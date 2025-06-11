@@ -7,7 +7,7 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
 open import Cubical.Data.Empty as ⊥ using (⊥)
 open import Cubical.Data.Int.Base as ℤ
-open import Cubical.Data.Int.Properties as ℤ
+open import Cubical.Data.Int.PropertiesOld as ℤ
 open import Cubical.Data.Nat as ℕ
 import Cubical.Data.Nat.Order as ℕ
 open import Cubical.Data.NatPlusOne.Base as ℕ₊₁
