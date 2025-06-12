@@ -1,5 +1,5 @@
 {-# OPTIONS --safe #-}
-module Cubical.Data.Int.Properties where
+module Cubical.Data.Int.Fast.Properties where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
@@ -21,7 +21,7 @@ open import Cubical.Data.Fin.Inductive.Properties
 
 
 open import Cubical.Data.Int.Base as ℤ hiding (_+_ ; _·_ ; _-_) renaming (_+f_ to _+_ ; _·f_ to _·_ ; _-f_ to _-_)
-open import Cubical.Data.Int.PropertiesOld as P public
+open import Cubical.Data.Int.Properties as P public
  hiding (·lCancel ; ·rCancel; +Assoc ;+Comm;-DistL·;-DistR·;minusPlus;plusMinus
    ;·Assoc;·Comm;·DistL+;·DistR+;·IdL;·IdR;·DistPosRMin;·DistPosRMax;·DistPosLMin;·DistPosLMax;abs·
    ; inj-z+ ; 
