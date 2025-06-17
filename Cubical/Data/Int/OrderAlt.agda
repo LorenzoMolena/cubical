@@ -7,7 +7,8 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
 open import Cubical.Data.Empty as ⊥ using (⊥)
 open import Cubical.Data.Int.Base as ℤ hiding (_+_ ; _·_) renaming (_+f_ to _+_ ; _·f_ to _·_)
-open import Cubical.Data.Int.PropertiesAlt as ℤ
+open import Cubical.Data.Int.PropertiesAlt as ℤ hiding (
+  _≤_ ; _<_ ; _≥_ ; _>_ ; Trichotomy ; isProp≤ ; isProp< ; zero-≤pos ; ¬-pos<-zero ; negsuc<-zero ; ¬pos≤negsuc ; negsuc<pos ; suc-≤-suc ; negsuc-≤-negsuc ; pos-≤-pos )
 open import Cubical.Data.Nat as ℕ hiding (_+_ ; _·_)
 import Cubical.Data.Nat.Order as ℕ
 open import Cubical.Data.NatPlusOne.Base as ℕ₊₁
@@ -81,7 +82,7 @@ negsuc<pos {suc k} {suc l} = suc k ℕ.+ suc l
                            --   sym (pos0+ (pos (suc l)))
 
 suc-≤-suc : m ≤ n → sucℤ m ≤ sucℤ n
-suc-≤-suc {m} {n} (k , p) = k , (? ∙ sym (sucℤ+pos k m) ∙ ?)
+suc-≤-suc {m} {n} (k , p) = k , ({!   !} ∙ sym (sucℤ+pos k m) ∙ {!   !})
 
 -- negsuc-≤-negsuc : pos k ≤ pos l → negsuc l ≤ negsuc k
 -- negsuc-≤-negsuc {k} {l} (i , p) = i ,
@@ -557,3 +558,4 @@ suc-≤-suc {m} {n} (k , p) = k , (? ∙ sym (sucℤ+pos k m) ∙ ?)
 -- 0≤x² (negsuc n) = subst (0 ≤_) (pos·pos (suc n) (suc n)
 --   ∙ sym (negsuc·negsuc n n)) zero-≤pos
 
+   

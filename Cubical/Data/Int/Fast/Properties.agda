@@ -35,7 +35,9 @@ open import Cubical.Data.Int.Properties as P public
    -pos ; -neg ; sucℤnegsucneg ; -sucℤ ; -predℤ ; -Involutive ; isEquiv- ;
    sucℤ+pos ; predℤ+negsuc ; sucℤ+negsuc ; predℤ+pos ; predℤ-pos ;
    -- properties of +f/·f/-f etc.
-   predℤ+
+   predℤ+ ; +predℤ ; sucℤ+ ; +sucℤ ; pos0+ ; negsuc0+ ;
+   -- these don't need to be rewritten
+   ind-comm ; ind-assoc
    )
 
 open import Cubical.Data.Int.Order as P public
@@ -99,13 +101,7 @@ sucℤ+pos-f (suc n) (negsuc (suc n₁))   = w n n₁ where
   w zero (suc m)       = refl
   w (suc zero) zero    = refl
   w (suc (suc n)) zero = cong (sucℤ ∘ (ℕ-f-hlp (suc n))) (zero∸ (suc n))
-  w (suc n) (suc m)    = w n m 
-  
-  
---  {!sucℤ+pos-f n (negsuc n₁)!}
--- zero m = refl
--- sucℤ+pos-f (suc n) m = cong sucℤ (sucℤ+pos n m)
-
+  w (suc n) (suc m)    = w n m
 
 ·lCancel : (c m n : ℤ) → c · m ≡ c · n → ¬ c ≡ 0 → m ≡ n
 ·lCancel c m n = subst-f
@@ -118,7 +114,6 @@ sucℤ+pos-f (suc n) (negsuc (suc n₁))   = w n n₁ where
 ·DistPosRMin : (x : ℕ) (y z : ℤ) → pos x · P.min y z ≡ P.min (pos x · y) (pos x · z)
 ·DistPosRMin x y z = subst-f
   (λ _+_ _·_ → pos x · P.min y z ≡ P.min (pos x · y) (pos x · z)) (P.·DistPosRMin x y z)
-
 
 ·DistPosRMax : (x : ℕ) (y z : ℤ) → pos x · P.max y z ≡ P.max (pos x · y) (pos x · z)
 ·DistPosRMax x y z = subst-f
@@ -213,7 +208,6 @@ inj-z+ {z} {l} {n} =
 ·suc≤0 {m} {k} = subst-f
   (λ _+_ _·_ → m · pos (suc k) ≤ pos 0 → m ≤ pos 0) (P.·suc≤0 {m} {k})
 
-
 ≤-·o : {m n : ℤ} {k : ℕ} → m ≤ n → m · pos k ≤ n · pos k
 ≤-·o {m} {n} {k} = subst-f
   (λ _+_ _·_ → m ≤ n → m · pos k ≤ n · pos k) (P.≤-·o {m} {n} {k})
@@ -242,7 +236,6 @@ inj-z+ {z} {l} {n} =
 ·suc<0 : {m : ℤ} {k : ℕ} → m · pos (suc k) < pos 0 → m < pos 0
 ·suc<0 {m} {k} = subst-f
   (λ _+_ _·_ → m · pos (suc k) < pos 0 → m < pos 0) (P.·suc<0 {m} {k})
-
 
 ·0< : ∀ m n → 0< m → 0< n → 0< (m · n)
 ·0< m n p q = subst-f
@@ -567,11 +560,6 @@ predℤ-pos (suc n) = refl
 ∸≡suc→∸swap≡0 (suc m) zero k p    = refl
 ∸≡suc→∸swap≡0 (suc m) (suc n) k p = ∸≡suc→∸swap≡0 m n k p
 
-ℕ-fSwap : ∀ m n → m ℕ-f n ≡ -( n ℕ-f m)
-ℕ-fSwap zero    zero    = refl
-ℕ-fSwap zero    (suc n) = refl
-ℕ-fSwap (suc m) zero    = refl
-ℕ-fSwap (suc m) (suc n) = ℕ-fSwap m n
 -}
 
 
@@ -593,76 +581,176 @@ predℤ+ (pos (suc m)) (negsuc n)          = predℕ-f≡ℕ-fsuc m n
 predℤ+ (negsuc m)    (pos n)             = predℕ-f≡ℕ-fsuc n (suc m)
 predℤ+ (negsuc m)    (negsuc n)          = refl
 
--- tests with transport / hcomp
 
 -- +Comm : ∀ m n → m + n ≡ n + m
--- +Comm m n = subst-f
---   (λ _+_ _·_ → m + n ≡ n + m) (P.+Comm m n)
+-- +Comm (pos m)    (pos n)     = cong pos (ℕ.+-comm m n)
+-- +Comm (negsuc m) (pos n)     = refl
+-- +Comm (pos m) (negsuc n)     = refl  
+-- +Comm (negsuc m) (negsuc n)  = cong (negsuc ∘ suc) (ℕ.+-comm m n)
 
--- +Comm : ∀ m n → m + n ≡ n + m
--- +Comm m n i = hcomp (λ j → λ { (i = i0) → +≡+f m n j ;
---                                (i = i1) → +≡+f n m j })
---                     (P.+Comm m n i)
+
+-- +predℤ : ∀ m n → predℤ (m + n) ≡ m + (predℤ n)
+-- +predℤ m n = cong predℤ (+Comm m n)  ∙∙ predℤ+ n m ∙∙ +Comm (predℤ n) m
+
++predℤ : ∀ m n → predℤ (m + n) ≡ m + (predℤ n)
++predℤ (pos zero)          (pos zero)    = refl
++predℤ (pos (suc zero))    (pos zero)    = refl
++predℤ (pos (suc (suc m))) (pos zero)    = cong (pos ∘ suc) (ℕ.+-zero m)
++predℤ (pos m)             (pos (suc n)) = cong (predℤ ∘ pos) (ℕ.+-comm m (suc n)) ∙ cong pos (ℕ.+-comm n m)
++predℤ (pos m)             (negsuc n)    = predℕ-f≡ℕ-fsuc m (suc n)
++predℤ (negsuc m)          (pos zero)    = cong (negsuc ∘ suc) (sym (ℕ.+-zero m))
++predℤ (negsuc m)          (pos (suc n)) = predℕ-f≡ℕ-fsuc n m
++predℤ (negsuc m)          (negsuc n)    = cong (negsuc ∘ suc ∘ suc ) (ℕ.+-comm m n)
+                                         ∙ cong (negsuc ∘ suc) (ℕ.+-comm (suc n) m)
+
+sucℕ-fsuc≡ℕ-f : ∀ m n → sucℤ (m ℕ-f suc n) ≡ m ℕ-f n
+sucℕ-fsuc≡ℕ-f zero          zero    = refl
+sucℕ-fsuc≡ℕ-f zero          (suc n) = refl
+sucℕ-fsuc≡ℕ-f (suc zero)    zero    = refl
+sucℕ-fsuc≡ℕ-f (suc (suc m)) zero    = refl
+sucℕ-fsuc≡ℕ-f (suc m)       (suc n) = sucℕ-fsuc≡ℕ-f m n
+
+sucℤ+ : ∀ m n → sucℤ (m + n) ≡ (sucℤ m) + n
+sucℤ+ (pos m)          (pos n)             = refl
+sucℤ+ (pos m)          (negsuc n)          = sucℕ-fsuc≡ℕ-f m n
+sucℤ+ (negsuc zero)    (pos zero)          = refl
+sucℤ+ (negsuc zero)    (pos (suc zero))    = refl
+sucℤ+ (negsuc zero)    (pos (suc (suc n))) = refl
+sucℤ+ (negsuc (suc m)) (pos n)             = sucℕ-fsuc≡ℕ-f n (suc m)
+sucℤ+ (negsuc zero)    (negsuc n)          = refl
+sucℤ+ (negsuc (suc m)) (negsuc n)          = refl
+
++sucℤ : ∀ m n → sucℤ (m + n) ≡ m + (sucℤ n)
++sucℤ (pos m)             (pos n)          = cong (pos ∘ suc) (ℕ.+-comm m n) ∙ cong pos (ℕ.+-comm (suc n) m)
++sucℤ (pos zero)          (negsuc zero)    = refl
++sucℤ (pos (suc zero))    (negsuc zero)    = refl
++sucℤ (pos (suc (suc m))) (negsuc zero)    = cong (pos ∘ suc) (sym (ℕ.+-zero (suc m)))
++sucℤ (pos m)             (negsuc (suc n)) = sucℕ-fsuc≡ℕ-f m (suc n)
++sucℤ (negsuc m)          (pos n)          = sucℕ-fsuc≡ℕ-f n m
++sucℤ (negsuc m)          (negsuc zero)    = cong negsuc (ℕ.+-zero m)
++sucℤ (negsuc m)          (negsuc (suc n)) = cong negsuc (ℕ.+-comm m (suc n) ∙ cong suc (ℕ.+-comm n m))
+
+pos0+ : ∀ z → z ≡ pos 0 + z
+pos0+ (pos n)    = refl
+pos0+ (negsuc n) = refl
+
++pos0 : ∀ z → z ≡ z + pos 0
++pos0 (pos n)    = cong pos $ sym (ℕ.+-zero n)
++pos0 (negsuc n) = refl
+
+
+negsuc0+ : ∀ z → predℤ z ≡ negsuc 0 + z
+negsuc0+ (pos zero)          = refl
+negsuc0+ (pos (suc zero))    = refl
+negsuc0+ (pos (suc (suc n))) = refl
+negsuc0+ (negsuc n)          = refl
+
++negsuc0 : ∀ z → predℤ z ≡ z + negsuc 0
++negsuc0 (pos zero)          = refl
++negsuc0 (pos (suc zero))    = refl
++negsuc0 (pos (suc (suc n))) = refl
++negsuc0 (negsuc n)          = cong (negsuc ∘ suc) $ sym (ℕ.+-zero n) 
+
+ind-comm : {A : Type₀} (_∙_ : A → A → A) (f : ℕ → A) (g : A → A)
+           (p : ∀ {n} → f (suc n) ≡ g (f n))
+           (g∙ : ∀ a b → g (a ∙ b) ≡ g a ∙ b)
+           (∙g : ∀ a b → g (a ∙ b) ≡ a ∙ g b)
+           (base : ∀ z → z ∙ f 0 ≡ f 0 ∙ z)
+         → ∀ z n → z ∙ f n ≡ f n ∙ z
+ind-comm _∙_ f g p g∙ ∙g base z 0 = base z
+ind-comm _∙_ f g p g∙ ∙g base z (suc n) =
+  z ∙ f (suc n) ≡[ i ]⟨ z ∙ p {n} i ⟩
+  z ∙ g (f n)   ≡⟨ sym ( ∙g z (f n)) ⟩
+  g (z ∙ f n)   ≡⟨ cong g IH ⟩
+  g (f n ∙ z)   ≡⟨ g∙ (f n) z ⟩
+  g (f n) ∙ z   ≡[ i ]⟨ p {n} (~ i) ∙ z ⟩
+  f (suc n) ∙ z ∎
+  where
+  IH = ind-comm _∙_ f g p g∙ ∙g base z n
+
+ind-assoc : {A : Type₀} (_·_ : A → A → A) (f : ℕ → A)
+        (g : A → A) (p : ∀ a b → g (a · b) ≡ a · (g b))
+        (q : ∀ {c} → f (suc c) ≡ g (f c))
+        (base : ∀ m n → (m · n) · (f 0) ≡ m · (n · (f 0)))
+        (m n : A) (o : ℕ)
+      → m · (n · (f o)) ≡ (m · n) · (f o)
+ind-assoc _·_ f g p q base m n 0 = sym (base m n)
+ind-assoc _·_ f g p q base m n (suc o) =
+    m · (n · (f (suc o))) ≡[ i ]⟨ m · (n · q {o} i) ⟩
+    m · (n · (g (f o)))   ≡[ i ]⟨ m · (p n (f o) (~ i)) ⟩
+    m · (g (n · (f o)))   ≡⟨ sym (p m (n · (f o)))⟩
+    g (m · (n · (f o)))   ≡⟨ cong g IH ⟩
+    g ((m · n) · (f o))   ≡⟨ p (m · n) (f o) ⟩
+    (m · n) · (g (f o))   ≡[ i ]⟨ (m · n) · q {o} (~ i) ⟩
+    (m · n) · (f (suc o)) ∎
+    where
+    IH = ind-assoc _·_ f g p q base m n o
 
 +Comm : ∀ m n → m + n ≡ n + m
 +Comm (pos m)    (pos n)     = cong pos (ℕ.+-comm m n)
 +Comm (negsuc m) (pos n)     = refl
-+Comm (pos m) (negsuc n)     = refl  
++Comm (pos m)    (negsuc n)  = refl  
 +Comm (negsuc m) (negsuc n)  = cong (negsuc ∘ suc) (ℕ.+-comm m n)
 
--- _+≡+f[_]_ : ∀ m i n → ℤ
--- m +≡+f[ i ] n = +≡+f m n i 
++Comm' : ∀ m n → m + n ≡ n + m
++Comm' m (pos n)    = ind-comm _+_ pos    sucℤ  refl sucℤ+  +sucℤ (λ n → sym (+pos0 n) ∙ pos0+ n) m n
++Comm' m (negsuc n) = ind-comm _+_ negsuc predℤ refl predℤ+ +predℤ (λ n → sym (+negsuc0 n) ∙ negsuc0+ n) m n
 
--- +Assoc : ∀ m n o → m + (n + o) ≡ (m + n) + o
--- +Assoc m n o i = hcomp (λ j → λ { (i = i0) → +≡+f m (+≡+f n o j) j ;
---                                   (i = i1) → +≡+f (+≡+f m n j) o j })
---                        (P.+Assoc m n o i)
++Assoc' : ∀ m n o → m + (n + o) ≡ (m + n) + o
++Assoc' m n (pos o)    = ind-assoc _+_ pos    sucℤ  +sucℤ  refl (λ m n → sym (+pos0 (m + n)) ∙ cong (m +_) (+pos0 n) ) m n o
++Assoc' m n (negsuc o) = ind-assoc _+_ negsuc predℤ +predℤ refl (λ m n → sym (+negsuc0 (m + n))
+                                                                      ∙∙ +predℤ m n
+                                                                      ∙∙ cong (m +_) (+negsuc0 n) ) m n o
+nℕ-fn≡0 : ∀ n → n ℕ-f n ≡ pos 0
+nℕ-fn≡0 zero    = refl
+nℕ-fn≡0 (suc n) = nℕ-fn≡0 n
 
--- test, with only two cases not transported
-+Assoc : ∀ m n o → m + (n + o) ≡ (m + n) + o
-+Assoc (pos m)    (pos n)    (pos o)    = cong pos (ℕ.+-assoc m n o)
-+Assoc (pos m)    (pos n)    (negsuc o) = let
-  x = pos m
-  y = pos n
-  z = negsuc o
-  in
-  subst-f (λ _+_ _·_ → x + (y + z) ≡ (x + y) + z) (P.+Assoc x y z)
-+Assoc (pos m)    (negsuc n) (pos o)    = let
-  x = pos m
-  y = negsuc n
-  z = pos  o
-  in
-  subst-f (λ _+_ _·_ → x + (y + z) ≡ (x + y) + z) (P.+Assoc x y z)
-+Assoc (pos m) (negsuc n) (negsuc o)    = let
-  x = pos m
-  y = negsuc n
-  z = negsuc o
-  in
-  subst-f (λ _+_ _·_ → x + (y + z) ≡ (x + y) + z) (P.+Assoc x y z)
-+Assoc (negsuc m) (pos n)    (pos o)    = let
-  x = negsuc m
-  y = pos n
-  z = pos o
-  in
-  subst-f (λ _+_ _·_ → x + (y + z) ≡ (x + y) + z) (P.+Assoc x y z)
-+Assoc (negsuc m) (pos n)    (negsuc o) = let
-  x = negsuc m
-  y = pos n
-  z = negsuc o
-  in
-  subst-f (λ _+_ _·_ → x + (y + z) ≡ (x + y) + z) (P.+Assoc x y z)
-+Assoc (negsuc m) (negsuc n) (pos o)    = let
-  x = negsuc m
-  y = negsuc n
-  z = pos o
-  in
-  subst-f (λ _+_ _·_ → x + (y + z) ≡ (x + y) + z) (P.+Assoc x y z)
-+Assoc (negsuc m) (negsuc n) (negsuc o) = cong (negsuc ∘ suc) (
-  m +ℕ (1 +ℕ (n +ℕ o)) ≡⟨ ℕ.+-assoc m 1 _ ⟩
-  m +ℕ 1 +ℕ (n +ℕ o)   ≡⟨ cong (_+ℕ (n +ℕ o)) (ℕ.+-comm m 1) ⟩
-  1 +ℕ m +ℕ (n +ℕ o)   ≡⟨ sym (ℕ.+-assoc 1 m (n +ℕ o)) ⟩
-  1 +ℕ (m +ℕ (n +ℕ o)) ≡⟨ cong (1 +ℕ_) (ℕ.+-assoc m n o) ⟩
-  suc (m +ℕ n +ℕ o)    ∎)
+ℕ-fSwap : ∀ m n → m ℕ-f n ≡ -(n ℕ-f m)
+ℕ-fSwap zero    zero    = refl
+ℕ-fSwap zero    (suc n) = refl
+ℕ-fSwap (suc m) zero    = refl
+ℕ-fSwap (suc m) (suc n) = ℕ-fSwap m n
 
-  -- subst-f
-  -- (λ _+_ _·_ → m + (n + o) ≡ (m + n) + o) (P.+Assoc m n o)
+
++PosDistLℕ-f : ∀ m n k → (n ℕ-f k) + (pos m) ≡ (n ℕ.+ m) ℕ-f k
++PosDistLℕ-f zero    zero    zero    = refl
++PosDistLℕ-f (suc m) zero    zero    = refl
++PosDistLℕ-f m       zero    (suc k) = refl
++PosDistLℕ-f m       (suc n) zero    = refl
++PosDistLℕ-f m       (suc n) (suc k) = +PosDistLℕ-f m n k
+
++PosDistRℕ-f : ∀ m n k → (pos m) + (n ℕ-f k) ≡ (m ℕ.+ n) ℕ-f k
++PosDistRℕ-f m n k = +Comm (pos m) (n ℕ-f k)
+                  ∙∙ +PosDistLℕ-f m n k
+                  ∙∙ cong (_ℕ-f k) (ℕ.+-comm n m)
+
++NegsucDistLℕ-f : ∀ m n k → (n ℕ-f k) + negsuc m ≡ n ℕ-f (suc k ℕ.+ m)
++NegsucDistLℕ-f m zero zero       = refl  
++NegsucDistLℕ-f m zero (suc k)    = refl
++NegsucDistLℕ-f m (suc n) zero    = refl
++NegsucDistLℕ-f m (suc n) (suc k) = +NegsucDistLℕ-f m n k
+
++NegsucDistRℕ-f : ∀ m n k → negsuc m + (n ℕ-f k) ≡ n ℕ-f (suc m ℕ.+ k)
++NegsucDistRℕ-f m n k = +Comm (negsuc m) (n ℕ-f k)
+                     ∙∙ +NegsucDistLℕ-f m n k
+                     ∙∙ cong (n ℕ-f_ ∘ suc) (ℕ.+-comm k m)
+
++Assoc : ∀ m n k → m + (n + k) ≡ (m + n) + k
++Assoc (pos m)    (pos n)    (pos k)    = cong pos (ℕ.+-assoc m n k)
++Assoc (pos m)    (pos n)    (negsuc k) = +PosDistRℕ-f m n (suc k)
++Assoc (pos m)    (negsuc n) (pos k)    =
+  pos m + k ℕ-f suc n ≡⟨ +PosDistRℕ-f m k (suc n) ⟩
+  (m +ℕ k) ℕ-f suc n  ≡⟨ sym (+PosDistLℕ-f k m (suc n)) ⟩
+  m ℕ-f suc n + pos k ∎ 
++Assoc (pos m)    (negsuc n) (negsuc k) = sym $ +NegsucDistLℕ-f k m (suc n)
++Assoc (negsuc m) (pos n)    (pos k)    = sym $ +PosDistLℕ-f k n (suc m)
++Assoc (negsuc m) (pos n)    (negsuc k) =
+  negsuc m + n ℕ-f suc k   ≡⟨ +NegsucDistRℕ-f m n (suc k) ⟩
+  n ℕ-f (suc m +ℕ suc k)   ≡⟨ cong (n ℕ-f_ ∘ suc) (ℕ.+-suc m k) ⟩
+  n ℕ-f (suc (suc m) +ℕ k) ≡⟨ sym $ +NegsucDistLℕ-f k n (suc m) ⟩
+  n ℕ-f suc m + negsuc k   ∎
++Assoc (negsuc m) (negsuc n) (pos k)    = +NegsucDistRℕ-f m k (suc n) ∙ cong (k ℕ-f_ ∘ suc) (ℕ.+-suc m n)
++Assoc (negsuc m) (negsuc n) (negsuc k) = cong (negsuc ∘ suc) $
+  m +ℕ suc (n +ℕ k)   ≡⟨ ℕ.+-suc m (n +ℕ k) ⟩
+  suc (m +ℕ (n +ℕ k)) ≡⟨ cong suc (ℕ.+-assoc m n k)  ⟩
+  suc (m +ℕ n +ℕ k)   ∎
