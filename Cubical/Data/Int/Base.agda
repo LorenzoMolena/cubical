@@ -123,3 +123,10 @@ sumFinℤ {n = n} f = sumFinGen {n = n} _+_ 0 f
 sumFinℤId : (n : ℕ) {f g : Fin n → ℤ}
   → ((x : _) → f x ≡ g x) → sumFinℤ {n = n} f ≡ sumFinℤ {n = n} g
 sumFinℤId n t i = sumFinℤ {n = n} λ x → t x i
+
+sumFinℤf : {n : ℕ} (f : Fin n → ℤ) → ℤ
+sumFinℤf {n = n} f = sumFinGen {n = n} _+f_ 0 f
+
+sumFinℤIdf : (n : ℕ) {f g : Fin n → ℤ}
+  → ((x : _) → f x ≡ g x) → sumFinℤf {n = n} f ≡ sumFinℤf {n = n} g
+sumFinℤIdf n t i = sumFinℤf {n = n} λ x → t x i

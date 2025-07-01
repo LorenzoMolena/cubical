@@ -20,7 +20,10 @@ open import Cubical.Data.Fin.Inductive.Base
 open import Cubical.Data.Fin.Inductive.Properties
 
 
-open import Cubical.Data.Int.Base as ℤ hiding (_+_ ; _·_ ; _-_ ; _ℕ-_ ) renaming (_+f_ to _+_ ; _·f_ to _·_ ; _-f_ to _-_ ; _ℕ-f_ to _ℕ-_ )
+open import Cubical.Data.Int.Base as ℤ
+  hiding (_+_ ; _·_ ; _-_ ; _ℕ-_ ; sumFinℤ ; sumFinℤId)
+  renaming (_+f_ to _+_ ; _·f_ to _·_ ; _-f_ to _-_ ; _ℕ-f_ to _ℕ-_ ;
+            sumFinℤf to sumFinℤ ; sumFinℤIdf to sumFinℤId)
 open import Cubical.Data.Int.Properties as P public
  hiding (·lCancel ; ·rCancel; +Assoc ;+Comm;-DistL·;-DistR·;minusPlus;plusMinus
    ;·Assoc;·Comm;·DistL+;·DistR+;·IdL;·IdR;·DistPosRMin;·DistPosRMax;·DistPosLMin;·DistPosLMax;abs·
@@ -56,7 +59,14 @@ open import Cubical.Data.Int.Properties as P public
    -DistLR· ; ℤ·negsuc ; ·suc→0 ; sucℤ· ; ·sucℤ ; predℤ· ; ·predℤ ; minus≡0-
    -- properties about abs
    -- - these don't need to be rewritten:
-   -- ; abs→⊎ ; ⊎→abs ; abs≡0 ; ¬x≡0→¬abs≡0 ; abs-
+   -- ; abs→⊎ ; ⊎→abs ; abs≡0 ; ¬x≡0→¬abs≡0 ; abs- ;
+   ; absPos·Pos ;
+   -- ℤ is an integral domain and other cancellation properties 
+   isIntegralℤPosPos ; isIntegralℤ ; -Cancel'' ;
+   -- properties about finite sums
+   sumFinℤ0 ; sumFinℤHom ;
+   -- fast multiplication and signs
+   sign·abs
    )
 
 open import Cubical.Data.Int.Order as P public
@@ -122,13 +132,13 @@ sucℤ+pos-f (suc n) (negsuc (suc n₁))   = w n n₁ where
   w (suc (suc n)) zero = cong (sucℤ ∘ (ℕ-f-hlp (suc n))) (zero∸ (suc n))
   w (suc n) (suc m)    = w n m
 
-·lCancel : (c m n : ℤ) → c · m ≡ c · n → ¬ c ≡ 0 → m ≡ n
-·lCancel c m n = subst-f
-  (λ _+_ _·_ → c · m ≡ c · n → ¬ c ≡ 0 → m ≡ n) (P.·lCancel c m n)
+-- ·lCancel : (c m n : ℤ) → c · m ≡ c · n → ¬ c ≡ 0 → m ≡ n
+-- ·lCancel c m n = subst-f
+--   (λ _+_ _·_ → c · m ≡ c · n → ¬ c ≡ 0 → m ≡ n) (P.·lCancel c m n)
 
-·rCancel : (c m n : ℤ) → m · c ≡ n · c → ¬ c ≡ 0 → m ≡ n
-·rCancel c m n = subst-f
-  (λ _+_ _·_ → m · c ≡ n · c → ¬ c ≡ 0 → m ≡ n) (P.·rCancel c m n)
+-- ·rCancel : (c m n : ℤ) → m · c ≡ n · c → ¬ c ≡ 0 → m ≡ n
+-- ·rCancel c m n = subst-f
+--  (λ _+_ _·_ → m · c ≡ n · c → ¬ c ≡ 0 → m ≡ n) (P.·rCancel c m n)
 
 ·DistPosRMin : (x : ℕ) (y z : ℤ) → pos x · P.min y z ≡ P.min (pos x · y) (pos x · z)
 ·DistPosRMin x y z = subst-f
@@ -937,3 +947,58 @@ minus≡0- : (x : ℤ) → - x ≡ (0 - x)
 minus≡0- (pos zero)    = refl
 minus≡0- (pos (suc n)) = refl
 minus≡0- (negsuc n)    = refl
+
+absPos·Pos : (m n : ℕ) → abs (pos m · pos n) ≡ abs (pos m) ·ℕ abs (pos n)
+absPos·Pos m n = refl
+
+isIntegralℤPosPos : (c m : ℕ) → pos c · pos m ≡ 0 → ¬ c ≡ 0 → m ≡ 0
+isIntegralℤPosPos zero    m p c≠0 =  ⊥.rec (c≠0 refl)
+isIntegralℤPosPos (suc c) m p _   = sym $ ℕ.0≡n·sm→0≡n $ injPos $
+  pos 0               ≡⟨ sym p ⟩
+  pos (suc c) · pos m ≡⟨ ·Comm (pos (suc c)) (pos m)  ⟩ 
+  pos m · pos (suc c) ∎
+
+isIntegralℤ : (c m : ℤ) → c · m ≡ 0 → ¬ c ≡ 0 → m ≡ 0
+isIntegralℤ (pos zero)    (pos m)       p h = ⊥.rec (h refl)
+isIntegralℤ (pos (suc c)) (pos m)       p h = cong pos (isIntegralℤPosPos (suc c) m p ℕ.snotz)
+isIntegralℤ (pos zero)    (negsuc m)    p h = ⊥.rec (h refl)
+isIntegralℤ (pos (suc c)) (negsuc m)    p h = ⊥.rec (negsucNotpos (predℕ (suc c ·ℕ suc m)) 0 p )
+isIntegralℤ (negsuc c)    (pos zero)    p h = refl
+isIntegralℤ (negsuc c)    (pos (suc m)) p h = ⊥.rec (negsucNotpos (predℕ (suc c ·ℕ suc m)) 0 p )
+isIntegralℤ (negsuc c)    (negsuc m)    p h = ⊥.rec (ℕ.snotz (injPos p))
+
+private
+  ·lCancel-helper : (c m n : ℤ) → c · m ≡ c · n → c · (m - n) ≡ 0
+  ·lCancel-helper c m n p =
+      ·DistR+ c m (- n)
+    ∙ (λ i → c · m + -DistR· c n (~ i))
+    ∙ subst (λ a → c · m - a ≡ 0) p (-Cancel (c · m))
+
+·lCancel : (c m n : ℤ) → c · m ≡ c · n → ¬ c ≡ 0 → m ≡ n
+·lCancel c m n p h = -≡0 _ _ (isIntegralℤ c (m - n) (·lCancel-helper c m n p) h)
+
+·rCancel : (c m n : ℤ) → m · c ≡ n · c → ¬ c ≡ 0 → m ≡ n
+·rCancel c m n p h = ·lCancel c m n (·Comm c m ∙ p ∙ ·Comm n c) h
+
+-Cancel'' : ∀ z → z ≡ - z → z ≡ 0
+-Cancel'' z r = isIntegralℤ 2 z (
+    2 · z         ≡⟨ ·DistL+ 1 1 z ⟩
+    1 · z + 1 · z ≡⟨ cong₂ _+_ (·IdL z) (·IdL z) ⟩
+    z + z         ≡⟨ cong (z +_) r ⟩
+    z + - z       ≡⟨ -Cancel z ⟩
+    0             ∎)
+  λ r → ⊥.rec (snotz (injPos r))
+
+-- some lemmas about finite sums
+
+sumFinℤ0 : (n : ℕ) → sumFinℤ {n = n} (λ (x : Fin n) → 0) ≡ 0
+sumFinℤ0 n = sumFinGen0 _+_ 0 +IdR n (λ _ → 0) λ _ → refl
+
+sumFinℤHom : {n : ℕ} (f g : Fin n → ℤ)
+  → sumFinℤ {n = n} (λ x → f x + g x) ≡ sumFinℤ {n = n} f + sumFinℤ {n = n} g
+sumFinℤHom {n = n} = sumFinGenHom _+_ 0 +IdR +Comm +Assoc n
+
+sign·abs : ∀ m → sign m · pos (abs m) ≡ m
+sign·abs (pos zero)    = refl
+sign·abs (pos (suc n)) = cong (pos ∘ suc) (ℕ.+-zero n)
+sign·abs (negsuc n)    = cong negsuc (ℕ.+-zero n)
