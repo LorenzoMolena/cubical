@@ -27,7 +27,7 @@ open import Cubical.Algebra.Group
 open import Cubical.Algebra.Group.Morphisms
 open import Cubical.Algebra.Group.MorphismProperties
 open import Cubical.Algebra.Group.Instances.Bool
--- open import Cubical.Algebra.Group.Instances.Int
+open import Cubical.Algebra.Group.Instances.Fast.Int
 
 open GroupStr (snd BoolGroup) using ()
   renaming ( _·_ to _+Bool_ )
@@ -134,18 +134,6 @@ isEven-pres+ x y with (dichotomyBoolSym (isEven x)) | dichotomyBoolSym (isEven y
 ... | inl xf | inr yt = isOddIsEven→IsOdd x y xf yt ∙ sym (cong₂ _+Bool_ xf yt)
 ... | inr xt | inl yf = isEvenIsOdd→IsOdd x y xt yf ∙ sym (cong₂ _+Bool_ xt yf)
 ... | inr xt | inr yt = isEvenIsEven→IsEven x y xt yt ∙ sym (cong₂ _+Bool_ xt yt)
-
--- to move in the right file
-------
-open GroupStr renaming (_·_ to _·g_)
-
-ℤGroup : Group ℓ-zero
-ℤGroup .fst = ℤ
-ℤGroup .snd .1g      = 0
-ℤGroup .snd ._·g_    = _+_
-ℤGroup .snd .inv     = -_
-ℤGroup .snd .isGroup = makeIsGroup isSetℤ +Assoc +IdR +IdL -Cancel -Cancel'
-------
 
 isEven-GroupMorphism : IsGroupHom (snd ℤGroup) isEven (snd BoolGroup)
 isEven-GroupMorphism = makeIsGroupHom isEven-pres+
