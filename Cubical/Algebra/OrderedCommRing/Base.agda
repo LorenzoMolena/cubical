@@ -72,7 +72,7 @@ record PseudolatticeStr (ℓ' : Level) (L : Type ℓ) : Type (ℓ-suc (ℓ-max �
 Pseudolattice : ∀ ℓ ℓ' → Type (ℓ-suc (ℓ-max ℓ ℓ'))
 Pseudolattice ℓ ℓ' = TypeWithStr ℓ (PseudolatticeStr ℓ')
 
-makeIsPseudolattice : {L : Type ℓ} {_≤_ : L → L → Type} {_∨l_ _∧l_ : L → L → L}
+makeIsPseudolattice : {L : Type ℓ} {_≤_ : L → L → Type ℓ'}
                       (is-setL : isSet L)
                       (is-prop-valued : isPropValued _≤_)
                       (is-refl : isRefl _≤_)
@@ -141,7 +141,12 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
   (·DistR+ : (x y z : R) → x · (y + z) ≡ (x · y) + (x · z))
   (AnnihilL : (x : R) → 0r · x ≡ 0r)
   (·Comm : (x y : R) → x · y ≡ y · x)
-  (isPseudolattice : IsPseudolattice _≤_)
+  (is-prop-valued≤ : isPropValued _≤_)
+  (is-refl : isRefl _≤_)
+  (is-trans≤ : isTrans _≤_)
+  (is-antisym : isAntisym _≤_)
+  (is-meet-semipseudolattice : isMeetSemipseudolattice (poset R _≤_ (isposet is-setR is-prop-valued≤ is-refl is-trans≤ is-antisym)))
+  (is-join-semipseudolattice : isJoinSemipseudolattice (poset R _≤_ (isposet is-setR is-prop-valued≤ is-refl is-trans≤ is-antisym)))
   (is-prop-valued : isPropValued _<_)
   (is-irrefl : isIrrefl _<_)
   (is-trans : isTrans _<_)
@@ -159,9 +164,11 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
   makeIsOrderedCommRing : IsOrderedCommRing 0r 1r _+_ _·_ -_ _<_ _≤_
   makeIsOrderedCommRing = OCR where
     OCR : IsOrderedCommRing 0r 1r _+_ _·_ -_ _<_ _≤_
-    IsOrderedCommRing.isCommRing OCR =
-      makeIsCommRing is-setR +Assoc +IdR +InvR +Comm ·Assoc ·IdR ·DistR+ ·Comm
-    IsOrderedCommRing.isPseudolattice OCR = isPseudolattice
+    IsOrderedCommRing.isCommRing OCR = makeIsCommRing
+      is-setR +Assoc +IdR +InvR +Comm ·Assoc ·IdR ·DistR+ ·Comm
+    IsOrderedCommRing.isPseudolattice OCR = makeIsPseudolattice
+      is-setR is-prop-valued≤ is-refl is-trans≤ is-antisym
+      is-meet-semipseudolattice is-join-semipseudolattice
     IsOrderedCommRing.isStrictOrder OCR =
       isstrictorder is-setR is-prop-valued is-irrefl is-trans is-asym is-weakly-linear
     IsOrderedCommRing.≤≃¬flip< OCR = ≤≃¬flip<
