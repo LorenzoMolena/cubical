@@ -60,7 +60,7 @@ record IsPseudoLattice {L : Type ℓ} (_≤_ : L → L → Type ℓ') : Type (�
   infixl 7 _∧l_
   infixl 6 _∨l_
 
-record PseudoLatticeStr (ℓ : Level) (L : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
+record PseudoLatticeStr (ℓ' : Level) (L : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
   constructor pseudolatticestr
 
   field
@@ -68,7 +68,7 @@ record PseudoLatticeStr (ℓ : Level) (L : Type ℓ) : Type (ℓ-suc (ℓ-max �
     isPseudoLattice : IsPseudoLattice _≤_
 
 PseudoLattice : ∀ ℓ ℓ' → Type (ℓ-suc (ℓ-max ℓ ℓ'))
-PseudoLattice ℓ ℓ' = TypeWithStr ℓ (PosetStr ℓ')
+PseudoLattice ℓ ℓ' = TypeWithStr ℓ (PseudoLatticeStr ℓ')
 
 record IsOrderedCommRing
   {R : Type ℓ}
