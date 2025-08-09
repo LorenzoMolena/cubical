@@ -15,7 +15,7 @@ open import Cubical.Relation.Nullary.Base
 open import Cubical.Algebra.CommRing.Base
 
 open import Cubical.Relation.Binary.Base
-open import Cubical.Relation.Binary.Order.Poset hiding (isLattice)
+open import Cubical.Relation.Binary.Order.Poset hiding (isLattice) renaming (isPseudolattice to pseudolattice)
 open import Cubical.Relation.Binary.Order.StrictOrder
 
 open BinaryRelation
@@ -50,14 +50,14 @@ record IsPseudolattice {L : Type ℓ} (_≤_ : L → L → Type ℓ') : Type (�
   constructor ispseudolattice
 
   field
-    is-poset : IsPoset _≤_
-    is-pseudolattice : isPseudolattice (poset L _≤_ is-poset)
+    isPoset : IsPoset _≤_
+    isPseudolattice : pseudolattice (poset L _≤_ isPoset)
 
   _∧l_ : L → L → L
-  a ∧l b = (is-pseudolattice .fst a b) .fst
+  a ∧l b = (isPseudolattice .fst a b) .fst
 
   _∨l_ : L → L → L
-  a ∨l b = (is-pseudolattice .snd a b) .fst
+  a ∨l b = (isPseudolattice .snd a b) .fst
 
   infixl 7 _∧l_
   infixl 6 _∨l_
@@ -84,8 +84,8 @@ makeIsPseudolattice : {L : Type ℓ} {_≤_ : L → L → Type} {_∨l_ _∧l_ :
 makeIsPseudolattice {_≤_ = _≤_} is-setL is-prop-valued is-refl is-trans is-antisym is-meet-semipseudolattice is-join-semipseudolattice = PS
   where
     PS : IsPseudolattice _≤_
-    PS .IsPseudolattice.is-poset = isposet is-setL is-prop-valued is-refl is-trans is-antisym
-    PS .IsPseudolattice.is-pseudolattice = is-meet-semipseudolattice , is-join-semipseudolattice
+    PS .IsPseudolattice.isPoset = isposet is-setL is-prop-valued is-refl is-trans is-antisym
+    PS .IsPseudolattice.isPseudolattice = is-meet-semipseudolattice , is-join-semipseudolattice
 
 record IsOrderedCommRing
   {R : Type ℓ}
@@ -94,10 +94,9 @@ record IsOrderedCommRing
   (-_ : R → R)
   (_<_ _≤_ : R → R → Type ℓ') : Type (ℓ-max ℓ ℓ') where
   constructor isorderedcommring
-  -- open BinaryRelation
   field
     isCommRing      : IsCommRing 0r 1r _+_ _·_ -_
-    isPseudoLattice : IsPseudolattice _≤_
+    isPseudolattice : IsPseudolattice _≤_
     isStrictOrder   : IsStrictOrder _<_
     ≤≃¬flip<        : ∀ x y → (x ≤ y) ≃ (¬ (y < x)) -- Do we need it? fix the Level?
     +MonoR≤         : ∀ x y z → x ≤ y → (x + z) ≤ (y + z)
@@ -109,7 +108,7 @@ record IsOrderedCommRing
     ·MonoR<         : ∀ x y z → 0r < z → x < y → (x · z) < (y · z)
     0<1             : 0r < 1r
 
-  open IsPseudolattice isPseudoLattice renaming (_∧l_ to _⊓_ ; _∨l_ to _⊔_)
+  open IsPseudolattice isPseudolattice renaming (_∧l_ to _⊓_ ; _∨l_ to _⊔_)
 
 record OrderedCommRingStr (ℓ' : Level) (R : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
   constructor orderedcommringstr
@@ -142,7 +141,7 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
   (·DistR+ : (x y z : R) → x · (y + z) ≡ (x · y) + (x · z))
   (AnnihilL : (x : R) → 0r · x ≡ 0r)
   (·Comm : (x y : R) → x · y ≡ y · x)
-  (isPseudoLattice : IsPseudoLattice _≤_)
+  (isPseudolattice : IsPseudolattice _≤_)
   (is-prop-valued : isPropValued _<_)
   (is-irrefl : isIrrefl _<_)
   (is-trans : isTrans _<_)
@@ -162,7 +161,7 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
     OCR : IsOrderedCommRing 0r 1r _+_ _·_ -_ _<_ _≤_
     IsOrderedCommRing.isCommRing OCR =
       makeIsCommRing is-setR +Assoc +IdR +InvR +Comm ·Assoc ·IdR ·DistR+ ·Comm
-    IsOrderedCommRing.isPseudoLattice OCR = isPseudoLattice
+    IsOrderedCommRing.isPseudolattice OCR = isPseudolattice
     IsOrderedCommRing.isStrictOrder OCR =
       isstrictorder is-setR is-prop-valued is-irrefl is-trans is-asym is-weakly-linear
     IsOrderedCommRing.≤≃¬flip< OCR = ≤≃¬flip<
@@ -175,9 +174,9 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
     IsOrderedCommRing.·MonoR< OCR = ·MonoR<
     IsOrderedCommRing.0<1 OCR = 0<1
 
-OrderedCommRing→PseudoLattice : OrderedCommRing ℓ ℓ' → PseudoLattice ℓ ℓ'
+OrderedCommRing→PseudoLattice : OrderedCommRing ℓ ℓ' → Pseudolattice ℓ ℓ'
 OrderedCommRing→PseudoLattice R .fst = R .fst
-OrderedCommRing→PseudoLattice R .snd = pseudolatticestr _ isPseudoLattice where
+OrderedCommRing→PseudoLattice R .snd = pseudolatticestr _ isPseudolattice where
   open OrderedCommRingStr (str R)
 
 OrderedCommRing→CommRing : OrderedCommRing ℓ ℓ' → CommRing ℓ
