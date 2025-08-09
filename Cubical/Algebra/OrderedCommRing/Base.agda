@@ -15,8 +15,10 @@ open import Cubical.Relation.Nullary.Base
 open import Cubical.Algebra.CommRing.Base
 
 open import Cubical.Relation.Binary.Base
-open import Cubical.Relation.Binary.Order.Poset hiding (isLattice) renaming (isPseudolattice to pseudolattice)
+open import Cubical.Relation.Binary.Order.Poset hiding (isLattice)
 open import Cubical.Relation.Binary.Order.StrictOrder
+
+open BinaryRelation
 
 private
   variable
@@ -26,7 +28,7 @@ record IsLattice
   {L : Type ℓ} (_≤_ : L → L → Type ℓ') (_⊓_ _⊔_ : L → L → L) : Type (ℓ-max ℓ ℓ') where
   constructor islattice
   field
-    isPoset : IsPoset _≤_
+    is-poset : IsPoset _≤_
     ⊓-inf   : ∀ x y z → z ≤ x → z ≤ y → z ≤ (x ⊓ y)
     ⊔-sup   : ∀ x y z → x ≤ z → y ≤ z → (x ⊔ y) ≤ z
 
@@ -44,31 +46,46 @@ record LatticeStr (ℓ' : Level) (L : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ
 Lattice : (ℓ ℓ' : Level) → Type (ℓ-suc (ℓ-max ℓ ℓ'))
 Lattice ℓ ℓ' = TypeWithStr ℓ (LatticeStr ℓ')
 
-record IsPseudoLattice {L : Type ℓ} (_≤_ : L → L → Type ℓ') : Type (ℓ-max ℓ ℓ') where
+record IsPseudolattice {L : Type ℓ} (_≤_ : L → L → Type ℓ') : Type (ℓ-max ℓ ℓ') where
   constructor ispseudolattice
 
   field
-    isPoset : IsPoset _≤_
-    isPseudoLattice : pseudolattice (poset L _≤_ isPoset)
+    is-poset : IsPoset _≤_
+    is-pseudolattice : isPseudolattice (poset L _≤_ is-poset)
 
   _∧l_ : L → L → L
-  a ∧l b = (isPseudoLattice .fst a b) .fst
+  a ∧l b = (is-pseudolattice .fst a b) .fst
 
   _∨l_ : L → L → L
-  a ∨l b = (isPseudoLattice .snd a b) .fst
+  a ∨l b = (is-pseudolattice .snd a b) .fst
 
   infixl 7 _∧l_
   infixl 6 _∨l_
 
-record PseudoLatticeStr (ℓ' : Level) (L : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
+record PseudolatticeStr (ℓ' : Level) (L : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
   constructor pseudolatticestr
 
   field
     _≤_ : L → L → Type ℓ'
-    isPseudoLattice : IsPseudoLattice _≤_
+    is-pseudolattice : IsPseudolattice _≤_
 
-PseudoLattice : ∀ ℓ ℓ' → Type (ℓ-suc (ℓ-max ℓ ℓ'))
-PseudoLattice ℓ ℓ' = TypeWithStr ℓ (PseudoLatticeStr ℓ')
+Pseudolattice : ∀ ℓ ℓ' → Type (ℓ-suc (ℓ-max ℓ ℓ'))
+Pseudolattice ℓ ℓ' = TypeWithStr ℓ (PseudolatticeStr ℓ')
+
+makeIsPseudolattice : {L : Type ℓ} {_≤_ : L → L → Type} {_∨l_ _∧l_ : L → L → L}
+                      (is-setL : isSet L)
+                      (is-prop-valued : isPropValued _≤_)
+                      (is-refl : isRefl _≤_)
+                      (is-trans : isTrans _≤_)
+                      (is-antisym : isAntisym _≤_)
+                      (is-meet-semipseudolattice : isMeetSemipseudolattice (poset L _≤_ (isposet is-setL is-prop-valued is-refl is-trans is-antisym)))
+                      (is-join-semipseudolattice : isJoinSemipseudolattice (poset L _≤_ (isposet is-setL is-prop-valued is-refl is-trans is-antisym)))
+                      → IsPseudolattice _≤_
+makeIsPseudolattice {_≤_ = _≤_} is-setL is-prop-valued is-refl is-trans is-antisym is-meet-semipseudolattice is-join-semipseudolattice = PS
+  where
+    PS : IsPseudolattice _≤_
+    PS .IsPseudolattice.is-poset = isposet is-setL is-prop-valued is-refl is-trans is-antisym
+    PS .IsPseudolattice.is-pseudolattice = is-meet-semipseudolattice , is-join-semipseudolattice
 
 record IsOrderedCommRing
   {R : Type ℓ}
@@ -80,7 +97,7 @@ record IsOrderedCommRing
   open BinaryRelation
   field
     isCommRing      : IsCommRing 0r 1r _+_ _·_ -_
-    isPseudoLattice : IsPseudoLattice _≤_
+    isPseudoLattice : IsPseudolattice _≤_
     isStrictOrder   : IsStrictOrder _<_
     ≤≃¬flip<        : ∀ x y → (x ≤ y) ≃ (¬ (y < x)) -- Do we need it? fix the Level?
     +MonoR≤         : ∀ x y z → x ≤ y → (x + z) ≤ (y + z)
@@ -92,7 +109,7 @@ record IsOrderedCommRing
     ·MonoR<         : ∀ x y z → 0r < z → x < y → (x · z) < (y · z)
     0<1             : 0r < 1r
 
-  open IsPseudoLattice isPseudoLattice renaming (_∧l_ to _⊓_ ; _∨l_ to _⊔_)
+  open IsPseudolattice isPseudoLattice renaming (_∧l_ to _⊓_ ; _∨l_ to _⊔_)
 
 record OrderedCommRingStr (ℓ' : Level) (R : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
   constructor orderedcommringstr
