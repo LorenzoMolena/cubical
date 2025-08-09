@@ -4,6 +4,7 @@ module Cubical.Algebra.OrderedCommRing.Base where
 -}
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.SIP using (TypeWithStr)
 open import Cubical.Foundations.Structure using (⟨_⟩; str)
 
@@ -13,11 +14,8 @@ open import Cubical.Relation.Nullary.Base
 
 open import Cubical.Algebra.CommRing.Base
 
--- open import Cubical.Algebra.Lattice
-
 open import Cubical.Relation.Binary.Base
-open import Cubical.Relation.Binary.Order.Poset renaming
-  (isLattice to isBoundedLattice)
+open import Cubical.Relation.Binary.Order.Poset hiding (isLattice) renaming (isPseudolattice to pseudolattice)
 open import Cubical.Relation.Binary.Order.StrictOrder
 
 private
@@ -46,28 +44,55 @@ record LatticeStr (ℓ' : Level) (L : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ
 Lattice : (ℓ ℓ' : Level) → Type (ℓ-suc (ℓ-max ℓ ℓ'))
 Lattice ℓ ℓ' = TypeWithStr ℓ (LatticeStr ℓ')
 
+record IsPseudoLattice {L : Type ℓ} (_≤_ : L → L → Type ℓ') : Type (ℓ-max ℓ ℓ') where
+  constructor ispseudolattice
+
+  field
+    isPoset : IsPoset _≤_
+    isPseudoLattice : pseudolattice (poset L _≤_ isPoset)
+
+  _∧l_ : L → L → L
+  a ∧l b = (isPseudoLattice .fst a b) .fst
+
+  _∨l_ : L → L → L
+  a ∨l b = (isPseudoLattice .snd a b) .fst
+
+  infixl 7 _∧l_
+  infixl 6 _∨l_
+
+record PseudoLatticeStr (ℓ : Level) (L : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
+  constructor pseudolatticestr
+
+  field
+    _≤_ : L → L → Type ℓ'
+    isPseudoLattice : IsPseudoLattice _≤_
+
+PseudoLattice : ∀ ℓ ℓ' → Type (ℓ-suc (ℓ-max ℓ ℓ'))
+PseudoLattice ℓ ℓ' = TypeWithStr ℓ (PosetStr ℓ')
+
 record IsOrderedCommRing
   {R : Type ℓ}
   (0r 1r : R )
   (_+_ _·_ : R → R → R)
   (-_ : R → R)
-  (_<_ _≤_ : R → R → Type ℓ')
-  (_⊓_ _⊔_ : R → R → R) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
+  (_<_ _≤_ : R → R → Type ℓ') : Type (ℓ-max ℓ ℓ') where
   constructor isorderedcommring
   open BinaryRelation
   field
-    isCommRing     : IsCommRing 0r 1r _+_ _·_ -_
-    isLattice      : IsLattice _≤_ _⊓_ _⊔_
-    isStrictOrder  : IsStrictOrder _<_
-    ≤⇔¬<          : ∀ x y → (x ≤ y) ≡ (¬ (y < x)) -- Do we need it? fix the Level?
-    +MonoR≤        : ∀ x y z → x ≤ y → (x + z) ≤ (y + z)
-    +MonoR<        : ∀ x y z → x < y → (x + z) < (y + z)
-    posSum→pos∨pos : ∀ x y → 0r < (x + y) → 0r < x ∨ 0r < y -- Do we need it?
-    <-≤-trans      : ∀ x y z → x < y → y ≤ z → x < z
-    ≤-<-trans      : ∀ x y z → x ≤ y → y < z → x < z
-    ·MonoR≤        : ∀ x y z → 0r ≤ z → x ≤ y → (x · z) ≤ (y · z)
-    ·MonoR<        : ∀ x y z → 0r < z → x < y → (x · z) < (y · z)
-    0<1            : 0r < 1r
+    isCommRing      : IsCommRing 0r 1r _+_ _·_ -_
+    isPseudoLattice : IsPseudoLattice _≤_
+    isStrictOrder   : IsStrictOrder _<_
+    ≤≃¬flip<        : ∀ x y → (x ≤ y) ≃ (¬ (y < x)) -- Do we need it? fix the Level?
+    +MonoR≤         : ∀ x y z → x ≤ y → (x + z) ≤ (y + z)
+    +MonoR<         : ∀ x y z → x < y → (x + z) < (y + z)
+    posSum→pos∨pos  : ∀ x y → 0r < (x + y) → 0r < x ∨ 0r < y -- Do we need it?
+    <-≤-trans       : ∀ x y z → x < y → y ≤ z → x < z
+    ≤-<-trans       : ∀ x y z → x ≤ y → y < z → x < z
+    ·MonoR≤         : ∀ x y z → 0r ≤ z → x ≤ y → (x · z) ≤ (y · z)
+    ·MonoR<         : ∀ x y z → 0r < z → x < y → (x · z) < (y · z)
+    0<1             : 0r < 1r
+
+  open IsPseudoLattice isPseudoLattice renaming (_∧l_ to _⊓_ ; _∨l_ to _⊔_)
 
 record OrderedCommRingStr (ℓ' : Level) (R : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
   constructor orderedcommringstr
@@ -76,14 +101,13 @@ record OrderedCommRingStr (ℓ' : Level) (R : Type ℓ) : Type (ℓ-suc (ℓ-max
     _+_ _·_ : R → R → R
     -_ : R → R
     _<_ _≤_ : R → R → Type ℓ'
-    _⊓_ _⊔_ : R → R → R
-    isOrderedCommRing : IsOrderedCommRing 0r 1r _+_ _·_ -_ _<_ _≤_ _⊓_ _⊔_
+    isOrderedCommRing : IsOrderedCommRing 0r 1r _+_ _·_ -_ _<_ _≤_
 
-  open IsOrderedCommRing isOrderedCommRing public
+  open IsOrderedCommRing isOrderedCommRing renaming () public
 
   infix  8 -_
-  infixl 7 _·_ _⊓_
-  infixl 6 _+_ _⊔_
+  infixl 7 _·_
+  infixl 6 _+_
   infix 4 _<_ _≤_
 
 OrderedCommRing : (ℓ ℓ' : Level) → Type (ℓ-suc (ℓ-max ℓ ℓ'))
