@@ -8,7 +8,7 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.SIP using (TypeWithStr)
 open import Cubical.Foundations.Structure using (⟨_⟩; str)
 
-open import Cubical.Functions.Logic using () renaming (_⊔′_ to _∨_)
+import Cubical.Functions.Logic as L
 
 open import Cubical.Relation.Nullary.Base
 
@@ -98,10 +98,10 @@ record IsOrderedCommRing
     isCommRing      : IsCommRing 0r 1r _+_ _·_ -_
     isPseudolattice : IsPseudolattice _≤_
     isStrictOrder   : IsStrictOrder _<_
-    ≤≃¬flip<        : ∀ x y → (x ≤ y) ≃ (¬ (y < x)) -- Do we need it? fix the Level?
+    ≤≃¬>            : ∀ x y → (x ≤ y) ≃ (¬ (y < x))
     +MonoR≤         : ∀ x y z → x ≤ y → (x + z) ≤ (y + z)
     +MonoR<         : ∀ x y z → x < y → (x + z) < (y + z)
-    posSum→pos∨pos  : ∀ x y → 0r < (x + y) → 0r < x ∨ 0r < y -- Do we need it?
+    posSum→pos∨pos  : ∀ x y → 0r < (x + y) → (0r < x) L.⊔′ (0r < y)
     <-≤-trans       : ∀ x y z → x < y → y ≤ z → x < z
     ≤-<-trans       : ∀ x y z → x ≤ y → y < z → x < z
     ·MonoR≤         : ∀ x y z → 0r ≤ z → x ≤ y → (x · z) ≤ (y · z)
@@ -152,10 +152,10 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
   (is-trans : isTrans _<_)
   (is-asym : isAsym _<_)
   (is-weakly-linear : isWeaklyLinear _<_)
-  (≤≃¬flip< : ∀ x y → (x ≤ y) ≃ (¬ (y < x)))
+  (≤≃¬> : ∀ x y → (x ≤ y) ≃ (¬ (y < x)))
   (+MonoR≤ : ∀ x y z → x ≤ y → (x + z) ≤ (y + z))
   (+MonoR< : ∀ x y z → x < y → (x + z) < (y + z))
-  (posSum→pos∨pos : ∀ x y → 0r < (x + y) → 0r < x ∨ 0r < y)
+  (posSum→pos∨pos : ∀ x y → 0r < (x + y) → 0r < x L.⊔′ 0r < y)
   (<-≤-trans : ∀ x y z → x < y → y ≤ z → x < z)
   (≤-<-trans : ∀ x y z → x ≤ y → y < z → x < z)
   (·MonoR≤ : ∀ x y z → 0r ≤ z → x ≤ y → (x · z) ≤ (y · z))
@@ -171,7 +171,7 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
       is-meet-semipseudolattice is-join-semipseudolattice
     IsOrderedCommRing.isStrictOrder OCR =
       isstrictorder is-setR is-prop-valued is-irrefl is-trans is-asym is-weakly-linear
-    IsOrderedCommRing.≤≃¬flip< OCR = ≤≃¬flip<
+    IsOrderedCommRing.≤≃¬> OCR = ≤≃¬>
     IsOrderedCommRing.+MonoR≤ OCR = +MonoR≤
     IsOrderedCommRing.+MonoR< OCR = +MonoR<
     IsOrderedCommRing.posSum→pos∨pos OCR = posSum→pos∨pos
