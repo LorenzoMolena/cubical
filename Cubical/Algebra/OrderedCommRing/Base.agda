@@ -5,8 +5,7 @@ module Cubical.Algebra.OrderedCommRing.Base where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
-open import Cubical.Foundations.SIP using (TypeWithStr)
-open import Cubical.Foundations.Structure using (⟨_⟩; str)
+open import Cubical.Foundations.SIP
 
 import Cubical.Functions.Logic as L
 
@@ -15,77 +14,16 @@ open import Cubical.Relation.Nullary.Base
 open import Cubical.Algebra.CommRing.Base
 
 open import Cubical.Relation.Binary.Base
-open import Cubical.Relation.Binary.Order.Poset hiding (isLattice) renaming (isPseudolattice to pseudolattice)
+open import Cubical.Relation.Binary.Order.Poset hiding (isPseudolattice)
 open import Cubical.Relation.Binary.Order.StrictOrder
+
+open import Cubical.Relation.Binary.Order.Pseudolattice
 
 open BinaryRelation
 
 private
   variable
     ℓ ℓ' : Level
-
-record IsLattice
-  {L : Type ℓ} (_≤_ : L → L → Type ℓ') (_⊓_ _⊔_ : L → L → L) : Type (ℓ-max ℓ ℓ') where
-  constructor islattice
-  field
-    is-poset : IsPoset _≤_
-    ⊓-inf   : ∀ x y z → z ≤ x → z ≤ y → z ≤ (x ⊓ y)
-    ⊔-sup   : ∀ x y z → x ≤ z → y ≤ z → (x ⊔ y) ≤ z
-
-record LatticeStr (ℓ' : Level) (L : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
-  constructor latticestr
-  field
-    _≤_ : L → L → Type ℓ'
-    _⊓_ _⊔_ : L → L → L
-    isLattice : IsLattice _≤_ _⊓_ _⊔_
-
-  infixl 7 _⊓_
-  infixl 6 _⊔_
-  infixl 4 _≤_
-
-Lattice : (ℓ ℓ' : Level) → Type (ℓ-suc (ℓ-max ℓ ℓ'))
-Lattice ℓ ℓ' = TypeWithStr ℓ (LatticeStr ℓ')
-
-record IsPseudolattice {L : Type ℓ} (_≤_ : L → L → Type ℓ') : Type (ℓ-max ℓ ℓ') where
-  constructor ispseudolattice
-
-  field
-    isPoset : IsPoset _≤_
-    isPseudolattice : pseudolattice (poset L _≤_ isPoset)
-
-  _∧l_ : L → L → L
-  a ∧l b = (isPseudolattice .fst a b) .fst
-
-  _∨l_ : L → L → L
-  a ∨l b = (isPseudolattice .snd a b) .fst
-
-  infixl 7 _∧l_
-  infixl 6 _∨l_
-
-record PseudolatticeStr (ℓ' : Level) (L : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
-  constructor pseudolatticestr
-
-  field
-    _≤_ : L → L → Type ℓ'
-    is-pseudolattice : IsPseudolattice _≤_
-
-Pseudolattice : ∀ ℓ ℓ' → Type (ℓ-suc (ℓ-max ℓ ℓ'))
-Pseudolattice ℓ ℓ' = TypeWithStr ℓ (PseudolatticeStr ℓ')
-
-makeIsPseudolattice : {L : Type ℓ} {_≤_ : L → L → Type ℓ'}
-                      (is-setL : isSet L)
-                      (is-prop-valued : isPropValued _≤_)
-                      (is-refl : isRefl _≤_)
-                      (is-trans : isTrans _≤_)
-                      (is-antisym : isAntisym _≤_)
-                      (is-meet-semipseudolattice : isMeetSemipseudolattice (poset L _≤_ (isposet is-setL is-prop-valued is-refl is-trans is-antisym)))
-                      (is-join-semipseudolattice : isJoinSemipseudolattice (poset L _≤_ (isposet is-setL is-prop-valued is-refl is-trans is-antisym)))
-                      → IsPseudolattice _≤_
-makeIsPseudolattice {_≤_ = _≤_} is-setL is-prop-valued is-refl is-trans is-antisym is-meet-semipseudolattice is-join-semipseudolattice = PS
-  where
-    PS : IsPseudolattice _≤_
-    PS .IsPseudolattice.isPoset = isposet is-setL is-prop-valued is-refl is-trans is-antisym
-    PS .IsPseudolattice.isPseudolattice = is-meet-semipseudolattice , is-join-semipseudolattice
 
 record IsOrderedCommRing
   {R : Type ℓ}
@@ -130,7 +68,7 @@ OrderedCommRing : (ℓ ℓ' : Level) → Type (ℓ-suc (ℓ-max ℓ ℓ'))
 OrderedCommRing ℓ ℓ' = TypeWithStr ℓ (OrderedCommRingStr ℓ')
 
 module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
-  { _<_ _≤_ : R → R → Type ℓ' }
+  {_<_ _≤_ : R → R → Type ℓ'}
   (is-setR : isSet R)
   (+Assoc : (x y z : R) → x + (y + z) ≡ (x + y) + z)
   (+IdR : (x : R) → x + 0r ≡ x)
@@ -139,7 +77,6 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
   (·Assoc : (x y z : R) → x · (y · z) ≡ (x · y) · z)
   (·IdR : (x : R) → x · 1r ≡ x)
   (·DistR+ : (x y z : R) → x · (y + z) ≡ (x · y) + (x · z))
-  (AnnihilL : (x : R) → 0r · x ≡ 0r)
   (·Comm : (x y : R) → x · y ≡ y · x)
   (is-prop-valued≤ : isPropValued _≤_)
   (is-refl : isRefl _≤_)
