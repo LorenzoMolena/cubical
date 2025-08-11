@@ -288,7 +288,7 @@ module OrderedCommRingTheory
     (is-prop-valued≤ _ _)
     (is-prop-valued≤ _ _)
     (+MonoR≤ _ _ _)
-    +-cancelʳ-≤
+    +CancelR≤
 
   +MonoL≤≃ : (x ≤ y) ≃ (z + x ≤ z + y)
   +MonoL≤≃ = {!!}
