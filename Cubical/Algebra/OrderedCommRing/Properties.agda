@@ -8,6 +8,10 @@ open import Cubical.Data.Sum
 open import Cubical.Data.Sigma using (Σ; _,_)
 
 open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Binary.Order.Poset
+open import Cubical.Relation.Binary.Order.Quoset
+open import Cubical.Relation.Binary.Order.QuosetReasoning
+open import Cubical.Relation.Binary.Order.StrictOrder
 open import Cubical.Data.Sum
 
 open import Cubical.Algebra.OrderedCommRing.Base
@@ -21,6 +25,15 @@ module OrderedCommRingTheory
   where
 
   open OrderedCommRingStr (str R) renaming (_⊓_ to min ; _⊔_ to max)
+
+  open <-≤-Reasoning
+    ⟨ R ⟩
+    (posetstr _ isPoset)
+    (quosetstr _ (isStrictOrder→isQuoset isStrictOrder))
+    (λ _ → <-≤-trans _ _ _) (λ _ → ≤-<-trans _ _ _) (<-≤-weaken _ _)
+  open <-syntax
+  open ≤-syntax
+  open ≡-syntax
 
   private
     variable
@@ -67,11 +80,12 @@ module OrderedCommRingTheory
   ------------------------------------------------------------------------
 
   -- 3.1 Monotonicity and cancellation
-  +-monoˡ-≤ : (x ≤ y) → ((z + x) ≤ (z + y))
-  +-monoˡ-≤ = {!!}
-
-  +-monoʳ-≤ : (x ≤ y) → ((x + z) ≤ (y + z))
-  +-monoʳ-≤ = {!!}
+  +MonoL≤ : (x ≤ y) → ((z + x) ≤ (z + y))
+  +MonoL≤ {x} {y} {z} x≤y = begin≤
+    z + x ≡→≤⟨ +Comm _ _ ⟩
+    x + z ≤⟨ +MonoR≤ _ _ _ x≤y ⟩
+    y + z ≡→≤⟨ +Comm _ _ ⟩
+    z + y ◾
 
   +-monoˡ-< : (x < y) → ((z + x) < (z + y))
   +-monoˡ-< = {!!}
