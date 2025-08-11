@@ -1,5 +1,3 @@
-{-# OPTIONS --cubical #-}
-
 module Cubical.Algebra.OrderedCommRing.Properties where
 
 open import Cubical.Foundations.Prelude
@@ -24,31 +22,13 @@ module OrderedCommRingTheory
 
   open OrderedCommRingStr (str R) renaming (_⊓_ to min ; _⊔_ to max)
 
-  private 
+  private
     variable
       x y z x' y' ε : ⟨ R ⟩
 
   ------------------------------------------------------------------------
-  -- 1. Order core (preorder/partial/linear)
+  -- 1. Order core (partial / strict order)
   ------------------------------------------------------------------------
-
-  ≤-refl : (x ≤ x)
-  ≤-refl = {!!}
-
-  ≤-antisym : (x ≤ y) → (y ≤ x) → (x ≡ y)
-  ≤-antisym = {!!}
-
-  ≤-trans : (x ≤ y) → (y ≤ z) → (x ≤ z)
-  ≤-trans = {!!}
-
-  <-trans : (x < y) → (y < z) → (x < z)
-  <-trans = {!!}
-
-  <-irref : ¬ (x < x)
-  <-irrefl = {!!}
-
-  <-asym : (x < y) → ¬ (y < x)
-  <-asym = {!!}
 
   <-resp-≡ˡ : (x ≡ y) → (y < z) → (x < z)
   <-resp-≡ˡ = {!!}
@@ -56,30 +36,31 @@ module OrderedCommRingTheory
   <-resp-≡ʳ : (x < y) → (y ≡ z) → (x < z)
   <-resp-≡ʳ = {!!}
 
+  {-
+
+  // need further assumptions on R
+
   cmp-≤ : (x ≤ y) ⊎ (y ≤ x)
   cmp-≤ = {!!}
 
+
   ≤-total : (x ≤ y) ⊎ (y ≤ x)
-  ≤-total = {!!}
+  ≤-total = cmp-≤
+
+  -}
 
   ------------------------------------------------------------------------
   -- 2. Order ↔ equality bridges
   ------------------------------------------------------------------------
 
-  <-to-≤ : (x < y) → (x ≤ y)
-  <-to-≤ = {!!}
+  ≤→¬> : (x ≤ y) → ¬ (y < x)
+  ≤→¬> = equivFun (≤≃¬> _ _)
 
-  ≤-not-> : (x ≤ y) → ¬ (y < x)
-  ≤-not-> = {!!}
+  ¬>→≤ : ¬(y < x) → (x ≤ y)
+  ¬>→≤ = invEq (≤≃¬> _ _)
 
-  ≮-refl : ¬ (x < x)
-  ≮-refl = {!!}
-
-  ≤-≡-≤ : (x ≤ y) → (y ≤ x) → (x ≡ y)
-  ≤-≡-≤ = {!!}
-
-  <-cmp-≡ : (x < y) → (x ≡ y) → ⊥
-  <-cmp-≡ = {!!}
+  <→≢ : (x < y) → ¬(x ≡ y)
+  <→≢ = {!!}
 
   ------------------------------------------------------------------------
   -- 3. Interaction with addition
