@@ -187,13 +187,13 @@ module OrderedCommRingTheory
 
   -- 4.5 Bounds and unit-ish facts (no inverses assumed)
 
-  0≤x,y≤1→x∙y≤y : (0r ≤ x) → (x ≤ 1r) → (0r ≤ y) → (y ≤ 1r) → ((x · y) ≤ y)
+  0≤x,y≤1→x∙y≤y : 0r ≤ x → x ≤ 1r → 0r ≤ y → y ≤ 1r → x · y ≤ y
   0≤x,y≤1→x∙y≤y = {!!}
 
-  0≤x,y≤1→x∙y≤x : (0r ≤ x) → (x ≤ 1r) → (0r ≤ y) → (y ≤ 1r) → ((x · y) ≤ x)
+  0≤x,y≤1→x∙y≤x : 0r ≤ x → x ≤ 1r → 0r ≤ y → y ≤ 1r → x · y ≤ x
   0≤x,y≤1→x∙y≤x = {!!}
 
-  0≤x,1≤y→x≤x·y : (0r ≤ x) → (1r ≤ y) → (x ≤ (x · y))
+  0≤x,1≤y→x≤x·y : 0r ≤ x → 1r ≤ y → x ≤ x · y
   0≤x,1≤y→x≤x·y = {!!}
 
   ------------------------------------------------------------------------
@@ -206,10 +206,10 @@ module OrderedCommRingTheory
   -Antitone<≃ : (x < y) ≃ (- y < - x)
   -Antitone<≃ = {!!}
 
-  ≤0≃0≤- : ((x ≤ 0r) ≃ (0r ≤ (- x)))
+  ≤0≃0≤- : (x ≤ 0r) ≃ (0r ≤ - x)
   ≤0≃0≤- = {!!}
 
-  0≤≃-≤0 : ((0r ≤ x) ≃ ((- x) ≤ 0r))
+  0≤≃-≤0 : (0r ≤ x) ≃ (- x ≤ 0r)
   0≤≃-≤0 = {!!}
 
   ------------------------------------------------------------------------
