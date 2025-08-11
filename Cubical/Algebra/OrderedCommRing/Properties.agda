@@ -3,8 +3,6 @@ module Cubical.Algebra.OrderedCommRing.Properties where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.SIP
 open import Cubical.Foundations.Equiv
-open import Cubical.Data.Empty
-open import Cubical.Data.Sum
 open import Cubical.Data.Sigma using (Σ; _,_)
 
 open import Cubical.Relation.Nullary.Base
@@ -12,7 +10,6 @@ open import Cubical.Relation.Binary.Order.Poset
 open import Cubical.Relation.Binary.Order.Quoset
 open import Cubical.Relation.Binary.Order.QuosetReasoning
 open import Cubical.Relation.Binary.Order.StrictOrder
-open import Cubical.Data.Sum
 
 open import Cubical.Algebra.OrderedCommRing.Base
 
@@ -42,12 +39,6 @@ module OrderedCommRingTheory
   ------------------------------------------------------------------------
   -- 1. Order core (partial / strict order)
   ------------------------------------------------------------------------
-
-  <-resp-≡ˡ : (x ≡ y) → (y < z) → (x < z)
-  <-resp-≡ˡ = {!!}
-
-  <-resp-≡ʳ : (x < y) → (y ≡ z) → (x < z)
-  <-resp-≡ʳ = {!!}
 
   {-
 
@@ -80,189 +71,146 @@ module OrderedCommRingTheory
   ------------------------------------------------------------------------
 
   -- 3.1 Monotonicity and cancellation
-  +MonoL≤ : (x ≤ y) → ((z + x) ≤ (z + y))
+  +MonoL≤ : x ≤ y → z + x ≤ z + y
   +MonoL≤ {x} {y} {z} x≤y = begin≤
     z + x ≡→≤⟨ +Comm _ _ ⟩
     x + z ≤⟨ +MonoR≤ _ _ _ x≤y ⟩
     y + z ≡→≤⟨ +Comm _ _ ⟩
     z + y ◾
 
-  +-monoˡ-< : (x < y) → ((z + x) < (z + y))
-  +-monoˡ-< = {!!}
+  +MonoL< : x < y → z + x < z + y
+  +MonoL< = {!!}
 
-  +-monoʳ-< : (x < y) → ((x + z) < (y + z))
-  +-monoʳ-< = {!!}
+  +CancelL≤ : z + x ≤ z + y → x ≤ y
+  +CancelL≤ = {!!}
 
-  +-cancelˡ-≤ : ((z + x) ≤ (z + y)) → (x ≤ y)
-  +-cancelˡ-≤ = {!!}
+  +CancelR≤ : x + z ≤ y + z → x ≤ y
+  +CancelR≤ = {!!}
 
-  +-cancelʳ-≤ : ((x + z) ≤ (y + z)) → (x ≤ y)
-  +-cancelʳ-≤ = {!!}
+  +CancelL< : z + x < z + y → x < y
+  +CancelL< = {!!}
 
-  +-cancelˡ-< : ((z + x) <  (z + y)) → (x <  y)
-  +-cancelˡ-< = {!!}
-
-  +-cancelʳ-< : ((x + z) <  (y + z)) → (x <  y)
-  +-cancelʳ-< = {!!}
+  +CancelR< : x + z < y + z → x < y
+  +CancelR< = {!!}
 
   -- 3.2 Zero, negation, subtraction
-  0≤1 : (0r ≤ 1r)
-  0≤1 = {!!}
+  0≤1 : 0r ≤ 1r
+  0≤1 = <-≤-weaken _ _ 0<1
 
-  -- 0<1 : (0r < 1r)
-  -- 0<1 = {!!}
+  -Antitone≤ : x ≤ y → - y ≤ - x
+  -Antitone≤ = {!!}
 
-  neg-mono-≤ : (x ≤ y) → ((- y) ≤ (- x))
-  neg-mono-≤ = {!!}
+  -Antitone< : x < y → - y < - x
+  -Antitone< = {!!}
 
-  neg-mono-< : (x < y) → ((- y) < (- x))
-  neg-mono-< = {!!}
+  ≤≃0≤Δ : (x ≤ y) ≃ (0r ≤ y - x)
+  ≤≃0≤Δ = {!!}
 
-  ≤-iff-0≤diff : ((x ≤ y) ≃ (0r ≤ (y - x)))
-  ≤-iff-0≤diff = {!!}
+  <≃0<Δ : (x < y) ≃ (0r < y - x)
+  <≃0<Δ = {!!}
 
-  <-iff-0<diff : ((x < y) ≃ (0r < (y - x)))
-  <-iff-0<diff = {!!}
-
-  diff-monoʳ-≤ : (x ≤ y) → ((x - z) ≤ (y - z))
-  diff-monoʳ-≤ = {!!}
-
-  diff-monoˡ-≤ : (x ≤ y) → ((z - y) ≤ (z - x))
-  diff-monoˡ-≤ = {!!}
+  SubLAntitone≤ : x ≤ y → z - y ≤ z - x
+  SubLAntitone≤ = {!!}
 
   ------------------------------------------------------------------------
   -- 4. Interaction with multiplication
   ------------------------------------------------------------------------
 
   -- 4.1 Nonnegativity/positivity closure
-  ·-preserves-nonneg : (0r ≤ x) → (0r ≤ y) → (0r ≤ (x · y))
-  ·-preserves-nonneg = {!!}
+  0≤· : 0r ≤ x → 0r ≤ y → 0r ≤ x · y
+  0≤· = {!!}
 
-  ·-preserves-pos    : (0r < x) → (0r < y) → (0r < (x · y))
-  ·-preserves-pos = {!!}
+  0<· : 0r < x → 0r < y → 0r < x · y
+  0<· = {!!}
+
+  {-
+
+  // might need further assumptions on R
 
   square-nonneg : (0r ≤ (x · x))
   square-nonneg = {!!}
+
+  -}
 
 --  square-pos    : (x ＃ 0r) → (0r < (x · x))
 --  square-pos = {!!}
 
   -- 4.2 Monotonicity (restricted)
-  ·-monoʳ-≤-nonneg : (x ≤ y) → (0r ≤ z) → ((x · z) ≤ (y · z))
-  ·-monoʳ-≤-nonneg = {!!}
 
-  ·-monoˡ-≤-nonneg : (x ≤ y) → (0r ≤ z) → ((z · x) ≤ (z · y))
-  ·-monoˡ-≤-nonneg = {!!}
+  ·MonoL≤ : 0r ≤ z → x ≤ y → z · x ≤ z · y
+  ·MonoL≤ = {!!}
 
-  ·-monoʳ-<-pos    : (x < y) → (0r < z) → ((x · z) < (y · z))
-  ·-monoʳ-<-pos = {!!}
-
-  ·-monoˡ-<-pos    : (x < y) → (0r < z) → ((z · x) < (z · y))
-  ·-monoˡ-<-pos = {!!}
+  ·MonoL< : 0r < z → x < y → z · x < z · y
+  ·MonoL< = {!!}
 
   -- 4.3 Sign rules for products
-  ·-pos-pos→pos  : (0r < x) → (0r < y) → (0r < (x · y))
-  ·-pos-pos→pos = {!!}
 
-  ·-pos-neg→neg  : (0r < x) → (y < 0r) → ((x · y) < 0r)
-  ·-pos-neg→neg = {!!}
+  pos·neg→neg : (0r < x) → (y < 0r) → ((x · y) < 0r)
+  pos·neg→neg = {!!}
 
-  ·-neg-pos→neg  : (x < 0r) → (0r < y) → ((x · y) < 0r)
-  ·-neg-pos→neg = {!!}
+  neg·pos→neg : (x < 0r) → (0r < y) → ((x · y) < 0r)
+  neg·pos→neg = {!!}
 
-  ·-neg-neg→pos  : (x < 0r) → (y < 0r) → (0r < (x · y))
-  ·-neg-neg→pos = {!!}
+  neg·neg→pos : (x < 0r) → (y < 0r) → (0r < (x · y))
+  neg·neg→pos = {!!}
 
-  ·-nonneg-nonpos→nonpos : (0r ≤ x) → (y ≤ 0r) → ((x · y) ≤ 0r)
-  ·-nonneg-nonpos→nonpos = {!!}
+  nonneg·nonpos→nonpos : (0r ≤ x) → (y ≤ 0r) → ((x · y) ≤ 0r)
+  nonneg·nonpos→nonpos = {!!}
 
-  ·-nonpos-nonneg→nonpos : (x ≤ 0r) → (0r ≤ y) → ((x · y) ≤ 0r)
-  ·-nonpos-nonneg→nonpos = {!!}
+  nonpos·nonneg→nonpos : (x ≤ 0r) → (0r ≤ y) → ((x · y) ≤ 0r)
+  nonpos·nonneg→nonpos = {!!}
+
+  nonpos·nonpos→nonneg : (x ≤ 0r) → (y ≤ 0r) → ((x · y) ≤ 0r)
+  nonpos·nonpos→nonneg = {!!}
 
   -- 4.4 Cancellation with positive factors
-  ·-cancelʳ-≤-pos : (0r < z) → ((x · z) ≤ (y · z)) → (x ≤ y)
-  ·-cancelʳ-≤-pos = {!!}
+  -- Needs the assumption "nontrivial zero divisors" or similar ones
+  module _ (is-domain : ∀ x y z → (0r < z) → x · z ≡ y · z → x ≡ y) where
+    ·CancelR≤ : (0r < z) → x · z ≤ y · z → x ≤ y
+    ·CancelR≤ = {!!}
 
-  ·-cancelˡ-≤-pos : (0r < z) → ((z · x) ≤ (z · y)) → (x ≤ y)
-  ·-cancelˡ-≤-pos = {!!}
+    ·CancelL≤ : (0r < z) → z · x ≤ z · y → x ≤ y
+    ·CancelL≤ = {!!}
 
-  ·-cancelʳ-<-pos : (0r < z) → ((x · z) <  (y · z)) → (x <  y)
-  ·-cancelʳ-<-pos = {!!}
+    ·CancelR< : (0r < z) → x · z < y · z → x < y
+    ·CancelR< = {!!}
 
-  ·-cancelˡ-<-pos : (0r < z) → ((z · x) <  (z · y)) → (x <  y)
-  ·-cancelˡ-<-pos = {!!}
+    ·CancelL< : (0r < z) → z · x < z · y → x < y
+    ·CancelL< = {!!}
+
+    x≤-x→x≤0 : x ≤ - x → x ≤ 0r
+    x≤-x→x≤0 = {!!}
+
+    -x≤x→0≤x : - x ≤ x → 0r ≤ x
+    -x≤x→0≤x = {!!}
+
 
   -- 4.5 Bounds and unit-ish facts (no inverses assumed)
-  one-nonneg        : (0r ≤ 1r)
-  one-nonneg = {!!}
 
-  ≤-one→≤-mul-when-≤1ˡ : (0r ≤ x) → (x ≤ 1r) → (0r ≤ y) → (y ≤ 1r) → ((x · y) ≤ y)
-  ≤-one→≤-mul-when-≤1ˡ = {!!}
+  0≤x,y≤1→x∙y≤y : (0r ≤ x) → (x ≤ 1r) → (0r ≤ y) → (y ≤ 1r) → ((x · y) ≤ y)
+  0≤x,y≤1→x∙y≤y = {!!}
 
-  ≤-one→≤-mul-when-≤1ʳ : (0r ≤ x) → (x ≤ 1r) → (0r ≤ y) → (y ≤ 1r) → ((x · y) ≤ x)
-  ≤-one→≤-mul-when-≤1ʳ = {!!}
+  0≤x,y≤1→x∙y≤x : (0r ≤ x) → (x ≤ 1r) → (0r ≤ y) → (y ≤ 1r) → ((x · y) ≤ x)
+  0≤x,y≤1→x∙y≤x = {!!}
 
-  pos→≤-mul-posˡ : (1r ≤ x) → (0r ≤ y) → (y ≤ (x · y))
-  pos→≤-mul-posˡ = {!!}
-
-  pos→≤-mul-posʳ : (1r ≤ y) → (0r ≤ x) → (x ≤ (x · y))
-  pos→≤-mul-posʳ = {!!}
+  0≤x,1≤y→x≤x·y : (0r ≤ x) → (1r ≤ y) → (x ≤ (x · y))
+  0≤x,1≤y→x≤x·y = {!!}
 
   ------------------------------------------------------------------------
   -- 5. Negation & subtraction (sign algebra)
   ------------------------------------------------------------------------
 
-  neg-neg≤ : (x ≤ (- x)) → (x ≤ 0r)
-  neg-neg≤ = {!!}
+  -Antitone≤≃ : (x ≤ y) ≃ (- y ≤ - x)
+  -Antitone≤≃ = {!   !}
 
-  ≤-neg-neg : ((- x) ≤ x) → (0r ≤ x)
-  ≤-neg-neg = {!!}
+  -Antitone<≃ : (x < y) ≃ (- y < - x)
+  -Antitone<≃ = {!!}
 
-  neg0≡0  : ((- 0r) ≡ 0r)
-  neg0≡0 = {!!}
+  ≤0≃0≤- : ((x ≤ 0r) ≃ (0r ≤ (- x)))
+  ≤0≃0≤- = {!!}
 
-  neg1≡-1 : ((- 1r) ≡ (- 1r))
-  neg1≡-1 = {!!}
-
-  neg-≤-iff : (((- x) ≤ (- y)) ≃ (y ≤ x))
-  neg-≤-iff = {!!}
-
-  neg-<-iff : (((- x) < (- y)) ≃ (y < x))
-  neg-<-iff = {!!}
-
-  sub-zeroʳ : ((x - 0r) ≡ x)
-  sub-zeroʳ = {!!}
-
-  sub-zeroˡ : ((0r - x) ≡ (- x))
-  sub-zeroˡ = {!!}
-
-  ≤-sub0 : ((x ≤ 0r) ≃ (0r ≤ (- x)))
-  ≤-sub0 = {!!}
-
-  0≤-sub : ((0r ≤ x) ≃ ((- x) ≤ 0r))
-  0≤-sub = {!!}
-
-  ------------------------------------------------------------------------
-  -- 6. Mixed order/alg identities (transport & congruence)
-  ------------------------------------------------------------------------
-
-  cong-≤-+ : (x ≡ x') → (y ≡ y') → (x ≤ y) → (x' ≤ y')
-  cong-≤-+ = {!!}
-
-  cong-<-+ : (x ≡ x') → (y ≡ y') → (x <  y) → (x' <  y')
-  cong-<-+ = {!!}
-
-  cong-≤-· : (x ≡ x') → (y ≡ y') → (x ≤ y) → (x' ≤ y')
-  cong-≤-· = {!!}
-
-  cong-<-· : (x ≡ x') → (y ≡ y') → (x <  y) → (x' <  y')
-  cong-<-· = {!!}
-
-  transport-≤ : (x ≡ y) → (x ≤ y)
-  transport-≤ = {!!}
-
-  transport-≥ : (x ≡ y) → (y ≤ x)
-  transport-≥ = {!!}
+  0≤≃-≤0 : ((0r ≤ x) ≃ ((- x) ≤ 0r))
+  0≤≃-≤0 = {!!}
 
   ------------------------------------------------------------------------
   -- 7. Min/Max (if provided)
