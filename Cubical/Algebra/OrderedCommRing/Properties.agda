@@ -5,7 +5,7 @@ open import Cubical.Foundations.SIP
 open import Cubical.Foundations.Equiv
 open import Cubical.Data.Empty
 open import Cubical.Data.Sum
-open import Cubical.Data.Sigma using (Σ; _,_)
+open import Cubical.Data.Sigma using (Σ; _,_ ; _×_)
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.Relation.Binary.Order.Poset
@@ -265,136 +265,100 @@ module OrderedCommRingTheory
   transport-≥ = {!!}
 
   ------------------------------------------------------------------------
-  -- 7. Min/Max (if provided)
+  -- 6. Min/Max
   ------------------------------------------------------------------------
 
-  max-ubˡ : (x ≤ (max x y))
-  max-ubˡ = {!!}
+  ≤maxL : x ≤ max x y
+  ≤maxL = {!!}
 
-  max-ubʳ : (y ≤ (max x y))
-  max-ubʳ = {!!}
+  ≤maxR : y ≤ max x y
+  ≤maxR = {!!}
 
-  max-le : (x ≤ z) → (y ≤ z) → ((max x y) ≤ z)
-  max-le = {!!}
+  lub≤ : x ≤ z → y ≤ z → max x y ≤ z
+  lub≤ = {!!}
 
-  min-lbˡ : ((min x y) ≤ x)
-  min-lbˡ = {!!}
+  ≤minL : min x y ≤ x
+  ≤minL = {!!}
 
-  min-lbʳ : ((min x y) ≤ y)
-  min-lbʳ = {!!}
+  ≤minR : min x y ≤ y
+  ≤minR = {!!}
 
-  le-min : (z ≤ x) → (z ≤ y) → (z ≤ (min x y))
-  le-min = {!!}
-
-  +-mono-≤-max : (x ≤ y) → ((x + z) ≤ (max (y + z) (z + y)))
-  +-mono-≤-max = {!!}
-
-  ·-mono-≤-max-nonneg : (0r ≤ z) → (x ≤ y) → ((x · z) ≤ (max (y · z) (z · y)))
-  ·-mono-≤-max-nonneg = {!!}
+  glb≤ : z ≤ x → z ≤ y → z ≤ min x y
+  glb≤ = {!!}
 
   ------------------------------------------------------------------------
-  -- 8. Distributivity and order (derived)
+  -- 7. Strict strengthening/weakening utilities
   ------------------------------------------------------------------------
 
-  distrib-≤-left : (0r ≤ x) → ((x · (y + z)) ≤ ((x · y) + (x · z)))
-  distrib-≤-left = {!!}
-
-  distrib-≤-right : (0r ≤ x) → (((y + z) · x) ≤ ((y · x) + (z · x)))
-  distrib-≤-right = {!!}
-
-  ·-sub-distrˡ-≤-nonneg : (0r ≤ x) → ((x · (y - z)) ≤ ((x · y) - (x · z)))
-  ·-sub-distrˡ-≤-nonneg = {!!}
-
-  ·-sub-distrʳ-≤-nonneg : (0r ≤ x) → (((y - z) · x) ≤ ((y · x) - (z · x)))
-  ·-sub-distrʳ-≤-nonneg = {!!}
-
-  ------------------------------------------------------------------------
-  -- 9. Strict strengthening/weakening utilities
-  ------------------------------------------------------------------------
-
-  <→≤-succedent : (x < y) → (x ≤ y)
-  <→≤-succedent = {!!}
-
---  ≤∧＃→<        : (x ≤ y) → (x ＃ y) → (x < y)
+--  ≤∧＃→< : (x ≤ y) → (x ＃ y) → (x < y)
 --  ≤∧＃→< = {!!}
 
-  <→≤-+ε       : (0r < ε) → (x < y) → ((x + ε) ≤ y)
-  <→≤-+ε = {!!}
+  <→+δ≤ : x < y → Σ[ δ ∈ _ ] ((0r < δ) × (x + δ ≤ y))
+  <→+δ≤ = {!!}
 
   ------------------------------------------------------------------------
-  -- 10. Monotone/antitone maps (templates)
+  -- 8. Monotone/antitone maps (templates)
   ------------------------------------------------------------------------
 
-  Monotoneᵣ : (f : ⟨ R ⟩ → ⟨ R ⟩) → Type (ℓ-max ℓ ℓ')
-  Monotoneᵣ f = ∀ {x y} → (x ≤ y) → ((f x) ≤ (f y))
+  isMonotone≤ : (f : ⟨ R ⟩ → ⟨ R ⟩) → Type (ℓ-max ℓ ℓ')
+  isMonotone≤ f = ∀ {x y} → x ≤ y → f x ≤ f y
 
-  Antitoneᵣ : (f : ⟨ R ⟩ → ⟨ R ⟩) → Type (ℓ-max ℓ ℓ')
-  Antitoneᵣ f = ∀ {x y} → (x ≤ y) → ((f y) ≤ (f x))
+  isAntitone≤ : (f : ⟨ R ⟩ → ⟨ R ⟩) → Type (ℓ-max ℓ ℓ')
+  isAntitone≤ f = ∀ {x y} → x ≤ y → f y ≤ f x
 
-  +-mono-functionˡ : (z : ⟨ R ⟩) → Monotoneᵣ (λ x → (z + x))
-  +-mono-functionˡ = {!!}
+  +isMonotone≤L : ∀ {z} → isMonotone≤ (z +_)
+  +isMonotone≤L = {!!}
 
-  +-mono-functionʳ : (z : ⟨ R ⟩) → Monotoneᵣ (λ x → (x + z))
-  +-mono-functionʳ = {!!}
+  +isMonotone≤R : ∀ {z} → isMonotone≤ (_+ z)
+  +isMonotone≤R = +MonoR≤ _ _ _
 
-  ·-mono-functionˡ-nonneg : {z : ⟨ R ⟩} → (0r ≤ z) → Monotoneᵣ (λ x → (z · x))
-  ·-mono-functionˡ-nonneg = {!!}
+  ·isMonotone≤L : ∀ {z} → 0r ≤ z → isMonotone≤ (z ·_)
+  ·isMonotone≤L = {!!}
 
-  ·-mono-functionʳ-nonneg : {z : ⟨ R ⟩} → (0r ≤ z) → Monotoneᵣ (λ x → (x · z))
-  ·-mono-functionʳ-nonneg = {!!}
+  ·isMonotone≤R : ∀ {z} → 0r ≤ z → isMonotone≤ (_· z)
+  ·isMonotone≤R 0≤z = ·MonoR≤ _ _ _ 0≤z
 
-  neg-antitone : Antitoneᵣ (λ x → (- x))
-  neg-antitone = {!!}
-
-  ------------------------------------------------------------------------
-  -- 11. Comparisons to zero/one (grab-bag)
-  ------------------------------------------------------------------------
-
-  ≤-0-iff-neg≥0 : ((x ≤ 0r) ≃ (0r ≤ (- x)))
-  ≤-0-iff-neg≥0 = {!!}
-
-  0-≤-iff-neg≤0 : ((0r ≤ x) ≃ (((- x) ≤ 0r)))
-  0-≤-iff-neg≤0 = {!!}
-
-  1≤-mul-cancelˡ-pos : (0r < y) → (1r ≤ x) → (y ≤ (y · x))
-  1≤-mul-cancelˡ-pos = {!!}
-
-  1≤-mul-cancelʳ-pos : (0r < x) → (1r ≤ y) → (x ≤ (x · y))
-  1≤-mul-cancelʳ-pos = {!!}
-
-  mul≤-one-when-≤1 : (0r ≤ x) → (x ≤ 1r) → (0r ≤ y) → (y ≤ 1r) → ((x · y) ≤ 1r)
-  mul≤-one-when-≤1 = {!!}
-
-  one≤-mul-when-≥1 : (1r ≤ x) → (1r ≤ y) → (1r ≤ (x · y))
-  one≤-mul-when-≥1 = {!!}
+  negIsAntitone : isAntitone≤ (-_)
+  negIsAntitone = {!!}
 
   ------------------------------------------------------------------------
-  -- 12. Convenient equivalences (shift/cancel)
+  -- 9. Comparisons to zero/one
   ------------------------------------------------------------------------
 
-  ≤-shiftˡ-+ : (((x + z) ≤ (y + z)) ≃ (x ≤ y))
-  ≤-shiftˡ-+ = {!!}
+  0≤x,y≤1→x·y≤1 : 0r ≤ x → x ≤ 1r → 0r ≤ y → y ≤ 1r → x · y ≤ 1r
+  0≤x,y≤1→x·y≤1 = {!!}
 
-  ≤-shiftʳ-+ : (((z + x) ≤ (z + y)) ≃ (x ≤ y))
-  ≤-shiftʳ-+ = {!!}
+  1≤x,y→1≤x·y : 1r ≤ x → 1r ≤ y → 1r ≤ x · y
+  1≤x,y→1≤x·y = {!!}
 
-  <-shiftˡ-+ : (((x + z) <  (y + z)) ≃ (x <  y))
-  <-shiftˡ-+ = {!!}
+  ------------------------------------------------------------------------
+  -- 10. Convenient equivalences (shift/cancel)
+  ------------------------------------------------------------------------
 
-  <-shiftʳ-+ : (((z + x) <  (z + y)) ≃ (x <  y))
-  <-shiftʳ-+ = {!!}
+  +MonoR≤≃ : (x ≤ y) ≃ (x + z ≤ y + z)
+  +MonoR≤≃ = propBiimpl→Equiv
+    (is-prop-valued≤ _ _)
+    (is-prop-valued≤ _ _)
+    (+MonoR≤ _ _ _)
+    +-cancelʳ-≤
 
-  ≤-shiftˡ-·-pos : (0r < z) → (((x · z) ≤ (y · z)) ≃ (x ≤ y))
-  ≤-shiftˡ-·-pos = {!!}
+  +MonoL≤≃ : (x ≤ y) ≃ (z + x ≤ z + y)
+  +MonoL≤≃ = {!!}
 
-  ≤-shiftʳ-·-pos : (0r < z) → (((z · x) ≤ (z · y)) ≃ (x ≤ y))
-  ≤-shiftʳ-·-pos = {!!}
+  +MonoR<≃ : (x < y) ≃ (x + z < y + z)
+  +MonoR<≃ = {!!}
 
-  <-shiftˡ-·-pos : (0r < z) → (((x · z) <  (y · z)) ≃ (x <  y))
-  <-shiftˡ-·-pos = {!!}
+  +MonoL<≃ : (x < y) ≃ (z + x < z + y)
+  +MonoL<≃ = {!!}
 
-  <-shiftʳ-·-pos : (0r < z) → (((z · x) <  (z · y)) ≃ (x <  y))
-  <-shiftʳ-·-pos = {!!}
+  ·MonoR≤≃ : 0r < z → (x ≤ y) ≃ (x · z ≤ y · z)
+  ·MonoR≤≃ = {!!}
 
-  ≤-0-iff-≤-neg : ((x ≤ 0r) ≃ ((x + x) ≤ (0r + x)))
-  ≤-0-iff-≤-neg = {!!}
+  ·MonoL≤≃ : 0r < z → (x ≤ y) ≃ (z · x ≤ z · y)
+  ·MonoL≤≃ = {!!}
+
+  ·MonoR<≃ : 0r < z → (x < y) ≃ (x · z < y · z)
+  ·MonoR<≃ = {!!}
+
+  ·MonoL<≃ : 0r < z → (x < y) ≃ (z · x < z · y)
+  ·MonoL<≃ = {!!}
