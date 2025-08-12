@@ -165,7 +165,11 @@ module OrderedCommRingTheory
 
   -- 4.4 Cancellation with positive factors
   -- Needs the assumption "nontrivial zero divisors" or similar ones
-  module _ (is-domain : ∀ x y z → (0r < z) → x · z ≡ y · z → x ≡ y) where
+  module _ (is-domain-pos : ∀ x y z → (0r < z) → x · z ≡ y · z → x ≡ y) where
+
+    is-domain-neg : (z < 0r) → x · z ≡ y · z → x ≡ y
+    is-domain-neg = {!   !}
+
     ·CancelR≤ : (0r < z) → x · z ≤ y · z → x ≤ y
     ·CancelR≤ = {!!}
 
@@ -184,6 +188,17 @@ module OrderedCommRingTheory
     -x≤x→0≤x : - x ≤ x → 0r ≤ x
     -x≤x→0≤x = {!!}
 
+    ·MonoR≤≃ : 0r < z → (x ≤ y) ≃ (x · z ≤ y · z)
+    ·MonoR≤≃ = {!!}
+
+    ·MonoL≤≃ : 0r < z → (x ≤ y) ≃ (z · x ≤ z · y)
+    ·MonoL≤≃ = {!!}
+
+    ·MonoR<≃ : 0r < z → (x < y) ≃ (x · z < y · z)
+    ·MonoR<≃ = {!!}
+
+    ·MonoL<≃ : 0r < z → (x < y) ≃ (z · x < z · y)
+    ·MonoL<≃ = {!!}
 
   -- 4.5 Bounds and unit-ish facts (no inverses assumed)
 
@@ -298,15 +313,3 @@ module OrderedCommRingTheory
 
   +MonoL<≃ : (x < y) ≃ (z + x < z + y)
   +MonoL<≃ = {!!}
-
-  ·MonoR≤≃ : 0r < z → (x ≤ y) ≃ (x · z ≤ y · z)
-  ·MonoR≤≃ = {!!}
-
-  ·MonoL≤≃ : 0r < z → (x ≤ y) ≃ (z · x ≤ z · y)
-  ·MonoL≤≃ = {!!}
-
-  ·MonoR<≃ : 0r < z → (x < y) ≃ (x · z < y · z)
-  ·MonoR<≃ = {!!}
-
-  ·MonoL<≃ : 0r < z → (x < y) ≃ (z · x < z · y)
-  ·MonoL<≃ = {!!}
