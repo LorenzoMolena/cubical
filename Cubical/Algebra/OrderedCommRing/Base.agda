@@ -32,6 +32,8 @@ record IsOrderedCommRing
   (-_ : R → R)
   (_<_ _≤_ : R → R → Type ℓ') : Type (ℓ-max ℓ ℓ') where
   constructor isorderedcommring
+
+  -- not minimal defn. to allow for properties to be implemented directly
   field
     isCommRing      : IsCommRing 0r 1r _+_ _·_ -_
     isPseudolattice : IsPseudolattice _≤_
