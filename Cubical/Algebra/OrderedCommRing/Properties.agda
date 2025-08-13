@@ -1,15 +1,23 @@
 module Cubical.Algebra.OrderedCommRing.Properties where
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.SIP
 open import Cubical.Foundations.Equiv
+open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Sum
 open import Cubical.Data.Sigma
 
 open import Cubical.Relation.Nullary.Base
+open import Cubical.Relation.Binary.Base
 open import Cubical.Relation.Binary.Order.Poset
 open import Cubical.Relation.Binary.Order.Quoset
 open import Cubical.Relation.Binary.Order.QuosetReasoning
 open import Cubical.Relation.Binary.Order.StrictOrder
+open import Cubical.Relation.Binary.Order.Toset
+open import Cubical.Relation.Binary.Order.Loset
+
+open import Cubical.HITs.PropositionalTruncation as ∥₁
 
 open import Cubical.Algebra.OrderedCommRing.Base
 
@@ -21,6 +29,7 @@ module OrderedCommRingTheory
   (R : OrderedCommRing ℓ ℓ')
   where
 
+  open BinaryRelation
   open OrderedCommRingStr (str R) renaming (_⊓_ to min ; _⊔_ to max)
 
   open <-≤-Reasoning
@@ -36,22 +45,26 @@ module OrderedCommRingTheory
     variable
       x y z x' y' ε : ⟨ R ⟩
 
+  
+  data Trichotomy (x y : ⟨ R ⟩) : Type (ℓ-max ℓ ℓ') where
+    lt : x < y → Trichotomy x y
+    eq : x ≡ y → Trichotomy x y
+    gt : y < x → Trichotomy x y
+
+  IsTrichotomous : Type (ℓ-max ℓ ℓ')
+  IsTrichotomous = ∀ x y → Trichotomy x y
+
   ------------------------------------------------------------------------
   -- 1. Order core (partial / strict order)
   ------------------------------------------------------------------------
 
-  {-
-
-  // need further assumptions on R
-
-  cmp-≤ : (x ≤ y) ⊎ (y ≤ x)
-  cmp-≤ = {!!}
+  module Trichotomous (_≟_ : IsTrichotomous) where
+    cmp-≤ : (x ≤ y) ⊎ (y ≤ x)
+    cmp-≤ = {!!}
 
 
-  ≤-total : (x ≤ y) ⊎ (y ≤ x)
-  ≤-total = cmp-≤
-
-  -}
+    ≤-total : (x ≤ y) ⊎ (y ≤ x)
+    ≤-total = cmp-≤
 
   ------------------------------------------------------------------------
   -- 2. Order ↔ equality bridges
@@ -123,18 +136,6 @@ module OrderedCommRingTheory
   0<· : 0r < x → 0r < y → 0r < x · y
   0<· = {!!}
 
-  {-
-
-  // might need further assumptions on R
-
-  square-nonneg : (0r ≤ (x · x))
-  square-nonneg = {!!}
-
-  -}
-
---  square-pos    : (x ＃ 0r) → (0r < (x · x))
---  square-pos = {!!}
-
   -- 4.2 Monotonicity (restricted)
 
   ·MonoL≤ : 0r ≤ z → x ≤ y → z · x ≤ z · y
@@ -164,9 +165,7 @@ module OrderedCommRingTheory
   nonpos·nonpos→nonneg = {!!}
 
   -- 4.4 Cancellation with positive factors
-  -- Needs the assumption "nontrivial zero divisors" or similar ones
-  module _ (is-domain-pos : ∀ x y z → (0r < z) → x · z ≡ y · z → x ≡ y) where
-
+  module IntegralDomain (is-domain-pos : ∀ x y z → (0r < z) → x · z ≡ y · z → x ≡ y) where
     is-domain-neg : (z < 0r) → x · z ≡ y · z → x ≡ y
     is-domain-neg = {!   !}
 
@@ -253,9 +252,6 @@ module OrderedCommRingTheory
   -- 7. Strict strengthening/weakening utilities
   ------------------------------------------------------------------------
 
---  ≤∧＃→< : (x ≤ y) → (x ＃ y) → (x < y)
---  ≤∧＃→< = {!!}
-
   <→+δ≤ : x < y → Σ[ δ ∈ _ ] ((0r < δ) × (x + δ ≤ y))
   <→+δ≤ = {!!}
 
@@ -313,3 +309,42 @@ module OrderedCommRingTheory
 
   +MonoL<≃ : (x < y) ≃ (z + x < z + y)
   +MonoL<≃ = {!!}
+
+  Connected< : isConnected _<_
+  Connected< _ _ (a≮b , b≮a) =
+    is-antisym _ _
+      (invEq (≤≃¬> _ _) b≮a)
+      (invEq (≤≃¬> _ _) a≮b)
+
+  module Decidable< (isDecidable< : isDecidable _<_) where
+    TrichotomyisProp : ∀ {x y} → isProp (Trichotomy x y)
+    TrichotomyisProp (lt p) (lt q) = cong lt (is-prop-valued< _ _ _ _)
+    TrichotomyisProp {y = y} (lt p) (eq q) = ⊥.rec (is-irrefl y (subst (_< y) q p))
+    TrichotomyisProp {y = y} (lt p) (gt q) = ⊥.rec (is-irrefl y (is-trans< _ _ _ q p))
+    TrichotomyisProp {y = y} (eq p) (lt q) = ⊥.rec (is-irrefl y (subst (_< y) p q))
+    TrichotomyisProp (eq p) (eq q) = cong eq (is-set _ _ _ _)
+    TrichotomyisProp {x} (eq p) (gt q) = ⊥.rec (is-irrefl x (subst (_< x) (sym p) q))
+    TrichotomyisProp {x} (gt p) (lt q) = ⊥.rec (is-irrefl x (is-trans< _ _ _ q p))
+    TrichotomyisProp {x} (gt p) (eq q) = ⊥.rec (is-irrefl x (subst (_< x) (sym q) p))
+    TrichotomyisProp (gt p) (gt q) = cong gt (is-prop-valued< _ _ _ _)
+
+    _≟_ : IsTrichotomous
+    _≟_ = IsTosetReflClosure<→IsTrichotomous
+      (isLoset→isTosetReflClosure isLoset isDecidable<)
+      where
+        isLoset : IsLoset _<_
+        isLoset = isloset
+          is-set is-prop-valued< is-irrefl is-trans< is-asym is-weakly-linear Connected<
+
+        IsTosetReflClosure<→IsTrichotomous : IsToset (ReflClosure _<_) → IsTrichotomous
+        IsTosetReflClosure<→IsTrichotomous torecl x y = ∥₁.rec
+          TrichotomyisProp
+          (λ { (inl (inl p)) → lt p
+             ; (inl (inr p)) → eq p
+             ; (inr (inl p)) → gt p
+             ; (inr (inr p)) → eq (sym p) })
+          (is-total x y)
+          where
+            open IsToset torecl using (is-total)
+
+  module Discrete (isDiscrete : Discrete ⟨ R ⟩) where
