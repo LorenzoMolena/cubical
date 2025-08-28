@@ -2,7 +2,7 @@ module Cubical.Data.Int.Fast.Base where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Data.Nat as ℕ hiding (_+_ ; _·_)
-open import Cubical.Data.Int.Base hiding (_ℕ-_ ; _+_ ; _-_ ; _·_ ; sumFinℤ ; sumFinℤId)
+open import Cubical.Data.Int.Base hiding (_ℕ-_ ; _+_ ; _-_ ; _·_ ; sumFinℤ ; sumFinℤId) public
 open import Cubical.Data.Fin.Inductive.Base
 
 infixl 7 _·_
