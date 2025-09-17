@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --v=tc.conv:20 #-}
+{-# OPTIONS --safe #-}
 module Cubical.Data.Int.Properties where
 
 

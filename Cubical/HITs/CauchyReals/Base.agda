@@ -309,4 +309,3 @@ record Casesℝ {ℓ} {ℓ'} (A : Type ℓ)
          B (go x) (go x') ε
  go = Elimℝ.go d
  go~ = Elimℝ.go∼ d
-
