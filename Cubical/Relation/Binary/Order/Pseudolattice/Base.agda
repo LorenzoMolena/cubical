@@ -1,10 +1,14 @@
 module Cubical.Relation.Binary.Order.Pseudolattice.Base where
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Function
 open import Cubical.Foundations.SIP
+open import Cubical.Foundations.HLevels
+
+open import Cubical.Reflection.RecordEquiv
 
 open import Cubical.Relation.Binary.Base
-open import Cubical.Relation.Binary.Order.Poset renaming (isPseudolattice to pseudolattice)
+open import Cubical.Relation.Binary.Order.Poset as P renaming (isPseudolattice to pseudolattice)
 open import Cubical.Relation.Binary.Order.StrictOrder
 
 open BinaryRelation
@@ -30,6 +34,8 @@ record IsPseudolattice {L : Type ℓ} (_≤_ : L → L → Type ℓ') : Type (�
 
   infixl 7 _∧l_
   infixl 6 _∨l_
+
+unquoteDecl IsPseudoLatticeIsoΣ = declareRecordIsoΣ IsPseudoLatticeIsoΣ (quote IsPseudolattice)
 
 record PseudolatticeStr (ℓ' : Level) (L : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
   constructor pseudolatticestr
@@ -57,3 +63,8 @@ makeIsPseudolattice {_≤_ = _≤_} is-setL is-prop-valued is-refl is-trans is-a
     PS : IsPseudolattice _≤_
     PS .IsPseudolattice.isPoset = isposet is-setL is-prop-valued is-refl is-trans is-antisym
     PS .IsPseudolattice.isPseudolattice = is-meet-semipseudolattice , is-join-semipseudolattice
+
+isPropIsPseudoLattice : {L : Type ℓ} (_≤_ : L → L → Type ℓ') → isProp (IsPseudolattice _≤_)
+isPropIsPseudoLattice _≤_ = isOfHLevelRetractFromIso 1 IsPseudoLatticeIsoΣ $
+  isPropΣ (isPropIsPoset _≤_) λ isPoset →
+    P.isPropIsPseudolattice (_ , (posetstr _ isPoset))
