@@ -1,0 +1,28 @@
+<!DOCTYPE HTML>
+<html><head><meta charset="utf-8"><title>Cubical.HITs.DunceCap.Base</title><link rel="stylesheet" href="Agda.css"></head><body><pre class="Agda">
+<a id="2" class="Keyword">module</a> <a id="9" href="Cubical.HITs.DunceCap.Base.html" class="Module">Cubical.HITs.DunceCap.Base</a> <a id="36" class="Keyword">where</a>
+
+<a id="43" class="Keyword">open</a> <a id="48" class="Keyword">import</a> <a id="55" href="Cubical.Foundations.Prelude.html" class="Module">Cubical.Foundations.Prelude</a>
+<a id="83" class="Keyword">open</a> <a id="88" class="Keyword">import</a> <a id="95" href="Cubical.Foundations.GroupoidLaws.html" class="Module">Cubical.Foundations.GroupoidLaws</a>
+
+<a id="129" class="Keyword">open</a> <a id="134" class="Keyword">import</a> <a id="141" href="Cubical.HITs.S1.html" class="Module">Cubical.HITs.S1</a> <a id="157" class="Keyword">using</a> <a id="163" class="Symbol">(</a><a id="164" href="Cubical.HITs.S1.Base.html#594" class="Datatype">S¹</a><a id="166" class="Symbol">;</a> <a id="168" href="Cubical.HITs.S1.Base.html#613" class="InductiveConstructor">base</a><a id="172" class="Symbol">)</a>
+<a id="174" class="Keyword">import</a> <a id="181" href="Cubical.HITs.S1.html" class="Module">Cubical.HITs.S1</a> <a id="197" class="Symbol">as</a> <a id="200" class="Module">S¹</a>
+
+<a id="204" class="Keyword">open</a> <a id="209" class="Keyword">import</a> <a id="216" href="Cubical.HITs.MappingCones.html" class="Module">Cubical.HITs.MappingCones</a>
+
+<a id="243" class="Comment">-- definition of the dunce cap as a HIT</a>
+
+<a id="284" class="Keyword">data</a> <a id="Dunce"></a><a id="289" href="Cubical.HITs.DunceCap.Base.html#289" class="Datatype">Dunce</a> <a id="295" class="Symbol">:</a> <a id="297" href="Agda.Primitive.html#388" class="Primitive">Type₀</a> <a id="303" class="Keyword">where</a>
+  <a id="Dunce.base"></a><a id="311" href="Cubical.HITs.DunceCap.Base.html#311" class="InductiveConstructor">base</a> <a id="316" class="Symbol">:</a> <a id="318" href="Cubical.HITs.DunceCap.Base.html#289" class="Datatype">Dunce</a>
+  <a id="Dunce.loop"></a><a id="326" href="Cubical.HITs.DunceCap.Base.html#326" class="InductiveConstructor">loop</a> <a id="331" class="Symbol">:</a> <a id="333" href="Cubical.HITs.DunceCap.Base.html#311" class="InductiveConstructor">base</a> <a id="338" href="Agda.Builtin.Cubical.Path.html#272" class="Function Operator">≡</a> <a id="340" href="Cubical.HITs.DunceCap.Base.html#311" class="InductiveConstructor">base</a>
+  <a id="Dunce.surf"></a><a id="347" href="Cubical.HITs.DunceCap.Base.html#347" class="InductiveConstructor">surf</a> <a id="352" class="Symbol">:</a> <a id="354" href="Agda.Primitive.Cubical.html#2013" class="Postulate">PathP</a> <a id="360" class="Symbol">(λ</a> <a id="363" href="Cubical.HITs.DunceCap.Base.html#363" class="Bound">i</a> <a id="365" class="Symbol">→</a> <a id="367" href="Cubical.HITs.DunceCap.Base.html#326" class="InductiveConstructor">loop</a> <a id="372" href="Cubical.HITs.DunceCap.Base.html#363" class="Bound">i</a> <a id="374" href="Agda.Builtin.Cubical.Path.html#272" class="Function Operator">≡</a> <a id="376" href="Cubical.HITs.DunceCap.Base.html#326" class="InductiveConstructor">loop</a> <a id="381" href="Cubical.HITs.DunceCap.Base.html#363" class="Bound">i</a><a id="382" class="Symbol">)</a> <a id="384" href="Cubical.HITs.DunceCap.Base.html#326" class="InductiveConstructor">loop</a> <a id="389" href="Cubical.Foundations.Prelude.html#892" class="Function">refl</a>
+
+<a id="395" class="Comment">-- definition of the dunce cap as a mapping cone</a>
+
+<a id="dunceMap"></a><a id="445" href="Cubical.HITs.DunceCap.Base.html#445" class="Function">dunceMap</a> <a id="454" class="Symbol">:</a> <a id="456" href="Cubical.HITs.S1.Base.html#594" class="Datatype">S¹</a> <a id="459" class="Symbol">→</a> <a id="461" href="Cubical.HITs.S1.Base.html#594" class="Datatype">S¹</a>
+<a id="464" href="Cubical.HITs.DunceCap.Base.html#445" class="Function">dunceMap</a> <a id="473" href="Cubical.HITs.S1.Base.html#613" class="InductiveConstructor">base</a>        <a id="485" class="Symbol">=</a> <a id="487" href="Cubical.HITs.S1.Base.html#613" class="InductiveConstructor">base</a>
+<a id="492" href="Cubical.HITs.DunceCap.Base.html#445" class="Function">dunceMap</a> <a id="501" class="Symbol">(</a><a id="502" href="Cubical.HITs.S1.Base.html#625" class="InductiveConstructor">S¹.loop</a> <a id="510" href="Cubical.HITs.DunceCap.Base.html#510" class="Bound">i</a><a id="511" class="Symbol">)</a> <a id="513" class="Symbol">=</a> <a id="515" class="Symbol">(</a><a id="516" href="Cubical.HITs.S1.Base.html#625" class="InductiveConstructor">S¹.loop</a> <a id="524" href="Cubical.Foundations.GroupoidLaws.html#260" class="Function Operator">⁻¹</a> <a id="527" href="Cubical.Foundations.Prelude.html#3984" class="Function Operator">∙∙</a> <a id="530" href="Cubical.HITs.S1.Base.html#625" class="InductiveConstructor">S¹.loop</a> <a id="538" href="Cubical.Foundations.Prelude.html#3984" class="Function Operator">∙∙</a> <a id="541" href="Cubical.HITs.S1.Base.html#625" class="InductiveConstructor">S¹.loop</a><a id="548" class="Symbol">)</a> <a id="550" href="Cubical.HITs.DunceCap.Base.html#510" class="Bound">i</a>
+
+<a id="DunceCone"></a><a id="553" href="Cubical.HITs.DunceCap.Base.html#553" class="Function">DunceCone</a> <a id="563" class="Symbol">:</a> <a id="565" href="Agda.Primitive.html#388" class="Primitive">Type₀</a>
+<a id="571" href="Cubical.HITs.DunceCap.Base.html#553" class="Function">DunceCone</a> <a id="581" class="Symbol">=</a> <a id="583" href="Cubical.HITs.MappingCones.Base.html#189" class="Datatype">Cone</a> <a id="588" href="Cubical.HITs.DunceCap.Base.html#445" class="Function">dunceMap</a>
+</pre></body></html>

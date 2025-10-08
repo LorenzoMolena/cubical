@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html><head><meta charset="utf-8"><title>Cubical.HITs.James.Inductive</title><link rel="stylesheet" href="Agda.css"></head><body><pre class="Agda"><a id="1" class="Comment">{-
+
+The Inductive Version of James Construction
+
+This file contains:
+  - An inductive family 𝕁, and its direct colimit is equivalence to James;
+    (KANG Rongji, Feb. 2022)
+  - The family 𝕁 can be iteratively constructed as pushouts;
+  - Special cases of 𝕁 n for n = 0, 1 and 2;
+  - Connectivity of inclusion maps.
+
+This file is the summary of the main results.
+The proof is divided into parts and put inside the fold Cubical.HITs.James.Inductive
+
+-}</a>
+<a id="452" class="Keyword">module</a> <a id="459" href="Cubical.HITs.James.Inductive.html" class="Module">Cubical.HITs.James.Inductive</a> <a id="488" class="Keyword">where</a>
+
+<a id="495" class="Keyword">open</a> <a id="500" class="Keyword">import</a> <a id="507" href="Cubical.Foundations.Prelude.html" class="Module">Cubical.Foundations.Prelude</a>
+<a id="535" class="Keyword">open</a> <a id="540" class="Keyword">import</a> <a id="547" href="Cubical.Foundations.Equiv.html" class="Module">Cubical.Foundations.Equiv</a>
+<a id="573" class="Keyword">open</a> <a id="578" class="Keyword">import</a> <a id="585" href="Cubical.Foundations.Pointed.html" class="Module">Cubical.Foundations.Pointed</a>
+
+<a id="614" class="Keyword">open</a> <a id="619" class="Keyword">import</a> <a id="626" href="Cubical.Data.Nat.html" class="Module">Cubical.Data.Nat</a>
+<a id="643" class="Keyword">open</a> <a id="648" class="Keyword">import</a> <a id="655" href="Cubical.Data.Unit.html" class="Module">Cubical.Data.Unit</a>
+<a id="673" class="Keyword">open</a> <a id="678" class="Keyword">import</a> <a id="685" href="Cubical.Data.Sigma.html" class="Module">Cubical.Data.Sigma</a>
+<a id="704" class="Keyword">open</a> <a id="709" class="Keyword">import</a> <a id="716" href="Cubical.Data.Sequence.html" class="Module">Cubical.Data.Sequence</a>
+
+<a id="739" class="Keyword">open</a> <a id="744" class="Keyword">import</a> <a id="751" href="Cubical.HITs.Wedge.html" class="Module">Cubical.HITs.Wedge</a>
+<a id="770" class="Keyword">open</a> <a id="775" class="Keyword">import</a> <a id="782" href="Cubical.HITs.Pushout.html" class="Module">Cubical.HITs.Pushout</a>
+<a id="803" class="Keyword">open</a> <a id="808" class="Keyword">import</a> <a id="815" href="Cubical.HITs.Pushout.PushoutProduct.html" class="Module">Cubical.HITs.Pushout.PushoutProduct</a>
+<a id="851" class="Keyword">open</a> <a id="856" class="Keyword">import</a> <a id="863" href="Cubical.HITs.SequentialColimit.html" class="Module">Cubical.HITs.SequentialColimit</a>
+
+<a id="895" class="Keyword">open</a> <a id="900" class="Keyword">import</a> <a id="907" href="Cubical.HITs.James.Base.html" class="Module">Cubical.HITs.James.Base</a>
+<a id="931" class="Keyword">open</a> <a id="936" class="Keyword">import</a> <a id="943" href="Cubical.HITs.James.Inductive.Base.html" class="Module">Cubical.HITs.James.Inductive.Base</a>
+<a id="977" class="Keyword">open</a> <a id="982" class="Keyword">import</a> <a id="989" href="Cubical.HITs.James.Inductive.PushoutFormula.html" class="Module">Cubical.HITs.James.Inductive.PushoutFormula</a>
+  <a id="1035" class="Keyword">renaming</a> <a id="1044" class="Symbol">(</a><a id="1045" href="Cubical.HITs.James.Inductive.PushoutFormula.html#8362" class="Function">isConnectedIncl</a> <a id="1061" class="Symbol">to</a> <a id="1064" class="Function">connIncl</a> <a id="1073" class="Symbol">;</a> <a id="1075" href="Cubical.HITs.James.Inductive.PushoutFormula.html#9065" class="Function">isConnectedInl</a> <a id="1090" class="Symbol">to</a> <a id="1093" class="Function">connInl</a><a id="1100" class="Symbol">)</a>
+<a id="1102" class="Keyword">open</a> <a id="1107" class="Keyword">import</a> <a id="1114" href="Cubical.HITs.James.Inductive.Reduced.html" class="Module">Cubical.HITs.James.Inductive.Reduced</a>
+<a id="1151" class="Keyword">open</a> <a id="1156" class="Keyword">import</a> <a id="1163" href="Cubical.HITs.James.Inductive.ColimitEquivalence.html" class="Module">Cubical.HITs.James.Inductive.ColimitEquivalence</a>
+
+<a id="1212" class="Keyword">open</a> <a id="1217" class="Keyword">import</a> <a id="1224" href="Cubical.Homotopy.Connected.html" class="Module">Cubical.Homotopy.Connected</a>
+
+<a id="1252" class="Keyword">private</a>
+  <a id="1262" class="Keyword">variable</a>
+    <a id="1275" href="Cubical.HITs.James.Inductive.html#1275" class="Generalizable">ℓ</a> <a id="1277" class="Symbol">:</a> <a id="1279" href="Agda.Primitive.html#742" class="Postulate">Level</a>
+
+<a id="1286" class="Keyword">module</a> <a id="JamesInd"></a><a id="1293" href="Cubical.HITs.James.Inductive.html#1293" class="Module">JamesInd</a>
+  <a id="1304" class="Symbol">(</a><a id="1305" href="Cubical.HITs.James.Inductive.html#1305" class="Bound">X∙</a><a id="1307" class="Symbol">@(</a><a id="1309" href="Cubical.HITs.James.Inductive.html#1309" class="Bound">X</a> <a id="1311" href="Agda.Builtin.Sigma.html#235" class="InductiveConstructor Operator">,</a> <a id="1313" href="Cubical.HITs.James.Inductive.html#1313" class="Bound">x₀</a><a id="1315" class="Symbol">)</a> <a id="1317" class="Symbol">:</a> <a id="1319" href="Cubical.Foundations.Pointed.Base.html#441" class="Function">Pointed</a> <a id="1327" href="Cubical.HITs.James.Inductive.html#1275" class="Generalizable">ℓ</a><a id="1328" class="Symbol">)</a> <a id="1330" class="Keyword">where</a>
+
+  <a id="1339" class="Comment">-- The family 𝕁 n is equivalence to Brunerie&#39;s J n, as will be shown latter.</a>
+  <a id="1418" class="Comment">-- Instead of his inductive procedure, 𝕁 is defined directly as an indexed HIT.</a>
+
+  <a id="JamesInd.𝕁"></a><a id="1501" href="Cubical.HITs.James.Inductive.html#1501" class="Function">𝕁</a> <a id="1503" class="Symbol">:</a> <a id="1505" href="Agda.Builtin.Nat.html#203" class="Datatype">ℕ</a> <a id="1507" class="Symbol">→</a> <a id="1509" href="Agda.Primitive.html#388" class="Primitive">Type</a> <a id="1514" href="Cubical.HITs.James.Inductive.html#1327" class="Bound">ℓ</a>
+  <a id="1518" href="Cubical.HITs.James.Inductive.html#1501" class="Function">𝕁</a> <a id="1520" class="Symbol">=</a> <a id="1522" href="Cubical.HITs.James.Inductive.Base.html#531" class="Datatype">𝕁ames</a> <a id="1528" class="Symbol">(</a><a id="1529" href="Cubical.HITs.James.Inductive.html#1309" class="Bound">X</a> <a id="1531" href="Agda.Builtin.Sigma.html#235" class="InductiveConstructor Operator">,</a> <a id="1533" href="Cubical.HITs.James.Inductive.html#1313" class="Bound">x₀</a><a id="1535" class="Symbol">)</a>
+
+  <a id="1540" class="Comment">-- This family forms a direct system.</a>
+
+  <a id="JamesInd.𝕁Seq"></a><a id="1581" href="Cubical.HITs.James.Inductive.html#1581" class="Function">𝕁Seq</a> <a id="1586" class="Symbol">:</a> <a id="1588" href="Cubical.Data.Sequence.Base.html#271" class="Record">Sequence</a> <a id="1597" href="Cubical.HITs.James.Inductive.html#1327" class="Bound">ℓ</a>
+  <a id="1601" href="Cubical.HITs.James.Inductive.html#1581" class="Function">𝕁Seq</a> <a id="1606" class="Symbol">=</a> <a id="1608" href="Cubical.HITs.James.Inductive.Base.html#977" class="Function">𝕁amesSeq</a> <a id="1617" class="Symbol">(</a><a id="1618" href="Cubical.HITs.James.Inductive.html#1309" class="Bound">X</a> <a id="1620" href="Agda.Builtin.Sigma.html#235" class="InductiveConstructor Operator">,</a> <a id="1622" href="Cubical.HITs.James.Inductive.html#1313" class="Bound">x₀</a><a id="1624" class="Symbol">)</a>
+
+  <a id="1629" class="Comment">-- The inductive construction of James is called 𝕁∞.</a>
+  <a id="1684" class="Comment">-- It is the direct colimit of 𝕁 n.</a>
+
+  <a id="JamesInd.𝕁∞"></a><a id="1723" href="Cubical.HITs.James.Inductive.html#1723" class="Function">𝕁∞</a> <a id="1726" class="Symbol">:</a> <a id="1728" href="Agda.Primitive.html#388" class="Primitive">Type</a> <a id="1733" href="Cubical.HITs.James.Inductive.html#1327" class="Bound">ℓ</a>
+  <a id="1737" href="Cubical.HITs.James.Inductive.html#1723" class="Function">𝕁∞</a> <a id="1740" class="Symbol">=</a> <a id="1742" href="Cubical.HITs.SequentialColimit.Base.html#364" class="Datatype">SeqColim</a> <a id="1751" href="Cubical.HITs.James.Inductive.html#1581" class="Function">𝕁Seq</a>
+
+  <a id="1759" class="Comment">-- And of course it is equivalent to James.</a>
+
+  <a id="JamesInd.J≃𝕁∞"></a><a id="1806" href="Cubical.HITs.James.Inductive.html#1806" class="Function">J≃𝕁∞</a> <a id="1811" class="Symbol">:</a> <a id="1813" href="Cubical.HITs.James.Base.html#707" class="Datatype">James</a> <a id="1819" class="Symbol">(</a><a id="1820" href="Cubical.HITs.James.Inductive.html#1309" class="Bound">X</a> <a id="1822" href="Agda.Builtin.Sigma.html#235" class="InductiveConstructor Operator">,</a> <a id="1824" href="Cubical.HITs.James.Inductive.html#1313" class="Bound">x₀</a><a id="1826" class="Symbol">)</a> <a id="1828" href="Agda.Builtin.Cubical.Equiv.html#1012" class="Function Operator">≃</a> <a id="1830" href="Cubical.HITs.James.Inductive.html#1723" class="Function">𝕁∞</a>
+  <a id="1835" href="Cubical.HITs.James.Inductive.html#1806" class="Function">J≃𝕁∞</a> <a id="1840" class="Symbol">=</a> <a id="1842" href="Cubical.Foundations.Equiv.html#3727" class="Function">compEquiv</a> <a id="1852" class="Symbol">(</a><a id="1853" href="Cubical.HITs.James.Inductive.ColimitEquivalence.html#6669" class="Function">James≃𝕁Red∞</a> <a id="1865" class="Symbol">_)</a> <a id="1868" class="Symbol">(</a><a id="1869" href="Cubical.Foundations.Equiv.html#3553" class="Function">invEquiv</a> <a id="1878" class="Symbol">(</a><a id="1879" href="Cubical.HITs.James.Inductive.Reduced.html#7317" class="Function">𝕁ames∞≃𝕁Red∞</a> <a id="1892" class="Symbol">_))</a>
+
+  <a id="1899" class="Comment">-- Special cases of 𝕁 n for n = 0, 1 and 2:</a>
+
+  <a id="JamesInd.𝕁₀≃Unit"></a><a id="1946" href="Cubical.HITs.James.Inductive.html#1946" class="Function">𝕁₀≃Unit</a> <a id="1954" class="Symbol">:</a> <a id="1956" href="Cubical.HITs.James.Inductive.html#1501" class="Function">𝕁</a> <a id="1958" class="Number">0</a> <a id="1960" href="Agda.Builtin.Cubical.Equiv.html#1012" class="Function Operator">≃</a> <a id="1962" href="Cubical.Data.Unit.Base.html#149" class="Record">Unit</a>
+  <a id="1969" href="Cubical.HITs.James.Inductive.html#1946" class="Function">𝕁₀≃Unit</a> <a id="1977" class="Symbol">=</a> <a id="1979" href="Cubical.HITs.James.Inductive.PushoutFormula.html#4568" class="Function">𝕁ames0≃</a> <a id="1987" class="Symbol">_</a>
+
+  <a id="JamesInd.𝕁₁≃X"></a><a id="1992" href="Cubical.HITs.James.Inductive.html#1992" class="Function">𝕁₁≃X</a> <a id="1997" class="Symbol">:</a> <a id="1999" href="Cubical.HITs.James.Inductive.html#1501" class="Function">𝕁</a> <a id="2001" class="Number">1</a> <a id="2003" href="Agda.Builtin.Cubical.Equiv.html#1012" class="Function Operator">≃</a> <a id="2005" href="Cubical.HITs.James.Inductive.html#1309" class="Bound">X</a>
+  <a id="2009" href="Cubical.HITs.James.Inductive.html#1992" class="Function">𝕁₁≃X</a> <a id="2014" class="Symbol">=</a> <a id="2016" href="Cubical.HITs.James.Inductive.PushoutFormula.html#4693" class="Function">𝕁ames1≃</a> <a id="2024" class="Symbol">_</a>
+
+  <a id="JamesInd.𝕁₂≃P[X×X←X⋁X→X]"></a><a id="2029" href="Cubical.HITs.James.Inductive.html#2029" class="Function">𝕁₂≃P[X×X←X⋁X→X]</a> <a id="2045" class="Symbol">:</a> <a id="2047" href="Cubical.HITs.James.Inductive.html#1501" class="Function">𝕁</a> <a id="2049" class="Number">2</a> <a id="2051" href="Agda.Builtin.Cubical.Equiv.html#1012" class="Function Operator">≃</a> <a id="2053" href="Cubical.HITs.Pushout.Base.html#458" class="Datatype">Pushout</a> <a id="2061" href="Cubical.HITs.Wedge.Base.html#2120" class="Function">⋁↪</a> <a id="2064" href="Cubical.HITs.Wedge.Base.html#2302" class="Function">fold⋁</a>
+  <a id="2072" href="Cubical.HITs.James.Inductive.html#2029" class="Function">𝕁₂≃P[X×X←X⋁X→X]</a> <a id="2088" class="Symbol">=</a> <a id="2090" href="Cubical.HITs.James.Inductive.PushoutFormula.html#5490" class="Function">𝕁ames2≃</a> <a id="2098" class="Symbol">_</a>
+
+  <a id="2103" class="Comment">-- The following is defined as pushouts of 𝕁 n.</a>
+
+  <a id="JamesInd.𝕁Push"></a><a id="2154" href="Cubical.HITs.James.Inductive.html#2154" class="Function">𝕁Push</a> <a id="2160" class="Symbol">:</a> <a id="2162" href="Agda.Builtin.Nat.html#203" class="Datatype">ℕ</a> <a id="2164" class="Symbol">→</a> <a id="2166" href="Agda.Primitive.html#388" class="Primitive">Type</a> <a id="2171" href="Cubical.HITs.James.Inductive.html#1327" class="Bound">ℓ</a>
+  <a id="2175" href="Cubical.HITs.James.Inductive.html#2154" class="Function">𝕁Push</a> <a id="2181" class="Symbol">=</a> <a id="2183" href="Cubical.HITs.James.Inductive.PushoutFormula.html#1189" class="Function">𝕁amesPush</a> <a id="2193" class="Symbol">(</a><a id="2194" href="Cubical.HITs.James.Inductive.html#1309" class="Bound">X</a> <a id="2196" href="Agda.Builtin.Sigma.html#235" class="InductiveConstructor Operator">,</a> <a id="2198" href="Cubical.HITs.James.Inductive.html#1313" class="Bound">x₀</a><a id="2200" class="Symbol">)</a>
+
+  <a id="2205" class="Comment">-- Brunerie uses f and g to denote the following maps, so do I.</a>
+
+  <a id="2272" class="Keyword">module</a> <a id="2279" href="Cubical.HITs.James.Inductive.html#2279" class="Module">_</a>
+    <a id="2285" class="Symbol">{</a><a id="2286" href="Cubical.HITs.James.Inductive.html#2286" class="Bound">n</a> <a id="2288" class="Symbol">:</a> <a id="2290" href="Agda.Builtin.Nat.html#203" class="Datatype">ℕ</a><a id="2291" class="Symbol">}</a> <a id="2293" class="Keyword">where</a>
+
+    <a id="2304" href="Cubical.HITs.James.Inductive.html#2304" class="Function">f</a> <a id="2306" class="Symbol">:</a> <a id="2308" href="Cubical.HITs.James.Inductive.html#2154" class="Function">𝕁Push</a> <a id="2314" href="Cubical.HITs.James.Inductive.html#2286" class="Bound">n</a> <a id="2316" class="Symbol">→</a> <a id="2318" href="Cubical.HITs.James.Inductive.html#1309" class="Bound">X</a> <a id="2320" href="Cubical.Data.Sigma.Base.html#438" class="Function Operator">×</a> <a id="2322" href="Cubical.HITs.James.Inductive.html#1501" class="Function">𝕁</a> <a id="2324" class="Symbol">(</a><a id="2325" class="Number">1</a> <a id="2327" href="Agda.Builtin.Nat.html#336" class="Primitive Operator">+</a> <a id="2329" href="Cubical.HITs.James.Inductive.html#2286" class="Bound">n</a><a id="2330" class="Symbol">)</a>
+    <a id="2336" href="Cubical.HITs.James.Inductive.html#2304" class="Function">f</a> <a id="2338" class="Symbol">=</a> <a id="2340" href="Cubical.HITs.James.Inductive.PushoutFormula.html#1743" class="Function">leftMap</a> <a id="2348" class="Symbol">_</a>
+
+    <a id="2355" href="Cubical.HITs.James.Inductive.html#2355" class="Function">g</a> <a id="2357" class="Symbol">:</a> <a id="2359" href="Cubical.HITs.James.Inductive.html#2154" class="Function">𝕁Push</a> <a id="2365" href="Cubical.HITs.James.Inductive.html#2286" class="Bound">n</a> <a id="2367" class="Symbol">→</a> <a id="2369" href="Cubical.HITs.James.Inductive.html#1501" class="Function">𝕁</a> <a id="2371" class="Symbol">(</a><a id="2372" class="Number">1</a> <a id="2374" href="Agda.Builtin.Nat.html#336" class="Primitive Operator">+</a> <a id="2376" href="Cubical.HITs.James.Inductive.html#2286" class="Bound">n</a><a id="2377" class="Symbol">)</a>
+    <a id="2383" href="Cubical.HITs.James.Inductive.html#2355" class="Function">g</a> <a id="2385" class="Symbol">=</a> <a id="2387" href="Cubical.HITs.James.Inductive.PushoutFormula.html#1907" class="Function">rightMap</a> <a id="2396" class="Symbol">_</a>
+
+  <a id="2401" class="Comment">-- Here we show that 𝕁 (n+2) can be made as double pushouts invoving only X, 𝕁 n and 𝕁 (n+1).</a>
+  <a id="2497" class="Comment">-- In particular, our 𝕁 is exactly what Brunerie had defined.</a>
+
+  <a id="JamesInd.𝕁ₙ₊₂≃Pushout"></a><a id="2562" href="Cubical.HITs.James.Inductive.html#2562" class="Function">𝕁ₙ₊₂≃Pushout</a> <a id="2575" class="Symbol">:</a> <a id="2577" class="Symbol">(</a><a id="2578" href="Cubical.HITs.James.Inductive.html#2578" class="Bound">n</a> <a id="2580" class="Symbol">:</a> <a id="2582" href="Agda.Builtin.Nat.html#203" class="Datatype">ℕ</a><a id="2583" class="Symbol">)</a> <a id="2585" class="Symbol">→</a> <a id="2587" href="Cubical.HITs.James.Inductive.html#1501" class="Function">𝕁</a> <a id="2589" class="Symbol">(</a><a id="2590" class="Number">2</a> <a id="2592" href="Agda.Builtin.Nat.html#336" class="Primitive Operator">+</a> <a id="2594" href="Cubical.HITs.James.Inductive.html#2578" class="Bound">n</a><a id="2595" class="Symbol">)</a> <a id="2597" href="Agda.Builtin.Cubical.Equiv.html#1012" class="Function Operator">≃</a> <a id="2599" href="Cubical.HITs.Pushout.Base.html#458" class="Datatype">Pushout</a> <a id="2607" href="Cubical.HITs.James.Inductive.html#2304" class="Function">f</a> <a id="2609" href="Cubical.HITs.James.Inductive.html#2355" class="Function">g</a>
+  <a id="2613" href="Cubical.HITs.James.Inductive.html#2562" class="Function">𝕁ₙ₊₂≃Pushout</a> <a id="2626" class="Symbol">=</a> <a id="2628" href="Cubical.HITs.James.Inductive.PushoutFormula.html#4792" class="Function">𝕁ames2+n≃</a> <a id="2638" class="Symbol">_</a>
+
+  <a id="2643" class="Comment">-- Connectivity of inclusion maps:</a>
+
+  <a id="2681" class="Keyword">module</a> <a id="2688" href="Cubical.HITs.James.Inductive.html#2688" class="Module">_</a>
+    <a id="2694" class="Symbol">(</a><a id="2695" href="Cubical.HITs.James.Inductive.html#2695" class="Bound">d</a> <a id="2697" class="Symbol">:</a> <a id="2699" href="Agda.Builtin.Nat.html#203" class="Datatype">ℕ</a><a id="2700" class="Symbol">)(</a><a id="2702" href="Cubical.HITs.James.Inductive.html#2702" class="Bound">conn</a> <a id="2707" class="Symbol">:</a> <a id="2709" href="Cubical.Homotopy.Connected.html#1409" class="Function">isConnected</a> <a id="2721" class="Symbol">(</a><a id="2722" class="Number">1</a> <a id="2724" href="Agda.Builtin.Nat.html#336" class="Primitive Operator">+</a> <a id="2726" href="Cubical.HITs.James.Inductive.html#2695" class="Bound">d</a><a id="2727" class="Symbol">)</a> <a id="2729" href="Cubical.HITs.James.Inductive.html#1309" class="Bound">X</a><a id="2730" class="Symbol">)</a> <a id="2732" class="Keyword">where</a>
+
+    <a id="2743" class="Comment">-- Warning:</a>
+    <a id="2759" class="Comment">-- The connectivity is shifted by 2 from the convention of usual homotopy theory.</a>
+
+    <a id="2846" class="Comment">-- If X is (d+1)-connected, the transition incl : 𝕁 n → 𝕁 (n+1) will be (n+1)d-connected.</a>
+
+    <a id="2941" href="Cubical.HITs.James.Inductive.html#2941" class="Function">isConnectedIncl</a> <a id="2957" class="Symbol">:</a> <a id="2959" class="Symbol">(</a><a id="2960" href="Cubical.HITs.James.Inductive.html#2960" class="Bound">n</a> <a id="2962" class="Symbol">:</a> <a id="2964" href="Agda.Builtin.Nat.html#203" class="Datatype">ℕ</a><a id="2965" class="Symbol">)</a> <a id="2967" class="Symbol">→</a> <a id="2969" href="Cubical.Homotopy.Connected.html#1509" class="Function">isConnectedFun</a> <a id="2984" class="Symbol">((</a><a id="2986" class="Number">1</a> <a id="2988" href="Agda.Builtin.Nat.html#336" class="Primitive Operator">+</a> <a id="2990" href="Cubical.HITs.James.Inductive.html#2960" class="Bound">n</a><a id="2991" class="Symbol">)</a> <a id="2993" href="Cubical.Data.Nat.Base.html#172" class="Primitive Operator">·</a> <a id="2995" href="Cubical.HITs.James.Inductive.html#2695" class="Bound">d</a><a id="2996" class="Symbol">)</a> <a id="2998" class="Symbol">(</a><a id="2999" href="Cubical.HITs.James.Inductive.Base.html#627" class="InductiveConstructor">incl</a> <a id="3004" class="Symbol">{</a><a id="3005" class="Argument">n</a> <a id="3007" class="Symbol">=</a> <a id="3009" href="Cubical.HITs.James.Inductive.html#2960" class="Bound">n</a><a id="3010" class="Symbol">})</a>
+    <a id="3017" href="Cubical.HITs.James.Inductive.html#2941" class="Function">isConnectedIncl</a> <a id="3033" class="Symbol">=</a> <a id="3035" href="Cubical.HITs.James.Inductive.html#1064" class="Function">connIncl</a> <a id="3044" href="Cubical.HITs.James.Inductive.html#1305" class="Bound">X∙</a> <a id="3047" href="Cubical.HITs.James.Inductive.html#2695" class="Bound">d</a> <a id="3049" href="Cubical.HITs.James.Inductive.html#2702" class="Bound">conn</a>
+
+    <a id="3059" class="Comment">-- If X is (d+1)-connected, the inclusion inl : 𝕁 n → 𝕁∞ will be (n+1)d-connected.</a>
+
+    <a id="3147" href="Cubical.HITs.James.Inductive.html#3147" class="Function">inl∞</a> <a id="3152" class="Symbol">:</a> <a id="3154" class="Symbol">(</a><a id="3155" href="Cubical.HITs.James.Inductive.html#3155" class="Bound">n</a> <a id="3157" class="Symbol">:</a> <a id="3159" href="Agda.Builtin.Nat.html#203" class="Datatype">ℕ</a><a id="3160" class="Symbol">)</a> <a id="3162" class="Symbol">→</a> <a id="3164" href="Cubical.HITs.James.Inductive.html#1501" class="Function">𝕁</a> <a id="3166" href="Cubical.HITs.James.Inductive.html#3155" class="Bound">n</a> <a id="3168" class="Symbol">→</a> <a id="3170" href="Cubical.HITs.James.Inductive.html#1723" class="Function">𝕁∞</a>
+    <a id="3177" href="Cubical.HITs.James.Inductive.html#3147" class="Function">inl∞</a> <a id="3182" class="Symbol">_</a> <a id="3184" class="Symbol">=</a> <a id="3186" href="Cubical.HITs.SequentialColimit.Base.html#407" class="InductiveConstructor">incl</a>
+
+    <a id="3196" href="Cubical.HITs.James.Inductive.html#3196" class="Function">isConnectedInl</a> <a id="3211" class="Symbol">:</a> <a id="3213" class="Symbol">(</a><a id="3214" href="Cubical.HITs.James.Inductive.html#3214" class="Bound">n</a> <a id="3216" class="Symbol">:</a> <a id="3218" href="Agda.Builtin.Nat.html#203" class="Datatype">ℕ</a><a id="3219" class="Symbol">)</a> <a id="3221" class="Symbol">→</a> <a id="3223" href="Cubical.Homotopy.Connected.html#1509" class="Function">isConnectedFun</a> <a id="3238" class="Symbol">((</a><a id="3240" class="Number">1</a> <a id="3242" href="Agda.Builtin.Nat.html#336" class="Primitive Operator">+</a> <a id="3244" href="Cubical.HITs.James.Inductive.html#3214" class="Bound">n</a><a id="3245" class="Symbol">)</a> <a id="3247" href="Cubical.Data.Nat.Base.html#172" class="Primitive Operator">·</a> <a id="3249" href="Cubical.HITs.James.Inductive.html#2695" class="Bound">d</a><a id="3250" class="Symbol">)</a> <a id="3252" class="Symbol">(</a><a id="3253" href="Cubical.HITs.James.Inductive.html#3147" class="Function">inl∞</a> <a id="3258" href="Cubical.HITs.James.Inductive.html#3214" class="Bound">n</a><a id="3259" class="Symbol">)</a>
+    <a id="3265" href="Cubical.HITs.James.Inductive.html#3196" class="Function">isConnectedInl</a> <a id="3280" class="Symbol">=</a> <a id="3282" href="Cubical.HITs.James.Inductive.html#1093" class="Function">connInl</a> <a id="3290" href="Cubical.HITs.James.Inductive.html#1305" class="Bound">X∙</a> <a id="3293" href="Cubical.HITs.James.Inductive.html#2695" class="Bound">d</a> <a id="3295" href="Cubical.HITs.James.Inductive.html#2702" class="Bound">conn</a>
+</pre></body></html>
