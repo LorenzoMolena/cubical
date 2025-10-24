@@ -200,7 +200,7 @@ module _
     where open IsOrderedCommRing isOCR≤
 
 isSetOrderedRingStr : (R : Type ℓ) → isSet (OrderedCommRingStr ℓ' R)
-isSetOrderedRingStr {ℓ} {ℓ'} R =
+isSetOrderedRingStr R =
   let open OrderedCommRingStr using (is-set)
   in
   isOfHLevelSucIfInhabited→isOfHLevelSuc 1 λ str →

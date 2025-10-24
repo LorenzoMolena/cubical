@@ -118,8 +118,8 @@ isPseudolattice→isProp≤≡≤' isPL≤ p q i j x y =
   isOfHLevel⁺≡ₗ 0 (is-prop-valued x y) (λ i → p i x y) (λ i → q i x y) i j
   where open IsPseudolattice isPL≤
 
-isSetPseudolatticeStr : {L : Type ℓ} → isSet (PseudolatticeStr ℓ' L)
-isSetPseudolatticeStr {L = L} = isOfHLevelRetractFromIso 2
+isSetPseudolatticeStr : (L : Type ℓ) → isSet (PseudolatticeStr ℓ' L)
+isSetPseudolatticeStr L = isOfHLevelRetractFromIso 2
   PseudolatticeStrIsoΣ λ (_ , isPL≤) _ p q →
   ΣSquareSet
     (isProp→isSet ∘ isPropIsPseudolattice)
