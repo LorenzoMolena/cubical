@@ -4,7 +4,9 @@ module Cubical.Algebra.OrderedCommRing.Base where
 -}
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Univalence
 open import Cubical.Foundations.SIP
 
 import Cubical.Functions.Logic as L
@@ -124,6 +126,58 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
     IsOrderedCommRing.·MonoR≤ OCR = ·MonoR≤
     IsOrderedCommRing.·MonoR< OCR = ·MonoR<
     IsOrderedCommRing.0<1 OCR = 0<1
+
+module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
+  {_<_ _≤_ : R → R → Type ℓ'}
+  (isCommRing : IsCommRing 0r 1r _+_ _·_ -_)
+  (isPseudolattice : IsPseudolattice _≤_)
+  (isStrictOrder   : IsStrictOrder _<_)
+  (<-≤-weaken : ∀ x y → x < y → x ≤ y)
+  (≤≃¬> : ∀ x y → (x ≤ y) ≃ (¬ (y < x)))
+  (+MonoR≤ : ∀ x y z → x ≤ y → (x + z) ≤ (y + z))
+  (+MonoR< : ∀ x y z → x < y → (x + z) < (y + z))
+  (<-≤-trans : ∀ x y z → x < y → y ≤ z → x < z)
+  (≤-<-trans : ∀ x y z → x ≤ y → y < z → x < z)
+  (·MonoR≤ : ∀ x y z → 0r ≤ z → x ≤ y → (x · z) ≤ (y · z))
+  (·MonoR< : ∀ x y z → 0r < z → x < y → (x · z) < (y · z))
+  (0<1 : 0r < 1r)
+  where
+
+  open module CR = IsCommRing      isCommRing
+  open module <S = IsStrictOrder   isStrictOrder
+
+  posSum→pos∨pos : ∀ x y → 0r < (x + y) → (0r < x) L.⊔′ (0r < y)
+  posSum→pos∨pos x y 0<x+y =
+    let
+      ⇒ : x < (x + y) → 0r < y
+      ⇒ = subst2 _<_
+        (CR.+InvR _)
+        (CR.+Comm _ _ ∙ CR.+Assoc _ _ _ ∙ cong (_+ _) (CR.+InvL _) ∙ CR.+IdL _)
+        ∘ +MonoR< _ _ _
+
+      ⇐ : 0r < y → x < (x + y)
+      ⇐ = subst2 _<_ (CR.+IdL _) (CR.+Comm _ _) ∘ +MonoR< _ _ _
+    in
+      subst ((0r < x) L.⊔′_)
+      (hPropExt (<S.is-prop-valued _ _) (<S.is-prop-valued _ _) ⇒ ⇐)
+      (<S.is-weakly-linear 0r (x + y) x 0<x+y)
+
+  makeIsOrderedCommRing' : IsOrderedCommRing 0r 1r _+_ _·_ -_ _<_ _≤_
+  makeIsOrderedCommRing' = OCR where
+    OCR : IsOrderedCommRing 0r 1r _+_ _·_ -_ _<_ _≤_
+    OCR .IsOrderedCommRing.isCommRing      = isCommRing
+    OCR .IsOrderedCommRing.isPseudolattice = isPseudolattice
+    OCR .IsOrderedCommRing.isStrictOrder   = isStrictOrder
+    OCR .IsOrderedCommRing.<-≤-weaken      = <-≤-weaken
+    OCR .IsOrderedCommRing.≤≃¬>            = ≤≃¬>
+    OCR .IsOrderedCommRing.+MonoR≤         = +MonoR≤
+    OCR .IsOrderedCommRing.+MonoR<         = +MonoR<
+    OCR .IsOrderedCommRing.posSum→pos∨pos  = posSum→pos∨pos
+    OCR .IsOrderedCommRing.<-≤-trans       = <-≤-trans
+    OCR .IsOrderedCommRing.≤-<-trans       = ≤-<-trans
+    OCR .IsOrderedCommRing.·MonoR≤         = ·MonoR≤
+    OCR .IsOrderedCommRing.·MonoR<         = ·MonoR<
+    OCR .IsOrderedCommRing.0<1             = 0<1
 
 OrderedCommRing→PseudoLattice : OrderedCommRing ℓ ℓ' → Pseudolattice ℓ ℓ'
 OrderedCommRing→PseudoLattice R .fst = R .fst
