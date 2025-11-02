@@ -347,11 +347,11 @@ s<→<ᵇ {suc m} {suc n} sm<sn = s<→<ᵇ (pred-≤-pred sm<sn)
 ... | true  , p = subst Bool→Type (sym p) tt
 ... | false , p = <→<ᵇ {m} {n} (pred-≤-pred sm<sn)
 
-... so we make it implicit! And now it is again fast
+-- ... so we make it implicit! And now it is again fast
 !<ᵇ : ∀ m n → {m < n} → Bool→Type (m <ᵇ n)
 !<ᵇ m n {p} = <→<ᵇ p
 
-whilst this becomes slow (on my pc) for m , n ~10⁶
+-- whilst this becomes slow (on my pc) for m , n ~10⁶
 !s<ᵇ : ∀ m n → {m < n} → Bool→Type (m <ᵇ n)
 !s<ᵇ m n {p} = s<→<ᵇ p
 
