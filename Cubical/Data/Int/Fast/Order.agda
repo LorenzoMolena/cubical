@@ -38,6 +38,25 @@ negsuc m <ᵇ negsuc n = n ℕ.<ᵇ m
 _<_ : ℤ → ℤ → Type₀
 m < n = sucℤ m ≤ n
 
+_<'_ : ℤ → ℤ → Type₀
+pos m    <' pos n    = m ℕ.< n
+pos m    <' negsuc n = ⊥
+negsuc m <' pos n    = Unit
+negsuc m <' negsuc n = n ℕ.< m
+
+<→<ᵇ : ∀ {m n} → m <' n → Bool→Type (m <ᵇ n)
+<→<ᵇ {pos m}    {pos n}    = ℕ.<→<ᵇ
+<→<ᵇ {pos m}    {negsuc n} = idfun ⊥
+<→<ᵇ {negsuc m} {pos n}    = idfun Unit
+<→<ᵇ {negsuc m} {negsuc n} = ℕ.<→<ᵇ
+
+<ᵇ→< : ∀ {m n} → Bool→Type (m <ᵇ n) → m <' n
+<ᵇ→< {pos m}    {pos n}    = ℕ.<ᵇ→<
+<ᵇ→< {pos m}    {negsuc n} = idfun ⊥
+<ᵇ→< {negsuc m} {pos n}    = idfun Unit
+<ᵇ→< {negsuc m} {negsuc n} = ℕ.<ᵇ→<
+
+
 _≥_ : ℤ → ℤ → Type₀
 m ≥ n = n ≤ m
 
@@ -64,6 +83,20 @@ isProp≤ {m} {n} (k , p) (l , q)
   where
     lemma : k ≡ l
     lemma = injPos (inj-z+ {m} {pos k} {pos l} (p ∙ sym q))
+
+open import Cubical.Data.Unit.Properties
+
+isProp≤' : isProp (m ≤' n)
+isProp≤' {pos m}    {pos n}    = ℕ.isProp≤
+isProp≤' {pos m}    {negsuc n} = ⊥.isProp⊥
+isProp≤' {negsuc m} {pos n}    = isPropUnit
+isProp≤' {negsuc m} {negsuc n} = ℕ.isProp≤
+
+isProp<' : isProp (m <' n)
+isProp<' {pos m}    {pos n}    = ℕ.isProp≤
+isProp<' {pos m}    {negsuc n} = ⊥.isProp⊥
+isProp<' {negsuc m} {pos n}    = isPropUnit
+isProp<' {negsuc m} {negsuc n} = ℕ.isProp≤
 
 isProp< : isProp (m < n)
 isProp< {m} = isProp≤ {sucℤ m}

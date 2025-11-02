@@ -323,10 +323,37 @@ private
   suc (n ∸ m + m) ≡⟨ cong suc (≤ᵇ-∸-+-cancel m n t) ⟩
   suc n           ∎
 
+-- this is fast for numerals
+!< : ∀ m n → {Bool→Type (m <ᵇ n)} → m < n
+!< m n {t} = <ᵇ→< t
+
+-- this is slow
+s<→<ᵇ : m < n → Bool→Type (m <ᵇ n)
+s<→<ᵇ {m}     {zero}  m<0   = ¬-<-zero m<0
+s<→<ᵇ {zero}  {suc n} 0<sn  = tt
+s<→<ᵇ {suc m} {suc n} sm<sn = s<→<ᵇ (pred-≤-pred sm<sn)
+
+-- Here it uses recursion only on the absurd case,
+-- so for actual computation with literals m and n, this is fast
+-- interestingly, this doesn't work in practice:
+-- try to normalize (C-c C-n)
+-- s<→<ᵇ {800000} {805000} (4999 , refl)
+-- <→<ᵇ {800000} {805000} (4999 , refl)
+-- they are both slow! ... if the proof of m < n is explictly given...
 <→<ᵇ : m < n → Bool→Type (m <ᵇ n)
 <→<ᵇ {m}     {zero}  m<0   = ¬-<-zero m<0
 <→<ᵇ {zero}  {suc n} 0<sn  = tt
-<→<ᵇ {suc m} {suc n} sm<sn = <→<ᵇ (pred-≤-pred sm<sn)
+<→<ᵇ {suc m} {suc n} sm<sn with m <ᵇ n UsingEq
+... | true  , p = subst Bool→Type (sym p) tt
+... | false , p = <→<ᵇ {m} {n} (pred-≤-pred sm<sn)
+
+... so we make it implicit! And now it is again fast
+!<ᵇ : ∀ m n → {m < n} → Bool→Type (m <ᵇ n)
+!<ᵇ m n {p} = <→<ᵇ p
+
+whilst this becomes slow (on my pc) for m , n ~10⁶
+!s<ᵇ : ∀ m n → {m < n} → Bool→Type (m <ᵇ n)
+!s<ᵇ m n {p} = s<→<ᵇ p
 
 ≤ᵇ→≤ : Bool→Type (m ≤ᵇ n) → m ≤ n
 ≤ᵇ→≤ {zero}  {n}     t = zero-≤
@@ -335,6 +362,21 @@ private
 ≤→≤ᵇ : m ≤ n → Bool→Type (m ≤ᵇ n)
 ≤→≤ᵇ {zero}  {n} 0≤n  = tt
 ≤→≤ᵇ {suc m} {n} sm≤n = <→<ᵇ sm≤n
+
+-- This is fast for:
+-- a) m = 0 < n : ×
+-- b) n = 0 < m : ✓
+-- c) 0 < n < m : ✓
+-- d) 0 < m < n : ×
+-- issues:
+-- a) zero-≤ = (_ , +-zero), and +-zero is inductive
+-- d) ??
+left-≤-max' : m ≤ max m n
+left-≤-max' {zero}  {n}    = zero-≤
+left-≤-max' {suc m} {zero} = ≤-refl
+left-≤-max' {suc m} {suc n} with m <ᵇ n UsingEq
+... | false , _ = ≤-refl
+... | true  , p = <-weaken (suc-≤-suc (<ᵇ→< (subst Bool→Type (sym p) tt)))
 
 ≤Dec : ∀ m n → Dec (m ≤ n)
 ≤Dec zero n = yes (n , +-zero _)
