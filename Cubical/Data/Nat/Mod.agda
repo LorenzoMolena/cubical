@@ -251,9 +251,20 @@ private
       step1 = mod-lemma-≤ (suc acc) d n
       step2 = sym (+-suc acc n)
 
+  rUnit-mod-lemma : ∀ k n x → hmod k (k + n) x n ≡ hmod k (k + n) (k + x + suc n) n
+  rUnit-mod-lemma zero    zero zero    = refl
+  rUnit-mod-lemma (suc k) zero zero    = {!   !}
+    -- hmod 0 (suc k) (suc k) (suc k) =
+    -- hmod 1 (suc k) k k =
+    -- hmod 1 (suc k) (suc k + suc k) k
+  rUnit-mod-lemma k       zero (suc x) = {!   !}
+  rUnit-mod-lemma k (suc n) x = {!   !}
+
 remainder'_/_ : (x n : ℕ) → ℕ
 remainder' x / zero = x
 remainder' x / suc n = hmod 0 n x n
+
+_mod'_ = remainder'_/_
 
 quotient'_/_ : (x n : ℕ) → ℕ
 quotient' x / zero = 0
@@ -274,6 +285,53 @@ quotient' x / suc n = hdiv 0 n x n
 
 mod'< : ∀ n x → remainder' x / suc n < suc n
 mod'< n x = suc-≤-suc (mod-lemma-≤ 0 x n)
+
+mod'-rUnit : (n x : ℕ) → x mod' n ≡ ((x + n) mod' n)
+mod'-rUnit zero    x = sym (+-zero x)
+mod'-rUnit (suc n) zero = {! refl  !}
+mod'-rUnit (suc zero) (suc x) = {! refl  !}
+mod'-rUnit (suc (suc n)) (suc x) = {! (suc x mod' suc (suc n)) ≡
+      (suc (x + suc (suc n)) mod' suc (suc n))  !}
+-- x mod' suc n ≐ hmod 0 n x n
+-- (x + suc n) mod' suc n ≐ hmod 0 n (x + suc n) n
+
+mod'-lUnit : (n x : ℕ) → x mod' n ≡ ((n + x) mod' n)
+mod'-lUnit zero x = refl
+mod'-lUnit (suc n) x = {!   !}
+
+mod'+mod'≡mod' : (n x y : ℕ)
+  → (x + y) mod' n ≡ (((x mod' n) + (y mod' n)) mod' n)
+mod'+mod'≡mod' zero x y = refl
+mod'+mod'≡mod' (suc n) x y = {!   !}
+
+mod'-idempotent : {n : ℕ} (x : ℕ) → (x mod' n) mod' n ≡ x mod' n
+mod'-idempotent {zero}  _ = refl
+mod'-idempotent {suc n} x = {! ((x mod' suc n) mod' suc n) ≡ (x mod' suc n)  !}
+
+zero-charac' : (n : ℕ) → n mod' n ≡ 0
+zero-charac' zero = refl
+zero-charac' (suc zero) = refl
+zero-charac' (suc (suc n)) = {! zero-charac' (suc n)  !}
+
+zero-charac-gen' : (n x : ℕ) → ((x · n) mod' n) ≡ 0
+zero-charac-gen' zero    x = sym (0≡m·0 x)
+zero-charac-gen' (suc n) zero = refl
+zero-charac-gen' (suc n) (suc x) = {! (suc (n + x · suc n) mod' suc n)  !}
+
+mod'·mod'≡mod' : (n x y : ℕ)
+  → (x · y) mod' n ≡ (((x mod' n) · (y mod' n)) mod' n)
+mod'·mod'≡mod' zero    _ _ = refl
+mod'·mod'≡mod' (suc n) x y = {!   !}
+
+mod'-rCancel : (n x y : ℕ) → (x + y) mod' n ≡ (x + y mod' n) mod' n
+mod'-rCancel zero    _ _ = refl
+mod'-rCancel (suc n) x y = {!  !}
+
+mod'-lCancel : (n x y : ℕ) → (x + y) mod' n ≡ (x mod' n + y) mod' n
+mod'-lCancel n x y =
+     cong (_mod' n) (+-comm x y)
+  ∙∙ mod'-rCancel n y x
+  ∙∙ cong (_mod' n) (+-comm y (x mod' n))
 
 private
   test₀ : 100 mod 81 ≡ 19
