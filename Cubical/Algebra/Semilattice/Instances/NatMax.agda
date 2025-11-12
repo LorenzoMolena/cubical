@@ -9,7 +9,10 @@
 module Cubical.Algebra.Semilattice.Instances.NatMax where
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Function
+open import Cubical.Foundations.Path
 
+open import Cubical.Data.Bool.Base
 open import Cubical.Data.Empty.Base as ⊥
 open import Cubical.Data.FinData hiding (snotz)
 open import Cubical.Data.Nat renaming ( _+_ to _+ℕ_ ; _·_ to _·ℕ_ ; _^_ to _^ℕ_
@@ -33,24 +36,32 @@ _·_ maxSemilatticeStr = max
 isSemilattice maxSemilatticeStr = makeIsSemilattice isSetℕ maxAssoc maxRId maxComm maxIdem
   where
   maxAssoc : (x y z : ℕ) → max x (max y z) ≡ max (max x y) z
-  maxAssoc zero y z = refl
-  maxAssoc (suc x) zero z = refl
-  maxAssoc (suc x) (suc y) zero = maxSuc ∙ cong (λ p → max p _) (sym (maxSuc {x} {y}))
+  maxAssoc zero y z = {!   !} -- refl
+  maxAssoc (suc x) zero z = {!   !} -- refl
+  maxAssoc (suc x) (suc y) zero = maxSuc ∙ cong (λ p → max p zero) (sym (maxSuc {x} {y}))
   maxAssoc (suc x) (suc y) (suc z) =
     max (suc x) (max (suc y) (suc z)) ≡⟨ cong (max _) (maxSuc {y} {z}) ⟩
     max (suc x) (suc (max y z))       ≡⟨ maxSuc ⟩
     suc (max x (max y z))             ≡⟨ cong suc (maxAssoc x y z) ⟩
     suc (max (max x y) z)             ≡⟨ sym maxSuc ⟩
-    max (suc (max x y)) (suc z)       ≡⟨ cong (λ p → max p _) (sym (maxSuc {x} {y})) ⟩
+    max (suc (max x y)) (suc z)       ≡⟨ cong (flip max (suc z)) (sym (maxSuc {x} {y})) ⟩
     max (max (suc x) (suc y)) (suc z) ∎
 
   maxRId : (x : ℕ) → max x 0 ≡ x
   maxRId zero = refl
   maxRId (suc x) = refl
 
+  -- Example of proof with UsingEq
   maxIdem : (x : ℕ) → max x x ≡ x
-  maxIdem zero = refl
-  maxIdem (suc x) = maxSuc ∙ cong suc (maxIdem x)
+  maxIdem x with x <ᵇ x UsingEq
+  ... | false , _ = refl
+  ... | true  , p = ⊥.rec $ ¬m<m {x} $ <ᵇ→< $ subst Bool→Type (sym p) tt
+
+  -- Same proof, but using inspect
+  maxIdem' : (x : ℕ) → max x x ≡ x
+  maxIdem' x with x <ᵇ x | inspect (∘diag _<ᵇ_) x
+  ... | false | _      = refl
+  ... | true  | [ p ]ᵢ = ⊥.rec $ ¬m<m {x} $ <ᵇ→< $ subst Bool→Type (sym p) tt
 
 
 --characterisation of inequality
@@ -63,7 +74,8 @@ open JoinSemilattice (ℕ , maxSemilatticeStr) renaming (_≤_ to _≤max_)
                             k , +-suc k x ∙ cong suc q
 
 ≤ℕ→≤max :  ∀ x y → x ≤ℕ y → x ≤max y
-≤ℕ→≤max zero y _ = refl
+≤ℕ→≤max zero zero _ = refl
+≤ℕ→≤max zero (suc y) _ = refl
 ≤ℕ→≤max (suc x) zero p = ⊥.rec (¬-<-zero p)
 ≤ℕ→≤max (suc x) (suc y) (k , p) = maxSuc ∙ cong suc (≤ℕ→≤max x y (k , q))
   where

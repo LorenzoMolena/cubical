@@ -268,13 +268,13 @@ right-≤-max {suc n} {zero} = ≤-refl
 right-≤-max {suc n} {suc m} = subst (_ ≤_) (sym maxSuc) $ suc-≤-suc $ right-≤-max {n} {m}
 
 min-≤-left : min m n ≤ m
-min-≤-left {zero} {n} = ≤-refl
-min-≤-left {suc m} {zero} = zero-≤
+min-≤-left {m} {zero} = zero-≤
+min-≤-left {zero} {suc n} = ≤-refl
 min-≤-left {suc m} {suc n} = subst (_≤ _) (sym minSuc) $ suc-≤-suc $ min-≤-left {m} {n}
 
 min-≤-right : min m n ≤ n
-min-≤-right {zero} {n} = zero-≤
-min-≤-right {suc m} {zero} = ≤-refl
+min-≤-right {m} {zero} = zero-≤
+min-≤-right {zero} {suc n} = zero-≤
 min-≤-right {suc m} {suc n} = subst (_≤ _) (sym minSuc) $ suc-≤-suc $ min-≤-right {m} {n}
 
 -- Boolean order relations and their conversions to/from ≤ and <
