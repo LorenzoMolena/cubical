@@ -458,7 +458,7 @@ isAsym< {m} m<n = isIrrefl< ∘ <≤-trans {m} m<n
 ≤max {pos m}    {pos n}     = ℕ≤→≤ ℕ.left-≤-max
 ≤max {pos m}    {negsuc n}  = isRefl≤
 ≤max {negsuc m} {pos n}     = negsuc≤pos
-≤max {negsuc m} {negsuc n}  = -Dist≤ $ suc-≤-suc {pos (ℕ.min m n)} (ℕ≤→≤ ℕ.min-≤-left)
+≤max {negsuc m} {negsuc n}  = ℕ≤→negsuc≥negsuc ℕ.min-≤-left
 
 ≤→max : m ≤ n → ℤ.max m n ≡ n
 ≤→max {pos m}    {pos n}    = cong pos ∘ ∨Comm ℕ≤ {m} {n} ∙_ ∘ sym ∘ ≤→∨ ℕ≤ ∘ ≤→ℕ≤
@@ -471,7 +471,7 @@ min≤ : ℤ.min m n ≤ m
 min≤ {pos m}    {pos n}    = ℕ≤→≤ ℕ.min-≤-left
 min≤ {pos m}    {negsuc n} = negsuc≤pos
 min≤ {negsuc m} {pos n}    = isRefl≤
-min≤ {negsuc m} {negsuc n} = -Dist≤ $ suc-≤-suc {pos m} (ℕ≤→≤ ℕ.left-≤-max)
+min≤ {negsuc m} {negsuc n} = ℕ≤→negsuc≥negsuc ℕ.left-≤-max
 
 ≤→min : m ≤ n → ℤ.min m n ≡ m
 ≤→min {pos m}    {pos n}    = cong pos ∘ sym ∘ ≤→∧ ℕ≤ ∘ ≤→ℕ≤
