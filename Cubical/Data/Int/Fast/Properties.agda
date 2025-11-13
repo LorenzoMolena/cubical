@@ -13,9 +13,9 @@ open import Cubical.Data.Bool
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.NatPlusOne.Base as ℕ₊₁
 open import Cubical.Data.Nat as ℕ hiding (
-    +-assoc ; +-comm ; min ; max ; minComm ; maxComm ; minIdem
-  ; minSucL ; minSucR ; maxSucL ; maxSucR ; minAssoc)
+    +-assoc ; +-comm ; min ; max ; minComm ; maxComm ; minIdem)
   renaming (_·_ to _·ℕ_; _+_ to _+ℕ_)
+open import Cubical.Data.Nat.Order as ℕ using ()
 open import Cubical.Data.Sum
 open import Cubical.Data.Fin.Inductive.Base
 open import Cubical.Data.Fin.Inductive.Properties
@@ -34,8 +34,14 @@ open import Cubical.Data.Int.Fast.Base
 open import Cubical.Algebra.Semilattice
 open import Cubical.Algebra.Semilattice.Instances.NatMax
 
+open import Cubical.Relation.Binary.Order.Pseudolattice
+open import Cubical.Relation.Binary.Order.Pseudolattice.Instances.Nat renaming (
+  ℕ≤Pseudolattice to ℕ≤)
+
 open SemilatticeStr maxSemilatticeStr using () renaming (
   ·Assoc to ℕmaxAssoc ; idem to ℕmaxIdem)
+
+-- open module ℕ≤ = PseudolatticeStr (ℕ≤ .snd) using ()
 
 private
   ℕ-lem : ∀ n m → (pos n +negsuc m) ≡ (n ℕ- suc m)
@@ -96,8 +102,8 @@ minComm (negsuc m) (pos n)    = refl
 minComm (negsuc m) (negsuc n) = cong negsuc (ℕ.maxComm m n)
 
 minIdem : ∀ n → min n n ≡ n
-minIdem (pos n)    = cong pos (ℕ.minIdem n)
-minIdem (negsuc n) = cong negsuc (ℕmaxIdem n)
+minIdem (pos n)    = cong pos (∧Idem ℕ≤)
+minIdem (negsuc n) = cong negsuc (∨Idem ℕ≤)
 
 max : ℤ → ℤ → ℤ
 max (pos m)    (pos n)    = pos (ℕ.max m n )
@@ -112,8 +118,8 @@ maxComm (negsuc m) (pos n)    = refl
 maxComm (negsuc m) (negsuc n) = cong negsuc (ℕ.minComm m n)
 
 maxIdem : ∀ n → max n n ≡ n
-maxIdem (pos n)    = cong pos (ℕmaxIdem n)
-maxIdem (negsuc n) = cong negsuc (ℕ.minIdem n)
+maxIdem (pos n)    = cong pos (∨Idem ℕ≤)
+maxIdem (negsuc n) = cong negsuc (∧Idem ℕ≤)
 
 sucDistMin : ∀ m n → sucℤ (min m n) ≡ min (sucℤ m) (sucℤ n)
 sucDistMin (pos m)          (pos n)          = cong pos (sym minSuc)
@@ -138,17 +144,17 @@ predDistMin (negsuc m) (pos (suc n))    = refl
 predDistMin (negsuc m)    (negsuc n)    = cong negsuc (sym maxSuc)
 
 minSucL : ∀ m → min (sucℤ m) m ≡ m
-minSucL (pos m)          = cong pos (ℕ.minSucL m)
+minSucL (pos m)          = cong pos (ℕ.minComm (suc m) m ∙ sym (≤→∧ ℕ≤ ℕ.≤-sucℕ))
 minSucL (negsuc zero)    = refl
-minSucL (negsuc (suc m)) = cong negsuc (ℕ.maxSucR m)
+minSucL (negsuc (suc m)) = cong negsuc (ℕ.maxComm m (suc m) ∙ sym (≤→∨ ℕ≤ ℕ.≤-sucℕ))
 
 minSucR : ∀ m → min m (sucℤ m)  ≡ m
 minSucR m = minComm m (sucℤ m) ∙ minSucL m
 
 minPredL : ∀ m → min (predℤ m) m ≡ predℤ m
 minPredL (pos zero)    = refl
-minPredL (pos (suc m)) = cong pos (ℕ.minSucR m)
-minPredL (negsuc m)    = cong negsuc (ℕ.maxSucL m)
+minPredL (pos (suc m)) = cong pos (sym (≤→∧ ℕ≤ ℕ.≤-sucℕ))
+minPredL (negsuc m)    = cong negsuc (sym (≤→∨ ℕ≤ ℕ.≤-sucℕ))
 
 minPredR : ∀ m → min m (predℤ m) ≡ predℤ m
 minPredR m = minComm m (predℤ m) ∙ minPredL m
@@ -176,55 +182,55 @@ predDistMax (negsuc m)    (pos (suc n)) = refl
 predDistMax (negsuc m)    (negsuc n)    = cong negsuc (sym minSuc)
 
 maxSucL : ∀ m → max (sucℤ m) m ≡ sucℤ m
-maxSucL (pos m)          = cong pos (ℕ.maxSucL m)
+maxSucL (pos m)          = cong pos (sym (≤→∨ ℕ≤ ℕ.≤-sucℕ))
 maxSucL (negsuc zero)    = refl
-maxSucL (negsuc (suc m)) = cong negsuc (ℕ.minSucR m)
+maxSucL (negsuc (suc m)) = cong negsuc (sym (≤→∧ ℕ≤ ℕ.≤-sucℕ))
 
 maxSucR : ∀ m → max m (sucℤ m) ≡ sucℤ m
 maxSucR m = maxComm m (sucℤ m) ∙ maxSucL m
 
 maxPredL : ∀ m → max (predℤ m) m ≡ m
 maxPredL (pos zero)    = refl
-maxPredL (pos (suc m)) = cong pos (ℕ.maxSucR m)
-maxPredL (negsuc m)    = cong negsuc (ℕ.minSucL m)
+maxPredL (pos (suc m)) = cong pos (ℕ.maxComm m (suc m) ∙ sym (≤→∨ ℕ≤ ℕ.≤-sucℕ))
+maxPredL (negsuc m)    = cong negsuc (ℕ.minComm (suc m) m ∙ sym (≤→∧ ℕ≤ ℕ.≤-sucℕ))
 
 maxPredR : ∀ m → max m (predℤ m) ≡ m
 maxPredR m = maxComm m (predℤ m) ∙ maxPredL m
 
 minAssoc : ∀ x y z → min x (min y z) ≡ min (min x y) z
-minAssoc (pos m)    (pos n)    (pos k)    = cong pos $ ℕ.minAssoc m n k
+minAssoc (pos m)    (pos n)    (pos k)    = cong pos $ ∧Assoc ℕ≤ {m} {n} {k}
 minAssoc (pos m)    (pos n)    (negsuc k) = refl
 minAssoc (pos m)    (negsuc n) (pos k)    = refl
 minAssoc (pos m)    (negsuc n) (negsuc k) = refl
 minAssoc (negsuc m) (pos n)    (pos k)    = refl
 minAssoc (negsuc m) (pos n)    (negsuc k) = refl
 minAssoc (negsuc m) (negsuc n) (pos k)    = refl
-minAssoc (negsuc m) (negsuc n) (negsuc k) = cong negsuc $ ℕmaxAssoc m n k
+minAssoc (negsuc m) (negsuc n) (negsuc k) = cong negsuc $ ∨Assoc ℕ≤ {m} {n} {k}
 
 maxAssoc : ∀ x y z → max x (max y z) ≡ max (max x y) z
-maxAssoc (pos m)    (pos n)    (pos k)    = cong pos $ ℕmaxAssoc m n k
+maxAssoc (pos m)    (pos n)    (pos k)    = cong pos $ ∨Assoc ℕ≤ {m} {n} {k}
 maxAssoc (pos m)    (pos n)    (negsuc k) = refl
 maxAssoc (pos m)    (negsuc n) (pos k)    = refl
 maxAssoc (pos m)    (negsuc n) (negsuc k) = refl
 maxAssoc (negsuc m) (pos n)    (pos k)    = refl
 maxAssoc (negsuc m) (pos n)    (negsuc k) = refl
 maxAssoc (negsuc m) (negsuc n) (pos k)    = refl
-maxAssoc (negsuc m) (negsuc n) (negsuc k) = cong negsuc $ ℕ.minAssoc m n k
+maxAssoc (negsuc m) (negsuc n) (negsuc k) = cong negsuc $ ∧Assoc ℕ≤ {m} {n} {k}
 
 minAbsorbLMax : ∀ x y → min x (max x y) ≡ x
 minAbsorbLMax (pos zero) (pos n) = refl
-minAbsorbLMax (pos (suc m)) (pos zero) = cong pos (ℕ.minIdem (suc m))
+minAbsorbLMax (pos (suc m)) (pos zero) = cong pos (∧Idem ℕ≤)
 minAbsorbLMax (pos (suc m)) (pos (suc n)) with m <ᵇ n UsingEq
-... | false , _ = cong pos (ℕ.minIdem (suc m))
+... | false , _ = cong pos (∧Idem ℕ≤)
 ... | true  , p  with m <ᵇ n UsingEq
 ... | false , ¬p = ⊥.rec (true≢false (sym p ∙ ¬p))
 ... | true  , _  = refl
-minAbsorbLMax (pos m)    (negsuc n) = cong pos (ℕ.minIdem m)
+minAbsorbLMax (pos m)    (negsuc n) = cong pos (∧Idem ℕ≤)
 minAbsorbLMax (negsuc m) (pos n)    = refl
 minAbsorbLMax (negsuc zero) (negsuc n) = refl
 minAbsorbLMax (negsuc (suc m)) (negsuc zero) = refl
 minAbsorbLMax (negsuc (suc m)) (negsuc (suc n)) with m <ᵇ n UsingEq
-... | true  , _ = cong negsuc (ℕmaxIdem (suc m))
+... | true  , _ = cong negsuc (∨Idem ℕ≤)
 ... | false , ¬p with m <ᵇ n UsingEq
 ... | false , _ = refl
 ... | true  , p = ⊥.rec (true≢false (sym p ∙ ¬p))
@@ -233,16 +239,16 @@ maxAbsorbLMin : ∀ x y → max x (min x y) ≡ x
 maxAbsorbLMin (pos zero) (pos n) = refl
 maxAbsorbLMin (pos (suc m)) (pos zero) = refl
 maxAbsorbLMin (pos (suc m)) (pos (suc n)) with m <ᵇ n UsingEq
-... | true  , _ = cong pos (ℕmaxIdem (suc m))
+... | true  , _ = cong pos (∨Idem ℕ≤)
 ... | false , ¬p with m <ᵇ n UsingEq
 ... | false , _ = refl
 ... | true  , p = ⊥.rec (true≢false (sym p ∙ ¬p))
 maxAbsorbLMin (pos m) (negsuc n) = refl
-maxAbsorbLMin (negsuc m) (pos n) = cong negsuc (ℕ.minIdem m)
+maxAbsorbLMin (negsuc m) (pos n) = cong negsuc (∧Idem ℕ≤)
 maxAbsorbLMin (negsuc zero) (negsuc n) = refl
-maxAbsorbLMin (negsuc (suc m)) (negsuc zero) = cong negsuc (ℕ.minIdem (suc m))
+maxAbsorbLMin (negsuc (suc m)) (negsuc zero) = cong negsuc (∧Idem ℕ≤)
 maxAbsorbLMin (negsuc (suc m)) (negsuc (suc n)) with m <ᵇ n UsingEq
-... | false , _ = cong negsuc (ℕ.minIdem (suc m))
+... | false , _ = cong negsuc (∧Idem ℕ≤)
 ... | true  , p  with m <ᵇ n UsingEq
 ... | false , ¬p = ⊥.rec (true≢false (sym p ∙ ¬p))
 ... | true  , _  = refl
