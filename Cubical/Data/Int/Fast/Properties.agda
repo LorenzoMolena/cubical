@@ -8,12 +8,16 @@ open import Cubical.Foundations.Equiv
 
 open import Cubical.Relation.Nullary
 
+open import Cubical.Relation.Binary.Order.Pseudolattice
+open import Cubical.Relation.Binary.Order.Pseudolattice.Instances.Nat renaming (
+  ℕ≤Pseudolattice to ℕ≤)
+
 open import Cubical.Data.Bool
 
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.NatPlusOne.Base as ℕ₊₁
 open import Cubical.Data.Nat as ℕ hiding (
-    +-assoc ; +-comm ; min ; max ; minComm ; maxComm ; minIdem)
+    +-assoc ; +-comm ; min ; max ; minComm ; maxComm)
   renaming (_·_ to _·ℕ_; _+_ to _+ℕ_)
 open import Cubical.Data.Nat.Order as ℕ using ()
 open import Cubical.Data.Sum
@@ -30,18 +34,6 @@ open import Cubical.Data.Int.Properties as P public using (
   ; abs→⊎ ; ⊎→abs ; abs≡0 ; ¬x≡0→¬abs≡0 ; abs- ; 0≢1-ℤ ; clamp)
 
 open import Cubical.Data.Int.Fast.Base
-
-open import Cubical.Algebra.Semilattice
-open import Cubical.Algebra.Semilattice.Instances.NatMax
-
-open import Cubical.Relation.Binary.Order.Pseudolattice
-open import Cubical.Relation.Binary.Order.Pseudolattice.Instances.Nat renaming (
-  ℕ≤Pseudolattice to ℕ≤)
-
-open SemilatticeStr maxSemilatticeStr using () renaming (
-  ·Assoc to ℕmaxAssoc ; idem to ℕmaxIdem)
-
--- open module ℕ≤ = PseudolatticeStr (ℕ≤ .snd) using ()
 
 private
   ℕ-lem : ∀ n m → (pos n +negsuc m) ≡ (n ℕ- suc m)

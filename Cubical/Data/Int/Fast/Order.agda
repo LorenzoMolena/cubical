@@ -4,13 +4,17 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Function
 
+open import Cubical.Relation.Binary.Order.Pseudolattice
+open import Cubical.Relation.Binary.Order.Pseudolattice.Instances.Nat renaming (
+  ℕ≤Pseudolattice to ℕ≤)
+
 open import Cubical.Data.Empty as ⊥ using (⊥)
 
 open import Cubical.Data.Bool.Base hiding (_≟_)
 
 open import Cubical.Data.Int.Fast.Base as ℤ
 open import Cubical.Data.Int.Fast.Properties as ℤ
-open import Cubical.Data.Nat as ℕ hiding (minAssoc ; _<ᵇ_)
+open import Cubical.Data.Nat as ℕ hiding (_<ᵇ_)
 import Cubical.Data.Nat.Order as ℕ
 open import Cubical.Data.Nat.Order.Recursive as ℕrec using ()
 open import Cubical.Data.NatPlusOne.Base as ℕ₊₁
@@ -170,32 +174,38 @@ pos-≤-pos {k} {l} (i , p) .snd =
 ℕ≤→≤ : ∀ {m n} → m ℕ.≤ n → pos m ≤ pos n
 ℕ≤→≤ {m} (i , p) = i , cong pos (+-comm m i ∙ p)
 
+ℕ≤→negsuc≥negsuc : ∀ {m n} → m ℕ.≤ n → negsuc m ≥ negsuc n
+ℕ≤→negsuc≥negsuc = negsuc-≤-negsuc ∘ ℕ≤→≤
+
 ≤→ℕ≤ : ∀ {m n} → pos m ≤ pos n → m ℕ.≤ n
 ≤→ℕ≤ {m} (i , p) = i , injPos (+Comm (pos i) (pos m) ∙ p)
+
+negsuc≥negsuc→ℕ≤ : ∀ {m n} → negsuc m ≥ negsuc n → m ℕ.≤ n
+negsuc≥negsuc→ℕ≤ = ≤→ℕ≤ ∘ pos-≤-pos
 
 <ᵇ→< : Bool→Type (m <ᵇ n) → m < n
 <ᵇ→< {pos m}          {pos n}          t = ℕ≤→≤ (ℕ.<ᵇ→< t)
 <ᵇ→< {negsuc m}       {pos n}          t = negsuc<pos {m} {n}
 <ᵇ→< {negsuc (suc m)} {negsuc zero}    t = negsuc-≤-negsuc zero-≤pos
-<ᵇ→< {negsuc (suc m)} {negsuc (suc n)} t = negsuc-≤-negsuc (ℕ≤→≤ (ℕ.<ᵇ→< t))
+<ᵇ→< {negsuc (suc m)} {negsuc (suc n)} t = ℕ≤→negsuc≥negsuc (ℕ.<ᵇ→< t)
 
 <→<ᵇ : m < n → Bool→Type (m <ᵇ n)
 <→<ᵇ {pos m}          {pos n}    = ℕ.≤→≤ᵇ ∘ ≤→ℕ≤
 <→<ᵇ {pos m}          {negsuc n} = ¬pos≤negsuc
 <→<ᵇ {negsuc m}       {pos n}    = λ _ → tt
 <→<ᵇ {negsuc zero}    {negsuc n} = ¬pos≤negsuc
-<→<ᵇ {negsuc (suc m)} {negsuc n} = ℕ.≤→≤ᵇ ∘ ≤→ℕ≤ ∘ pos-≤-pos
+<→<ᵇ {negsuc (suc m)} {negsuc n} = ℕ.≤→≤ᵇ ∘ negsuc≥negsuc→ℕ≤
 
 ≤ᵇ→≤ : Bool→Type (m ≤ᵇ n) → m ≤ n
 ≤ᵇ→≤ {pos m}    {pos n}    t = ℕ≤→≤ (ℕ.≤ᵇ→≤ t)
 ≤ᵇ→≤ {negsuc m} {pos n}    t = negsuc≤pos
-≤ᵇ→≤ {negsuc m} {negsuc n} t = negsuc-≤-negsuc (ℕ≤→≤ (ℕ.≤ᵇ→≤ t))
+≤ᵇ→≤ {negsuc m} {negsuc n} t = ℕ≤→negsuc≥negsuc (ℕ.≤ᵇ→≤ t)
 
 ≤→≤ᵇ : m ≤ n → Bool→Type (m ≤ᵇ n)
 ≤→≤ᵇ {pos m}    {pos n}    = ℕ.≤→≤ᵇ ∘ ≤→ℕ≤
 ≤→≤ᵇ {pos m}    {negsuc n} = ¬pos≤negsuc
 ≤→≤ᵇ {negsuc m} {pos n}    = λ _ → tt
-≤→≤ᵇ {negsuc m} {negsuc n} = ℕ.≤→≤ᵇ ∘ ≤→ℕ≤ ∘ pos-≤-pos
+≤→≤ᵇ {negsuc m} {negsuc n} = ℕ.≤→≤ᵇ ∘ negsuc≥negsuc→ℕ≤
 
 ≤-+o : m ≤ n → m ℤ.+ o ≤ n ℤ.+ o
 ≤-+o {m} {n} {o} (i , p) .fst = i
@@ -451,11 +461,11 @@ isAsym< {m} m<n = isIrrefl< ∘ <≤-trans {m} m<n
 ≤max {negsuc m} {negsuc n}  = -Dist≤ $ suc-≤-suc {pos (ℕ.min m n)} (ℕ≤→≤ ℕ.min-≤-left)
 
 ≤→max : m ≤ n → ℤ.max m n ≡ n
-≤→max {pos m}    {pos n}    = cong pos ∘ ℕ.≤→max ∘ ≤→ℕ≤
+≤→max {pos m}    {pos n}    = cong pos ∘ ∨Comm ℕ≤ {m} {n} ∙_ ∘ sym ∘ ≤→∨ ℕ≤ ∘ ≤→ℕ≤
 ≤→max {pos m}    {negsuc n} = ⊥.rec ∘ ¬pos≤negsuc
 ≤→max {negsuc m} {pos n}    = λ _ → refl
-≤→max {negsuc m} {negsuc n} = cong negsuc ∘ (ℕ.minComm m n ∙_) ∘ ℕ.≤→min ∘ ≤→ℕ≤ ∘
-                              pred-≤-pred {pos n} ∘ -Dist≤ {negsuc m}
+≤→max {negsuc m} {negsuc n} = cong negsuc ∘ ∧Comm ℕ≤ {m} {n} ∙_
+                            ∘ sym ∘ ≤→∧ ℕ≤ ∘ negsuc≥negsuc→ℕ≤
 
 min≤ : ℤ.min m n ≤ m
 min≤ {pos m}    {pos n}    = ℕ≤→≤ ℕ.min-≤-left
@@ -464,11 +474,10 @@ min≤ {negsuc m} {pos n}    = isRefl≤
 min≤ {negsuc m} {negsuc n} = -Dist≤ $ suc-≤-suc {pos m} (ℕ≤→≤ ℕ.left-≤-max)
 
 ≤→min : m ≤ n → ℤ.min m n ≡ m
-≤→min {pos m}    {pos n}    = cong pos ∘ ℕ.≤→min ∘ ≤→ℕ≤
+≤→min {pos m}    {pos n}    = cong pos ∘ sym ∘ ≤→∧ ℕ≤ ∘ ≤→ℕ≤
 ≤→min {pos m}    {negsuc n} = ⊥.rec ∘ ¬pos≤negsuc
 ≤→min {negsuc m} {pos n}    = λ _ → refl
-≤→min {negsuc m} {negsuc n} = cong negsuc ∘ (ℕ.maxComm m n ∙_) ∘ ℕ.≤→max ∘ ≤→ℕ≤ ∘
-                              pred-≤-pred {pos n} ∘ -Dist≤ {negsuc m}
+≤→min {negsuc m} {negsuc n} = cong negsuc ∘ sym ∘ ≤→∨ ℕ≤ ∘ negsuc≥negsuc→ℕ≤
 
 ≤MonotoneMin : m ≤ n → o ≤ s → ℤ.min m o ≤ ℤ.min n s
 ≤MonotoneMin {m} {n} {o} {s} m≤n o≤s
@@ -501,7 +510,7 @@ min≤ {negsuc m} {negsuc n} = -Dist≤ $ suc-≤-suc {pos m} (ℕ≤→≤ ℕ.
 ≤Dec (negsuc m) (pos n)    = yes negsuc≤pos
 ≤Dec (negsuc m) (negsuc n) with ℕ.≤Dec n m
 ... | yes p = yes (-Dist≤ (suc-≤-suc {pos n} (ℕ≤→≤ p)))
-... | no ¬p = no (¬p ∘ ≤→ℕ≤ ∘ pred-≤-pred {pos n} ∘ -Dist≤ {negsuc m})
+... | no ¬p = no (¬p ∘ negsuc≥negsuc→ℕ≤)
 
 ≤Stable : ∀ m n → Stable (m ≤ n)
 ≤Stable m n = Dec→Stable (≤Dec m n)
