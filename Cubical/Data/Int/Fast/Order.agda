@@ -19,6 +19,7 @@ import Cubical.Data.Nat.Order as ℕ
 open import Cubical.Data.Nat.Order.Recursive as ℕrec using ()
 open import Cubical.Data.NatPlusOne.Base as ℕ₊₁
 open import Cubical.Data.Sigma
+open import Cubical.Data.Sum
 
 open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary
@@ -503,6 +504,16 @@ min≤ {negsuc m} {negsuc n} = ℕ≤→negsuc≥negsuc ℕ.left-≤-max
                            maxAssoc m n (ℤ.max o s) ∙
            cong₂ ℤ.max (≤→max m≤n) (≤→max o≤s))
           (≤max {m = ℤ.max m o} {n = ℤ.max n s})
+
+0<+ : ∀ m n → 0 < m ℤ.+ n → (0 < m) ⊎ (0 < n)
+0<+ (pos zero)    (pos zero)    = ⊥.rec ∘ isIrrefl<
+0<+ (pos zero)    (pos (suc n)) = inr
+0<+ (pos (suc m)) (pos n)       = λ _ → inl (suc-≤-suc {0} zero-≤pos)
+0<+ (pos zero)    (negsuc n)    = ⊥.rec ∘ ¬pos≤negsuc
+0<+ (pos (suc m)) (negsuc n)    = λ _ → inl (suc-≤-suc {0} zero-≤pos)
+0<+ (negsuc m)    (pos zero)    = ⊥.rec ∘ ¬pos≤negsuc
+0<+ (negsuc m)    (pos (suc n)) = λ _ → inr (suc-≤-suc {0} zero-≤pos)
+0<+ (negsuc m)    (negsuc n)    = ⊥.rec ∘ ¬pos≤negsuc
 
 ≤Dec : ∀ m n → Dec (m ≤ n)
 ≤Dec (pos m)    (pos n)    with ℕ.≤Dec m n

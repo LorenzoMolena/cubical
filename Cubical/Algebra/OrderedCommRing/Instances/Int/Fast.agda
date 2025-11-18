@@ -4,9 +4,6 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
 
-import Cubical.Functions.Logic as L
-
-open import Cubical.Data.Sum
 open import Cubical.Data.Empty as ⊥
 
 open import Cubical.HITs.PropositionalTruncation
@@ -15,7 +12,6 @@ open import Cubical.Data.Int.Fast as ℤ
   renaming (_+_ to _+ℤ_ ; _-_ to _-ℤ_; -_ to -ℤ_ ; _·_ to _·ℤ_)
 open import Cubical.Data.Int.Fast.Order
   renaming (_<_ to _<ℤ_ ; _≤_ to _≤ℤ_)
-open import Cubical.Data.Nat using (ℕ ; zero ; suc)
 
 open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.CommRing.Instances.Int.Fast
@@ -37,17 +33,6 @@ open CommRingStr
 open OrderedCommRingStr
 open PseudolatticeStr
 open StrictOrderStr
-
-private
-  lemma0<+ : ∀ x y → 0 <ℤ x +ℤ y → (0 <ℤ x) L.⊔′ (0 <ℤ y)
-  lemma0<+ (pos zero)    (pos zero)    = ⊥.rec ∘ isIrrefl<
-  lemma0<+ (pos zero)    (pos (suc n)) = ∣_∣₁ ∘ inr ∘ subst (0 <ℤ_) (sym $ pos0+ _)
-  lemma0<+ (pos (suc m)) (pos n)       = λ _ → ∣ inl (suc-≤-suc {0} {pos m} zero-≤pos) ∣₁
-  lemma0<+ (pos zero)    (negsuc n)    = ⊥.rec ∘ ¬pos≤negsuc
-  lemma0<+ (pos (suc m)) (negsuc n)    = λ _ → ∣ inl (suc-≤-suc {0} {pos m} zero-≤pos) ∣₁
-  lemma0<+ (negsuc m)    (pos zero)    = ⊥.rec ∘ ¬pos≤negsuc
-  lemma0<+ (negsuc m)    (pos (suc n)) = λ _ → ∣ inr (suc-≤-suc {0} {pos n} zero-≤pos) ∣₁
-  lemma0<+ (negsuc m)    (negsuc n)    = ⊥.rec ∘ ¬pos≤negsuc
 
 ℤOrderedCommRing : OrderedCommRing ℓ-zero ℓ-zero
 fst ℤOrderedCommRing = ℤ
@@ -76,7 +61,7 @@ isOrderedCommRing (snd ℤOrderedCommRing) = isOrderedCommRingℤ
           (gt y<z) → ⊥.rec (¬y<x y<z) })
     isOrderedCommRingℤ .+MonoR≤         = λ x y z → ≤-+o {x} {y} {z}
     isOrderedCommRingℤ .+MonoR<         = λ x y z → <-+o {x} {y} {z}
-    isOrderedCommRingℤ .posSum→pos∨pos  = lemma0<+
+    isOrderedCommRingℤ .posSum→pos∨pos  = λ _ _ → ∣_∣₁ ∘ 0<+ _ _
     isOrderedCommRingℤ .<-≤-trans       = λ x y z → <≤-trans {x} {y} {z}
     isOrderedCommRingℤ .≤-<-trans       = λ x y z → ≤<-trans {x} {y} {z}
     isOrderedCommRingℤ .·MonoR≤         = λ x y z → 0≤o→≤-·o {z} {x} {y}
