@@ -88,8 +88,10 @@ m ≥ᵇ n = n ≤ᵇ m
 ≤ᵗ≡≤ᵇ (negsuc zero)    (negsuc (suc n)) = refl
 ≤ᵗ≡≤ᵇ (negsuc (suc m)) (negsuc (suc n)) = ≤ᵗ≡≤ᵇ (negsuc m) (negsuc n)
 
-
-open BinaryRelation _<_
+data Trichotomy (m n : ℤ) : Type₀ where
+  lt : m < n → Trichotomy m n
+  eq : m ≡ n → Trichotomy m n
+  gt : n < m → Trichotomy m n
 
 private
   variable
@@ -560,17 +562,37 @@ negsuc (suc m) ≟' negsuc (suc n) = Trichotomy-pred (negsuc m ≟' negsuc n)
 
 -- Raw comparisons, without the proof terms
 compare : ℤ → ℤ → Ordering
-compare = isTrichotomous→Ordering _≟_
+compare m n with m ≟ n
+... | lt _ = LT
+... | eq _ = EQ
+... | gt _ = GT
 
 compare' : ℤ → ℤ → Ordering
-compare' = isTrichotomous→Ordering _≟'_
+compare' m n with m ≟' n
+... | lt _ = LT
+... | eq _ = EQ
+... | gt _ = GT
 
 private
 
-  test₀ : compare -4294967296 -4295967296 ≡ GT
+  test₀ : compare -4294967296  4295967296 ≡ LT
   test₀ = refl
 
-  -- This would take much longer to typecheck:
+  test₁ : compare -4294967296 -4294967296 ≡ EQ
+  test₁ = refl
 
-  -- test₁ : compare' -4294967296 -4295967296 ≡ GT
-  -- test₁ = refl
+  test₂ : compare -4294967296 -4295967296 ≡ GT
+  test₂ = refl
+
+  test₀' : compare' -4294967296  4295967296 ≡ LT
+  test₀' = refl
+
+  {- This would take much longer to typecheck:
+
+  test₁ : compare' -4294967296 -4295967296 ≡ GT
+  test₁ = refl
+
+  test₂' : compare' -4294967296 -4295967296 ≡ GT
+  test₂' = refl
+
+  -}
