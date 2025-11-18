@@ -589,8 +589,8 @@ private
 
   {- This would take much longer to typecheck:
 
-  test₁ : compare' -4294967296 -4295967296 ≡ GT
-  test₁ = refl
+  test₁' : compare' -4294967296 -4295967296 ≡ GT
+  test₁' = refl
 
   test₂' : compare' -4294967296 -4295967296 ≡ GT
   test₂' = refl
