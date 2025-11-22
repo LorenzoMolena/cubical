@@ -19,6 +19,7 @@ import Cubical.Data.Nat.Order as ℕ
 open import Cubical.Data.Nat.Order.Recursive as ℕrec using ()
 open import Cubical.Data.NatPlusOne.Base as ℕ₊₁
 open import Cubical.Data.Sigma
+open import Cubical.Data.Sum
 
 open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary
@@ -88,8 +89,10 @@ m ≥ᵇ n = n ≤ᵇ m
 ≤ᵗ≡≤ᵇ (negsuc zero)    (negsuc (suc n)) = refl
 ≤ᵗ≡≤ᵇ (negsuc (suc m)) (negsuc (suc n)) = ≤ᵗ≡≤ᵇ (negsuc m) (negsuc n)
 
-
-open BinaryRelation _<_
+data Trichotomy (m n : ℤ) : Type₀ where
+  lt : m < n → Trichotomy m n
+  eq : m ≡ n → Trichotomy m n
+  gt : n < m → Trichotomy m n
 
 private
   variable
@@ -506,6 +509,16 @@ min≤ {negsuc m} {negsuc n} = ℕ≤→negsuc≥negsuc ℕ.left-≤-max
            cong₂ ℤ.max (≤→max m≤n) (≤→max o≤s))
           (≤max {m = ℤ.max m o} {n = ℤ.max n s})
 
+0<+ : ∀ m n → 0 < m ℤ.+ n → (0 < m) ⊎ (0 < n)
+0<+ (pos zero)    (pos zero)    = ⊥.rec ∘ isIrrefl<
+0<+ (pos zero)    (pos (suc n)) = inr
+0<+ (pos (suc m)) (pos n)       = λ _ → inl (suc-≤-suc {0} zero-≤pos)
+0<+ (pos zero)    (negsuc n)    = ⊥.rec ∘ ¬pos≤negsuc
+0<+ (pos (suc m)) (negsuc n)    = λ _ → inl (suc-≤-suc {0} zero-≤pos)
+0<+ (negsuc m)    (pos zero)    = ⊥.rec ∘ ¬pos≤negsuc
+0<+ (negsuc m)    (pos (suc n)) = λ _ → inr (suc-≤-suc {0} zero-≤pos)
+0<+ (negsuc m)    (negsuc n)    = ⊥.rec ∘ ¬pos≤negsuc
+
 ≤Dec : ∀ m n → Dec (m ≤ n)
 ≤Dec (pos m)    (pos n)    with ℕ.≤Dec m n
 ... | yes p = yes (ℕ≤→≤ p)
@@ -564,17 +577,37 @@ negsuc (suc m) ≟' negsuc (suc n) = Trichotomy-pred (negsuc m ≟' negsuc n)
 
 -- Raw comparisons, without the proof terms
 compare : ℤ → ℤ → Ordering
-compare = isTrichotomous→Ordering _≟_
+compare m n with m ≟ n
+... | lt _ = LT
+... | eq _ = EQ
+... | gt _ = GT
 
 compare' : ℤ → ℤ → Ordering
-compare' = isTrichotomous→Ordering _≟'_
+compare' m n with m ≟' n
+... | lt _ = LT
+... | eq _ = EQ
+... | gt _ = GT
 
 private
 
-  test₀ : compare -4294967296 -4295967296 ≡ GT
+  test₀ : compare -4294967296  4295967296 ≡ LT
   test₀ = refl
 
-  -- This would take much longer to typecheck:
+  test₁ : compare -4294967296 -4294967296 ≡ EQ
+  test₁ = refl
 
-  -- test₁ : compare' -4294967296 -4295967296 ≡ GT
-  -- test₁ = refl
+  test₂ : compare -4294967296 -4295967296 ≡ GT
+  test₂ = refl
+
+  test₀' : compare' -4294967296  4295967296 ≡ LT
+  test₀' = refl
+
+  {- This would take much longer to typecheck:
+
+  test₁' : compare' -4294967296 -4295967296 ≡ GT
+  test₁' = refl
+
+  test₂' : compare' -4294967296 -4295967296 ≡ GT
+  test₂' = refl
+
+  -}
