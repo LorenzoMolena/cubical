@@ -519,6 +519,41 @@ min≤ {negsuc m} {negsuc n} = ℕ≤→negsuc≥negsuc ℕ.left-≤-max
 0<+ (negsuc m)    (pos (suc n)) = λ _ → inr (suc-≤-suc {0} zero-≤pos)
 0<+ (negsuc m)    (negsuc n)    = ⊥.rec ∘ ¬pos≤negsuc
 
+0<_ : ℤ → Type
+0< pos zero = ⊥
+0< pos (suc n) = Unit
+0< negsuc n = ⊥
+
+isProp0< : ∀ n → isProp (0< n)
+isProp0< (pos (suc _)) _ _ = refl
+
+·0< : ∀ m n → 0< m → 0< n → 0< (m ℤ.· n)
+·0< (pos (suc m)) (pos (suc n)) _ _ = tt
+ -- subst (0<_) (pos+ (suc n) (m ℕ.· (suc n)) ∙ cong (pos (suc n) ℤ.+_) (pos·pos m (suc n))) _
+
+0<·ℕ₊₁ : ∀ m n → 0< (m ℤ.· pos (ℕ₊₁→ℕ n)) → 0< m
+0<·ℕ₊₁ (pos (suc m)) (1+ n) x = tt
+
+-- 0<·ℕ₊₁ : ∀ m n → 0< (m ℤ.· pos (ℕ₊₁→ℕ n)) → 0< m
+-- 0<·ℕ₊₁ (pos (suc m)) n x = _
+-- 0<·ℕ₊₁ (negsuc n₁) (1+ n) x = {!   !}
+  -- ⊥.rec (subst 0<_ (negsuc·pos n₁ (suc n)
+  --  ∙ congS -_ (cong (pos (suc n) ℤ.+_)
+  --    (sym (pos·pos n₁ (suc n))) ∙
+  --       sym (pos+ (suc n) (n₁ ℕ.· suc n)))) x)
+
++0< : ∀ m n → 0< m → 0< n → 0< (m ℤ.+ n)
++0< (pos (suc m)) (pos (suc n)) _ _ = tt
+ -- subst (0<_) (cong sucℤ (pos+ (suc m) n)) _
+
+0<→ℕ₊₁ : ∀ n → 0< n → Σ ℕ₊₁ λ m → n ≡ pos (ℕ₊₁→ℕ m)
+0<→ℕ₊₁ (pos (suc n)) x = (1+ n) , refl
+
+min-0< : ∀ m n → 0< m → 0< n → 0< (ℤ.min m n)
+min-0< (pos (suc m)) (pos (suc n)) p q with m ℕ.<ᵇ n
+... | false = tt
+... | true  = tt
+
 ≤Dec : ∀ m n → Dec (m ≤ n)
 ≤Dec (pos m)    (pos n)    with ℕ.≤Dec m n
 ... | yes p = yes (ℕ≤→≤ p)

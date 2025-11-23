@@ -1100,6 +1100,11 @@ minus≡0- (negsuc n)    = refl
 absPos·Pos : (m n : ℕ) → abs (pos m · pos n) ≡ abs (pos m) ·ℕ abs (pos n)
 absPos·Pos m n = refl
 
+abs-max : ∀ n → pos (abs n) ≡ max n (- n)
+abs-max (pos zero) = refl
+abs-max (pos (suc n)) = refl
+abs-max (negsuc n) = refl
+
 abs· : (m n : ℤ) → abs (m · n) ≡ abs m ·ℕ abs n
 abs· (pos m)       (pos n)       = refl
 abs· (pos zero)    (negsuc n)    = refl

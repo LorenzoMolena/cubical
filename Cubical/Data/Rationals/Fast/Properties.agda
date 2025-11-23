@@ -5,18 +5,37 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.GroupoidLaws hiding (_⁻¹)
 open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Function
 
-open import Cubical.Data.Int.Fast as ℤ using (ℤ; pos·pos; pos0+)
+open import Cubical.Data.Int.Fast as ℤ using (ℤ; pos·pos; pos0+; pos; negsuc) renaming
+  (_+_ to _+ℤ_ ; _·_ to _·ℤ_ ; -_ to -ℤ_ ; abs to ∣_∣ℤ ; sign to sgn)
 open import Cubical.HITs.SetQuotients as SetQuotient using () renaming (_/_ to _//_)
 
-open import Cubical.Data.Nat as ℕ using (ℕ; zero; suc)
+open import Cubical.Data.Nat as ℕ using (ℕ; zero; suc) renaming
+  (_+_ to _+ℕ_ ; _·_ to _·ℕ_)
 open import Cubical.Data.NatPlusOne
 open import Cubical.Data.Sigma
+import Cubical.Data.Bool as 𝟚
 
 open import Cubical.Data.Sum
+open import Cubical.Data.Empty as ⊥
 open import Cubical.Relation.Nullary
 
 open import Cubical.Data.Rationals.Fast.Base
+
+open import Cubical.Data.Nat.GCD
+open import Cubical.Data.Nat.Coprime
+
+∼→sign≡sign : ∀ a a' b b' → (a , b) ∼ (a' , b') → ℤ.sign a ≡ ℤ.sign a'
+∼→sign≡sign (ℤ.pos zero)    (ℤ.pos zero)    (1+ _) (1+ _) = λ _ → refl
+∼→sign≡sign (ℤ.pos zero)    (ℤ.pos (suc n)) (1+ _) (1+ _) = ⊥.rec ∘ ℕ.znots ∘ ℤ.injPos
+∼→sign≡sign (ℤ.pos (suc m)) (ℤ.pos zero)    (1+ _) (1+ _) = ⊥.rec ∘ ℕ.snotz ∘ ℤ.injPos
+∼→sign≡sign (ℤ.pos (suc m)) (ℤ.pos (suc n)) (1+ _) (1+ _) = λ _ → refl
+∼→sign≡sign (ℤ.pos m)       (ℤ.negsuc n)    (1+ _) (1+ _) = ⊥.rec ∘ ℤ.posNotnegsuc _ _
+∼→sign≡sign (ℤ.negsuc m)    (ℤ.pos n)       (1+ _) (1+ _) = ⊥.rec ∘ ℤ.negsucNotpos _ _
+∼→sign≡sign (ℤ.negsuc m)    (ℤ.negsuc n)    (1+ _) (1+ _) = λ _ → refl
+
 
 ·CancelL : ∀ {a b} (c : ℕ₊₁) → [ ℕ₊₁→ℤ c ℤ.· a / c ·₊₁ b ] ≡ [ a / b ]
 ·CancelL {a} {b} c = eq/ _ _
@@ -32,76 +51,169 @@ open import Cubical.Data.Rationals.Fast.Base
    a ℤ.· (ℕ₊₁→ℤ b ℤ.· ℕ₊₁→ℤ c)  ≡⟨ cong (a ℤ.·_) (sym (pos·pos (ℕ₊₁→ℕ b) (ℕ₊₁→ℕ c))) ⟩
    a ℤ.· ℕ₊₁→ℤ (b ·₊₁ c) ∎)
 
+module Reduce where
+  private
+    ℕ[_] = ℕ₊₁→ℕ
+    ℤ[_] = ℕ₊₁→ℤ
+    +[_] = ℤ.pos
+
+    Cod : ∀ x → Type
+    Cod x = Σ[ (p , q) ∈ (ℤ × ℕ₊₁) ] areCoprime (ℤ.abs p , ℕ₊₁→ℕ q) × ([ p / q ] ≡ x)
+    isSetValuedCod : ∀ x → isSet (Cod x)
+    isSetValuedCod x = isSetΣSndProp
+      (isSet× ℤ.isSetℤ (subst isSet 1+Path ℕ.isSetℕ))
+      λ _ → isProp× isPropIsGCD (isSetℚ _ _)
+
+    lemma-cop : ∀ {d-1} a c₁ → (c₁ ·ℕ suc d-1 ≡ ∣ a ∣ℤ) → c₁ ≡ ∣ sgn a ·ℤ +[ c₁ ] ∣ℤ
+    lemma-cop (pos zero)    zero     _ = refl
+    lemma-cop (pos zero)    (suc _)  x = ⊥.rec (ℕ.snotz x)
+    lemma-cop (pos (suc n)) c₁       _ = sym $ ℕ.+-zero c₁
+    lemma-cop (negsuc n)    zero     _ = refl
+    lemma-cop (negsuc n)    (suc c₁) _ = cong suc $ sym $ ℕ.+-zero c₁
+
+  module cop ((a , b) : ℤ × ℕ₊₁) where
+    open ToCoprime (∣ a ∣ℤ , b) renaming (toCoprimeAreCoprime to tcac) public
+
+    reduced[] : Cod [ a / b ]
+    reduced[] .fst      = sgn a ·ℤ pos c₁ , c₂
+    reduced[] .snd .fst = subst (areCoprime ∘ (_, ℕ[ c₂ ]))
+                                (lemma-cop a _ (cong (c₁ ·ℕ_) (sym q) ∙ p₁))
+                                tcac
+    reduced[] .snd .snd = eq/ _ _ $
+      sgn a ·ℤ   +[ c₁ ] ·ℤ ℤ[ b ]         ≡⟨ sym $ ℤ.·Assoc (sgn a) _ _ ⟩
+      sgn a ·ℤ ( +[ c₁ ] ·ℤ ℤ[ b ])        ≡⟨⟩
+      sgn a ·ℤ ( +[ c₁ ·ℕ ℕ[ b ] ])        ≡⟨ cong ((sgn a ·ℤ_) ∘ +[_]) $
+                    c₁ ·ℕ ℕ[ b ]           ≡⟨ sym $ cong (c₁ ·ℕ_) p₂ ⟩
+                    c₁ ·ℕ (ℕ[ c₂ ] ·ℕ d)   ≡⟨ cong (c₁ ·ℕ_) (ℕ.·-comm ℕ[ c₂ ] d) ⟩
+                    c₁ ·ℕ (d ·ℕ ℕ[ c₂ ])   ≡⟨ ℕ.·-assoc c₁ d ℕ[ c₂ ] ⟩
+                    c₁ ·ℕ  d ·ℕ ℕ[ c₂ ]    ≡⟨ cong (_·ℕ ℕ[ c₂ ]) p₁ ⟩ refl ⟩
+      sgn a ·ℤ ( +[    ∣ a ∣ℤ ·ℕ ℕ[ c₂ ] ]) ≡⟨⟩
+      sgn a ·ℤ ( +[  ∣ a ∣ℤ ] ·ℤ ℤ[ c₂ ] )  ≡⟨ ℤ.·Assoc (sgn a) _ _ ⟩
+      sgn a ·ℤ   +[  ∣ a ∣ℤ ] ·ℤ ℤ[ c₂ ]    ≡⟨ cong (_·ℤ ℤ[ c₂ ]) (ℤ.sign·abs a) ⟩
+                           a ·ℤ ℤ[ c₂ ]    ∎
+
+  reduced[]∼ : ∀ x y r → PathP (λ i → Cod (eq/ x y r i)) (cop.reduced[] x) (cop.reduced[] y)
+  reduced[]∼ x@(a , b) y@(a' , b') r = let
+    ∣x∣ = (∣ a  ∣ℤ , b)
+    ∣y∣ = (∣ a' ∣ℤ , b')
+
+    tc∣x∣≡tc∣y∣ =
+      tc ∣x∣                             ≡⟨⟩
+      tc (∣ a ∣ℤ , b)                    ≡⟨ sym $ tc-cancelʳ ∣x∣ b' ⟩
+      tc (∣ a ∣ℤ ·ℕ ℕ[ b' ] , b ·₊₁ b') ≡⟨ cong (tc ∘ (_, b ·₊₁ b')) $
+          ∣ a ∣ℤ ·ℕ ℕ[ b' ]             ≡⟨ sym $ ℤ.abs· a ℤ[ b' ] ⟩
+          ∣ a  ·ℤ ℤ[ b' ] ∣ℤ             ≡⟨ cong ∣_∣ℤ r ⟩
+          ∣ a' ·ℤ ℤ[ b  ] ∣ℤ             ≡⟨ ℤ.abs· a' ℤ[ b ] ⟩ refl ⟩
+      tc (∣ a' ∣ℤ ·ℕ ℕ[ b ] , b ·₊₁ b') ≡⟨ cong (tc ∘ (∣ a' ∣ℤ ·ℕ ℕ[ b ] ,_)) $ ·₊₁-comm b b' ⟩
+      tc (∣ a' ∣ℤ ·ℕ ℕ[ b ] , b' ·₊₁ b) ≡⟨ tc-cancelʳ ∣y∣ b ⟩
+      tc (∣ a' ∣ℤ , b')                  ≡⟨⟩
+      tc ∣y∣                             ∎
+
+    step0 = cong (uncurry (_,_ ∘ (sgn a ·ℤ_) ∘ pos)) tc∣x∣≡tc∣y∣
+    step1 = cong ((_, c₂ ∣y∣) ∘ (_·ℤ pos (c₁ ∣y∣))) (∼→sign≡sign a a' b b' r)
+    in
+      ΣPathPProp (λ _ → isProp× isPropIsGCD (isSetℚ _ _)) $
+        sgn a  ·ℤ pos (c₁ ∣x∣) , c₂ ∣x∣ ≡⟨ step0 ⟩
+        sgn a  ·ℤ pos (c₁ ∣y∣) , c₂ ∣y∣ ≡⟨ step1 ⟩
+        sgn a' ·ℤ pos (c₁ ∣y∣) , c₂ ∣y∣ ∎
+    where
+      open ToCoprime renaming (toCoprime to tc) ; tc-cancelʳ = toCoprime-cancelʳ
+
+  reduced : ∀ x → Cod x
+  reduced = SetQuotient.elim isSetValuedCod cop.reduced[] reduced[]∼
+
+open Reduce public
+
 -- useful functions for defining operations on ℚ
 
-onCommonDenom :
-  (g : ℤ × ℕ₊₁ → ℤ × ℕ₊₁ → ℤ)
-  (g-eql : ∀ ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : a ℤ.· ℕ₊₁→ℤ d ≡ c ℤ.· ℕ₊₁→ℤ b)
-           → ℕ₊₁→ℤ d ℤ.· (g (a , b) (e , f)) ≡ ℕ₊₁→ℤ b ℤ.· (g (c , d) (e , f)))
-  (g-eqr : ∀ ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : c ℤ.· ℕ₊₁→ℤ f ≡ e ℤ.· ℕ₊₁→ℤ d)
-           → (g (a , b) (c , d)) ℤ.· ℕ₊₁→ℤ f ≡ (g (a , b) (e , f)) ℤ.· ℕ₊₁→ℤ d)
-  → ℚ → ℚ → ℚ
-onCommonDenom g g-eql g-eqr = SetQuotient.rec2 isSetℚ
-  (λ { (a , b) (c , d) → [ g (a , b) (c , d) / b ·₊₁ d ] })
-  (λ { (a , b) (c , d) (e , f) p → eql (a , b) (c , d) (e , f) p })
-  (λ { (a , b) (c , d) (e , f) p → eqr (a , b) (c , d) (e , f) p })
-  where abstract
-        eql : ∀ ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : a ℤ.· ℕ₊₁→ℤ d ≡ c ℤ.· ℕ₊₁→ℤ b)
-              → [ g (a , b) (e , f) / b ·₊₁ f ] ≡ [ g (c , d) (e , f) / d ·₊₁ f ]
-        eql (a , b) (c , d) (e , f) p =
-          [ g (a , b) (e , f) / b ·₊₁ f ]
-            ≡⟨ sym (·CancelL d) ⟩
-          [ ℕ₊₁→ℤ d ℤ.· (g (a , b) (e , f)) / d ·₊₁ (b ·₊₁ f) ]
-            ≡[ i ]⟨ [ ℕ₊₁→ℤ d ℤ.· (g (a , b) (e , f)) / ·₊₁-assoc d b f i ] ⟩
-          [ ℕ₊₁→ℤ d ℤ.· (g (a , b) (e , f)) / (d ·₊₁ b) ·₊₁ f ]
-            ≡[ i ]⟨ [ g-eql (a , b) (c , d) (e , f) p i / ·₊₁-comm d b i ·₊₁ f ] ⟩
-          [ ℕ₊₁→ℤ b ℤ.· (g (c , d) (e , f)) / (b ·₊₁ d) ·₊₁ f ]
-            ≡[ i ]⟨ [ ℕ₊₁→ℤ b ℤ.· (g (c , d) (e , f)) / ·₊₁-assoc b d f (~ i) ] ⟩
-          [ ℕ₊₁→ℤ b ℤ.· (g (c , d) (e , f)) / b ·₊₁ (d ·₊₁ f) ]
-            ≡⟨ ·CancelL b ⟩
-          [ g (c , d) (e , f) / d ·₊₁ f ] ∎
-        eqr : ∀ ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : c ℤ.· ℕ₊₁→ℤ f ≡ e ℤ.· ℕ₊₁→ℤ d)
-             → [ g (a , b) (c , d) / b ·₊₁ d ] ≡ [ g (a , b) (e , f) / b ·₊₁ f ]
-        eqr (a , b) (c , d) (e , f) p =
-          [ g (a , b) (c , d) / b ·₊₁ d ]
-            ≡⟨ sym (·CancelR f) ⟩
-          [ (g (a , b) (c , d)) ℤ.· ℕ₊₁→ℤ f / (b ·₊₁ d) ·₊₁ f ]
-            ≡[ i ]⟨ [ (g (a , b) (c , d)) ℤ.· ℕ₊₁→ℤ f / ·₊₁-assoc b d f (~ i) ] ⟩
-          [ (g (a , b) (c , d)) ℤ.· ℕ₊₁→ℤ f / b ·₊₁ (d ·₊₁ f) ]
-            ≡[ i ]⟨ [ g-eqr (a , b) (c , d) (e , f) p i / b ·₊₁ ·₊₁-comm d f i ] ⟩
-          [ (g (a , b) (e , f)) ℤ.· ℕ₊₁→ℤ d / b ·₊₁ (f ·₊₁ d) ]
-            ≡[ i ]⟨ [ (g (a , b) (e , f)) ℤ.· ℕ₊₁→ℤ d / ·₊₁-assoc b f d i ] ⟩
-          [ (g (a , b) (e , f)) ℤ.· ℕ₊₁→ℤ d / (b ·₊₁ f) ·₊₁ d ]
-            ≡⟨ ·CancelR d ⟩
-          [ g (a , b) (e , f) / b ·₊₁ f ] ∎
+reduce : ℚ → ℚ
+reduce = [_] ∘ fst ∘  reduced
 
-onCommonDenomSym :
-  (g : ℤ × ℕ₊₁ → ℤ × ℕ₊₁ → ℤ)
-  (g-sym : ∀ x y → g x y ≡ g y x)
-  (g-eql : ∀ ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : a ℤ.· ℕ₊₁→ℤ d ≡ c ℤ.· ℕ₊₁→ℤ b)
-           → ℕ₊₁→ℤ d ℤ.· (g (a , b) (e , f)) ≡ ℕ₊₁→ℤ b ℤ.· (g (c , d) (e , f)))
-  → ℚ → ℚ → ℚ
-onCommonDenomSym g g-sym g-eql = onCommonDenom g g-eql q-eqr
-  where abstract
-        q-eqr : ∀ ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : c ℤ.· ℕ₊₁→ℤ f ≡ e ℤ.· ℕ₊₁→ℤ d)
-                → (g (a , b) (c , d)) ℤ.· ℕ₊₁→ℤ f ≡ (g (a , b) (e , f)) ℤ.· ℕ₊₁→ℤ d
-        q-eqr (a , b) (c , d) (e , f) p =
-          (g (a , b) (c , d)) ℤ.· ℕ₊₁→ℤ f ≡[ i ]⟨ ℤ.·Comm (g-sym (a , b) (c , d) i) (ℕ₊₁→ℤ f) i ⟩
-          ℕ₊₁→ℤ f ℤ.· (g (c , d) (a , b)) ≡⟨ g-eql (c , d) (e , f) (a , b) p ⟩
-          ℕ₊₁→ℤ d ℤ.· (g (e , f) (a , b)) ≡[ i ]⟨ ℤ.·Comm (ℕ₊₁→ℤ d) (g-sym (e , f) (a , b) i) i ⟩
-          (g (a , b) (e , f)) ℤ.· ℕ₊₁→ℤ d ∎
+record OnCommonDenom : Type where
+ no-eta-equality
+ field
+  g : ℤ × ℕ₊₁ → ℤ × ℕ₊₁ → ℤ
+  g-eql : ∀ ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : a ℤ.· ℕ₊₁→ℤ d ≡ c ℤ.· ℕ₊₁→ℤ b)
+           → ℕ₊₁→ℤ d ℤ.· (g (a , b) (e , f)) ≡ ℕ₊₁→ℤ b ℤ.· (g (c , d) (e , f))
+  g-eqr : ∀ ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : c ℤ.· ℕ₊₁→ℤ f ≡ e ℤ.· ℕ₊₁→ℤ d)
+           → (g (a , b) (c , d)) ℤ.· ℕ₊₁→ℤ f ≡ (g (a , b) (e , f)) ℤ.· ℕ₊₁→ℤ d
 
-onCommonDenomSym-comm : ∀ {g} g-sym {g-eql} (x y : ℚ)
-                        → onCommonDenomSym g g-sym g-eql x y ≡
-                          onCommonDenomSym g g-sym g-eql y x
-onCommonDenomSym-comm g-sym = SetQuotient.elimProp2 (λ _ _ → isSetℚ _ _)
-  (λ { (a , b) (c , d) i → [ g-sym (a , b) (c , d) i / ·₊₁-comm b d i ] })
+ eql : ∀ ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : a ℤ.· ℕ₊₁→ℤ d ≡ c ℤ.· ℕ₊₁→ℤ b)
+       → [ g (a , b) (e , f) / b ·₊₁ f ] ≡ [ g (c , d) (e , f) / d ·₊₁ f ]
+ eql (a , b) (c , d) (e , f) p =
+   [ g (a , b) (e , f) / b ·₊₁ f ]
+     ≡⟨ sym (·CancelL d) ⟩
+   [ ℕ₊₁→ℤ d ℤ.· (g (a , b) (e , f)) / d ·₊₁ (b ·₊₁ f) ]
+     ≡[ i ]⟨ [ ℕ₊₁→ℤ d ℤ.· (g (a , b) (e , f)) / ·₊₁-assoc d b f i ] ⟩
+   [ ℕ₊₁→ℤ d ℤ.· (g (a , b) (e , f)) / (d ·₊₁ b) ·₊₁ f ]
+     ≡[ i ]⟨ [ g-eql (a , b) (c , d) (e , f) p i / ·₊₁-comm d b i ·₊₁ f ] ⟩
+   [ ℕ₊₁→ℤ b ℤ.· (g (c , d) (e , f)) / (b ·₊₁ d) ·₊₁ f ]
+     ≡[ i ]⟨ [ ℕ₊₁→ℤ b ℤ.· (g (c , d) (e , f)) / ·₊₁-assoc b d f (~ i) ] ⟩
+   [ ℕ₊₁→ℤ b ℤ.· (g (c , d) (e , f)) / b ·₊₁ (d ·₊₁ f) ]
+     ≡⟨ ·CancelL b ⟩
+   [ g (c , d) (e , f) / d ·₊₁ f ] ∎
+ eqr : ∀ ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : c ℤ.· ℕ₊₁→ℤ f ≡ e ℤ.· ℕ₊₁→ℤ d)
+      → [ g (a , b) (c , d) / b ·₊₁ d ] ≡ [ g (a , b) (e , f) / b ·₊₁ f ]
+ eqr (a , b) (c , d) (e , f) p =
+   [ g (a , b) (c , d) / b ·₊₁ d ]
+     ≡⟨ sym (·CancelR f) ⟩
+   [ (g (a , b) (c , d)) ℤ.· ℕ₊₁→ℤ f / (b ·₊₁ d) ·₊₁ f ]
+     ≡[ i ]⟨ [ (g (a , b) (c , d)) ℤ.· ℕ₊₁→ℤ f / ·₊₁-assoc b d f (~ i) ] ⟩
+   [ (g (a , b) (c , d)) ℤ.· ℕ₊₁→ℤ f / b ·₊₁ (d ·₊₁ f) ]
+     ≡[ i ]⟨ [ g-eqr (a , b) (c , d) (e , f) p i / b ·₊₁ ·₊₁-comm d f i ] ⟩
+   [ (g (a , b) (e , f)) ℤ.· ℕ₊₁→ℤ d / b ·₊₁ (f ·₊₁ d) ]
+     ≡[ i ]⟨ [ (g (a , b) (e , f)) ℤ.· ℕ₊₁→ℤ d / ·₊₁-assoc b f d i ] ⟩
+   [ (g (a , b) (e , f)) ℤ.· ℕ₊₁→ℤ d / (b ·₊₁ f) ·₊₁ d ]
+     ≡⟨ ·CancelR d ⟩
+   [ g (a , b) (e , f) / b ·₊₁ f ] ∎
+
+
+ go : ℚ → ℚ → ℚ
+ go = SetQuotient.Rec2.go w
+  where
+  w : SetQuotient.Rec2 ℚ
+  w .SetQuotient.Rec2.isSetB = isSetℚ
+  w .SetQuotient.Rec2.f (a , b) (c , d) = [ g (a , b) (c , d) / b ·₊₁ d ]
+  w .SetQuotient.Rec2.f∼ (a , b) (c , d) (e , f) p = eqr (a , b) (c , d) (e , f) p
+  w .SetQuotient.Rec2.∼f (a , b) (c , d) (e , f) p = eql (a , b) (c , d) (e , f) p
+
+record OnCommonDenomSym : Type where
+ no-eta-equality
+ field
+  g : ℤ × ℕ₊₁ → ℤ × ℕ₊₁ → ℤ
+  g-sym : ∀ x y → g x y ≡ g y x
+  g-eql : ∀ ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : a ℤ.· ℕ₊₁→ℤ d ≡ c ℤ.· ℕ₊₁→ℤ b)
+           → ℕ₊₁→ℤ d ℤ.· (g (a , b) (e , f)) ≡ ℕ₊₁→ℤ b ℤ.· (g (c , d) (e , f))
+
+ q-eqr : ∀ ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : c ℤ.· ℕ₊₁→ℤ f ≡ e ℤ.· ℕ₊₁→ℤ d)
+                 → (g (a , b) (c , d)) ℤ.· ℕ₊₁→ℤ f ≡ (g (a , b) (e , f)) ℤ.· ℕ₊₁→ℤ d
+ q-eqr (a , b) (c , d) (e , f) p =
+           (g (a , b) (c , d)) ℤ.· ℕ₊₁→ℤ f ≡[ i ]⟨ ℤ.·Comm (g-sym (a , b) (c , d) i) (ℕ₊₁→ℤ f) i ⟩
+           ℕ₊₁→ℤ f ℤ.· (g (c , d) (a , b)) ≡⟨ g-eql (c , d) (e , f) (a , b) p ⟩
+           ℕ₊₁→ℤ d ℤ.· (g (e , f) (a , b)) ≡[ i ]⟨ ℤ.·Comm (ℕ₊₁→ℤ d) (g-sym (e , f) (a , b) i) i ⟩
+           (g (a , b) (e , f)) ℤ.· ℕ₊₁→ℤ d ∎
+
+ go : ℚ → ℚ → ℚ
+ go = OnCommonDenom.go w
+  where
+  w : OnCommonDenom
+  w .OnCommonDenom.g = g
+  w .OnCommonDenom.g-eql = g-eql
+  w .OnCommonDenom.g-eqr = q-eqr
+
+ go-comm : ∀ x y → go x y ≡ go y x
+ go-comm = SetQuotient.ElimProp2.go w
+  where
+  w : SetQuotient.ElimProp2 (λ z z₁ → go z z₁ ≡ go z₁ z)
+  w .SetQuotient.ElimProp2.isPropB _ _ = isSetℚ _ _
+  w .SetQuotient.ElimProp2.f (a , b) (c , d) i = [ g-sym (a , b) (c , d) i / ·₊₁-comm b d i ]
 
 
 -- basic arithmetic operations on ℚ
 
 infixl 6 _+_
 infixl 7 _·_
+infix  8 -_
 
 private abstract
   lem₁ : ∀ a b c d e (p : a ℤ.· b ≡ c ℤ.· d) → b ℤ.· (a ℤ.· e) ≡ d ℤ.· (c ℤ.· e)
@@ -114,12 +226,13 @@ private abstract
                ∙ cong (ℤ._· b) (ℤ.·Comm a c) ∙ sym (ℤ.·Assoc c a b)
                ∙ cong (c ℤ.·_) (ℤ.·Comm a b)
 
-min : ℚ → ℚ → ℚ
-min = onCommonDenomSym
-  (λ { (a , b) (c , d) → ℤ.min (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b) })
-  (λ { (a , b) (c , d) → ℤ.minComm (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b) })
-   eq
+minR : OnCommonDenomSym
+minR .OnCommonDenomSym.g (a , b) (c , d) = ℤ.min (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b)
+minR .OnCommonDenomSym.g-sym (a , b) (c , d) = ℤ.minComm (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b)
+minR .OnCommonDenomSym.g-eql = eq
+
   where abstract
+
     eq : ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : a ℤ.· ℕ₊₁→ℤ d ≡ c ℤ.· ℕ₊₁→ℤ b)
        → ℕ₊₁→ℤ d ℤ.· ℤ.min (a ℤ.· ℕ₊₁→ℤ f) (e ℤ.· ℕ₊₁→ℤ b)
        ≡ ℕ₊₁→ℤ b ℤ.· ℤ.min (c ℤ.· ℕ₊₁→ℤ f) (e ℤ.· ℕ₊₁→ℤ d)
@@ -151,11 +264,14 @@ min = onCommonDenomSym
       ℕ₊₁→ℤ b ℤ.· ℤ.min (c ℤ.· ℕ₊₁→ℤ f)
                          (e ℤ.· ℕ₊₁→ℤ d) ∎
 
-max : ℚ → ℚ → ℚ
-max = onCommonDenomSym
-  (λ { (a , b) (c , d) → ℤ.max (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b) })
-  (λ { (a , b) (c , d) → ℤ.maxComm (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b) })
-   eq
+min = OnCommonDenomSym.go minR
+
+maxR : OnCommonDenomSym
+maxR .OnCommonDenomSym.g (a , b) (c , d) = ℤ.max (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b)
+maxR .OnCommonDenomSym.g-sym (a , b) (c , d) = ℤ.maxComm (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b)
+maxR .OnCommonDenomSym.g-eql = eq
+
+
   where abstract
     eq : ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : a ℤ.· ℕ₊₁→ℤ d ≡ c ℤ.· ℕ₊₁→ℤ b)
        → ℕ₊₁→ℤ d ℤ.· ℤ.max (a ℤ.· ℕ₊₁→ℤ f) (e ℤ.· ℕ₊₁→ℤ b)
@@ -188,13 +304,14 @@ max = onCommonDenomSym
       ℕ₊₁→ℤ b ℤ.· ℤ.max (c ℤ.· ℕ₊₁→ℤ f)
                          (e ℤ.· ℕ₊₁→ℤ d) ∎
 
+max = OnCommonDenomSym.go maxR
+
+
 minComm : ∀ x y → min x y ≡ min y x
-minComm = onCommonDenomSym-comm
-  (λ { (a , b) (c , d) → ℤ.minComm (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b) })
+minComm = OnCommonDenomSym.go-comm minR
 
 maxComm : ∀ x y → max x y ≡ max y x
-maxComm = onCommonDenomSym-comm
-  (λ { (a , b) (c , d) → ℤ.maxComm (a ℤ.· ℕ₊₁→ℤ d) (c ℤ.· ℕ₊₁→ℤ b) })
+maxComm = OnCommonDenomSym.go-comm maxR
 
 minIdem : ∀ x → min x x ≡ x
 minIdem = SetQuotient.elimProp (λ _ → isSetℚ _ _)
@@ -328,11 +445,10 @@ maxAbsorbLMin = SetQuotient.elimProp2 (λ _ _ → isSetℚ _ _)
                                cong ℕ₊₁→ℤ (·₊₁-comm (b ·₊₁ d) b)) ⟩
            a ℤ.· ℕ₊₁→ℤ (b ·₊₁ (b ·₊₁ d)) ∎) }
 
-_+_ : ℚ → ℚ → ℚ
-_+_ = onCommonDenomSym
-  (λ { (a , b) (c , d) → a ℤ.· (ℕ₊₁→ℤ d) ℤ.+ c ℤ.· (ℕ₊₁→ℤ b) })
-  (λ { (a , b) (c , d) → ℤ.+Comm (a ℤ.· (ℕ₊₁→ℤ d)) (c ℤ.· (ℕ₊₁→ℤ b)) })
-   eq
++Rec : OnCommonDenomSym
++Rec .OnCommonDenomSym.g (a , b) (c , d) = a ℤ.· (ℕ₊₁→ℤ d) ℤ.+ c ℤ.· (ℕ₊₁→ℤ b)
++Rec .OnCommonDenomSym.g-sym (a , b) (c , d) = ℤ.+Comm (a ℤ.· (ℕ₊₁→ℤ d)) (c ℤ.· (ℕ₊₁→ℤ b))
++Rec .OnCommonDenomSym.g-eql = eq
   where abstract
     eq : ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : a ℤ.· ℕ₊₁→ℤ d ≡ c ℤ.· ℕ₊₁→ℤ b)
        → ℕ₊₁→ℤ d ℤ.· (a ℤ.· ℕ₊₁→ℤ f ℤ.+ e ℤ.· ℕ₊₁→ℤ b)
@@ -346,9 +462,12 @@ _+_ = onCommonDenomSym
         ≡⟨ sym (ℤ.·DistR+ (ℕ₊₁→ℤ b) (c ℤ.· ℕ₊₁→ℤ f) (e ℤ.· ℕ₊₁→ℤ d)) ⟩
       ℕ₊₁→ℤ b ℤ.· (c ℤ.· ℕ₊₁→ℤ f ℤ.+ e ℤ.· ℕ₊₁→ℤ d) ∎
 
+
+_+_ : ℚ → ℚ → ℚ
+_+_ = OnCommonDenomSym.go +Rec
+
 +Comm : ∀ x y → x + y ≡ y + x
-+Comm = onCommonDenomSym-comm
-  (λ { (a , b) (c , d) → ℤ.+Comm (a ℤ.· (ℕ₊₁→ℤ d)) (c ℤ.· (ℕ₊₁→ℤ b)) })
++Comm = OnCommonDenomSym.go-comm +Rec
 
 +IdL : ∀ x → 0 + x ≡ x
 +IdL = SetQuotient.elimProp (λ _ → isSetℚ _ _)
@@ -382,15 +501,16 @@ _+_ = onCommonDenomSym
             ≡[ i ]⟨ ℤ.·DistL+ (a ℤ.· d) (c ℤ.· b) f (~ i) ℤ.+ e ℤ.· (b ℤ.· d) ⟩
           (a ℤ.· d ℤ.+ c ℤ.· b) ℤ.· f ℤ.+ e ℤ.· (b ℤ.· d) ∎
 
+·Rec : OnCommonDenomSym
+·Rec .OnCommonDenomSym.g (a , _) (c , _) = a ℤ.· c
+·Rec .OnCommonDenomSym.g-sym (a , _) (c , _) = ℤ.·Comm a c
+·Rec .OnCommonDenomSym.g-eql (a , b) (c , d) (e , _) p = lem₁ a (ℕ₊₁→ℤ d) c (ℕ₊₁→ℤ b) e p
 
 _·_ : ℚ → ℚ → ℚ
-_·_ = onCommonDenomSym
-  (λ { (a , _) (c , _) → a ℤ.· c })
-  (λ { (a , _) (c , _) → ℤ.·Comm a c })
-  (λ { (a , b) (c , d) (e , _) p → lem₁ a (ℕ₊₁→ℤ d) c (ℕ₊₁→ℤ b) e p })
+_·_ = OnCommonDenomSym.go ·Rec
 
 ·Comm : ∀ x y → x · y ≡ y · x
-·Comm = onCommonDenomSym-comm (λ { (a , _) (c , _) → ℤ.·Comm a c })
+·Comm = OnCommonDenomSym.go-comm ·Rec
 
 ·IdL : ∀ x → 1 · x ≡ x
 ·IdL = SetQuotient.elimProp (λ _ → isSetℚ _ _)
@@ -455,11 +575,32 @@ _·_ = onCommonDenomSym
 ·DistR+ x y z = sym ((λ i → ·Comm x z i + ·Comm y z i) ∙ (sym (·DistL+ z x y)) ∙ ·Comm z (x + y))
 
 
+[/]≡· : ∀ n m → [ n / m ] ≡ [ n / 1 ] · [ 1 / m ]
+[/]≡· n m = cong₂ [_/_] (sym (ℤ.·IdR n)) (sym (·₊₁-identityˡ _))
+
+[1/n]·[1/m]≡[1/n·m] : ∀ n m → [ 1 / n ] · [ 1 / m ] ≡ [ 1 / n ·₊₁ m ]
+[1/n]·[1/m]≡[1/n·m] n m = eq/ _ _ refl
+
+
+[n/n]≡[m/m] : ∀ n m → [ ℤ.pos (suc n) / 1+ n ] ≡ [ ℤ.pos (suc m) / 1+ m ]
+[n/n]≡[m/m] n m = eq/ _ _ (ℤ.·Comm (ℤ.pos (suc n)) (ℤ.pos (suc m)))
+
+[0/n]≡[0/m] : ∀ n m → [ ℤ.pos zero / 1+ n ] ≡ [ ℤ.pos zero / 1+ m ]
+[0/n]≡[0/m] n m = eq/ _ _ refl
+
+
 -_ : ℚ → ℚ
 - x = -1 · x
 
+-[/] : ∀ n m → [ ℤ.negsuc m / n ] ≡ - [ ℤ.pos (suc m) / n ]
+-[/] n m = cong₂ [_/_] (sym (ℤ.-1·x≡-x _)) (sym (·₊₁-identityˡ _))
+
+
 -Invol : ∀ x → - - x ≡ x
 -Invol x = ·Assoc -1 -1 x ∙ ·IdL x
+
+-Distr : ∀ x y → - (x + y) ≡ - x + - y
+-Distr = ·DistL+ -1
 
 negateEquiv : ℚ ≃ ℚ
 negateEquiv = isoToEquiv (iso -_ -_ -Invol -Invol)
@@ -473,6 +614,19 @@ negateEq = ua negateEquiv
 _-_ : ℚ → ℚ → ℚ
 x - y = x + (- y)
 
+
+-·- : ∀ x y → (- x) · (- y) ≡ x · y
+-·- x y = cong (_· (- y)) (·Comm -1 x)
+            ∙∙ sym (·Assoc x (- 1) _)
+            ∙∙ cong (x ·_) (-Invol y)
+
+-[x-y]≡y-x : ∀ x y → - ( x - y ) ≡ y - x
+-[x-y]≡y-x x y = -Distr x (- y) ∙ λ i → +Comm (- x) (-Invol y i) i
+
+-Distr' : ∀ x y → - (x - y) ≡ (- x) + y
+-Distr' x y = -[x-y]≡y-x x y ∙ +Comm y (- x)
+
+
 +InvR : ∀ x → x - x ≡ 0
 +InvR x = +Comm x (- x) ∙ +InvL x
 
@@ -483,3 +637,74 @@ x - y = x + (- y)
 
 +CancelR : ∀ x y z → x + y ≡ z + y → x ≡ z
 +CancelR x y z p = +CancelL y x z (+Comm y x ∙ p ∙ +Comm z y)
+
++CancelL- : ∀ x y z → x + y ≡ z → x ≡ z - y
++CancelL- x y z p = (sym (+IdR x)  ∙ cong (x +_) (sym (+InvR y)))
+  ∙∙  (+Assoc x y (- y)) ∙∙ cong (_- y) p
+
+abs : ℚ → ℚ
+abs x = max x (- x)
+
+abs' : ℚ → ℚ
+abs' = SetQuotient.Rec.go w
+ where
+ w : SetQuotient.Rec ℚ
+ w .SetQuotient.Rec.isSetB = isSetℚ
+ w .SetQuotient.Rec.f (a , b) = [ ℤ.pos (ℤ.abs a) , b ]
+ w .SetQuotient.Rec.f∼ (a , 1+ b) (a' , 1+ b') r = eq/ _ _
+   ((sym (ℤ.pos·pos (ℤ.abs a) (suc b')) ∙
+      cong ℤ.pos (sym (ℤ.abs· (a) (ℕ₊₁→ℤ (1+ b'))) ))
+     ∙∙ cong (λ x → ℤ.pos (ℤ.abs x)) r
+     ∙∙ sym ((sym (ℤ.pos·pos (ℤ.abs a') (suc b)) ∙
+      cong ℤ.pos (sym (ℤ.abs· (a') (ℕ₊₁→ℤ (1+ b))) ))))
+{-
+abs'≡abs : ∀ x → abs x ≡ abs' x
+abs'≡abs = SetQuotient.ElimProp.go w
+ where
+ w : SetQuotient.ElimProp (λ z → abs z ≡ abs' z)
+ w .SetQuotient.ElimProp.isPropB _ = isSetℚ _ _
+ w .SetQuotient.ElimProp.f (a , 1+ b) = eq/ _ _  ww
+  where
+
+  ww : ℤ.max (a ℤ.· ℕ₊₁→ℤ (1 ·₊₁ 1+ b))
+              ((-1 ·ℤ a)  ℤ.· ℕ₊₁→ℤ (1+ b)) ℤ.· ℤ.pos (suc b) ≡
+         ℤ.pos (ℤ.abs a) ℤ.·
+           ℕ₊₁→ℤ ((1+ b) ·₊₁ (1 ·₊₁ 1+ b))
+  ww = cong (ℤ._· ℤ.pos (suc b))
+            ({! ℤ.max (a ·ℤ ℕ₊₁→ℤ ((1+ 0) ·₊₁ (1+ b)))
+      (negsuc 0 ·ℤ a ·ℤ ℕ₊₁→ℤ (1+ b))
+      ≡ ℤ.max a (-ℤ a) ·ℤ ℕ₊₁→ℤ (1+ b) ·ℤ ℕ₊₁→ℤ (1+ b)  !} ∙∙
+       (λ i → ℤ.·Assoc (ℤ.abs-max a (~ i)) (ℕ₊₁→ℤ (1+ b))
+          (ℕ₊₁→ℤ (·₊₁-identityˡ (1+ b) (~ i))) (~ i)) ∙∙
+           {! cong (ℤ.pos (ℤ.abs a) ℤ.·_)
+            (sym (pos·pos (suc b) (ℕ₊₁→ℕ (·₊₁-identityˡ (1+ b) (~ i1))))) !})
+  --  cong (ℤ._· ℤ.pos (suc b))
+  --        ((λ i → ℤ.max (a ℤ.· ℕ₊₁→ℤ (·₊₁-identityˡ (1+ b) i))
+  --             ((ℤ.- a)  ℤ.· ℕ₊₁→ℤ (1+ b))) ∙ sym (ℤ.·DistPosLMax a ((ℤ.- a)) (suc b)) ) ∙∙
+  --     (λ i → ℤ.·Assoc (ℤ.abs-max a (~ i)) (ℕ₊₁→ℤ (1+ b))
+  --        (ℕ₊₁→ℤ (·₊₁-identityˡ (1+ b) (~ i))) (~ i)) ∙∙
+  --         cong (ℤ.pos (ℤ.abs a) ℤ.·_)
+  --          (sym (pos·pos (suc b) (ℕ₊₁→ℕ (·₊₁-identityˡ (1+ b) (~ i1)))))
+-}
+
+ℤ+→ℚ+ : ∀ m n → [ m / 1 ] + [ n / 1 ] ≡ [ m ℤ.+ n / 1 ]
+ℤ+→ℚ+ m n = cong [_/ 1 ] (cong₂ ℤ._+_ (ℤ.·IdR m) (ℤ.·IdR n))
+
+ℤ-→ℚ- : ∀ m n → [ m / 1 ] - [ n / 1 ] ≡ [ m ℤ.- n / 1 ]
+ℤ-→ℚ- m n = cong [_/ 1 ]
+  (cong₂
+    ℤ._+_ (ℤ.·IdR m)
+    (cong (_·ℤ _) (ℤ.-1·x≡-x n) ∙ ℤ.·IdR (ℤ.- n)))
+
+ℕ+→ℚ+ : ∀ m n → fromNat m + fromNat n ≡ fromNat (m ℕ.+ n)
+ℕ+→ℚ+ m n = ℤ+→ℚ+ (ℤ.pos m) (ℤ.pos n) ∙ cong [_/ 1 ] (sym (ℤ.pos+ m n))
+
+ℕ·→ℚ· : ∀ m n → fromNat m · fromNat n ≡ fromNat (m ℕ.· n)
+ℕ·→ℚ· m n = cong [_/ 1 ] (sym (ℤ.pos·pos m n))
+
+
+x+x≡2x : ∀ x → x + x ≡ 2 · x
+x+x≡2x x = cong₂ _+_
+    (sym (·IdL x))
+    (sym (·IdL x))
+    ∙ sym (·DistR+ 1 1 x)
