@@ -22,7 +22,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Sum as ⊎ using (_⊎_; inl; inr; isProp⊎)
 
 open import Cubical.HITs.PropositionalTruncation as ∥₁ using (isPropPropTrunc; ∣_∣₁)
-open import Cubical.HITs.SetQuotients
+open import Cubical.HITs.SetQuotients as SetQuotient
 
 open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary.Base
@@ -956,10 +956,9 @@ pos[-x≤x] ε = isTrans≤ (ℚ.- (fst ε)) 0 (fst ε) (-ℚ₊≤0 ε) (0≤�
 
 absCases : (q : ℚ) → (abs q ≡ - q) ⊎ (abs q ≡ q)
 absCases q with (- q) ≟ q
-... | lt x = inr (ℚ.maxComm q (- q) ∙ (≤→max (- q) q $ <Weaken≤ (- q) q x))
-... | eq x = inr (ℚ.maxComm q (- q) ∙ (≤→max (- q) q $ ≡Weaken≤ (- q) q x))
-... | gt x = inl (≤→max q (- q) (<Weaken≤ q (- q) x) )
-
+... | lt x = inr (sym (x⊔[-x]≡abs q) ∙∙ ℚ.maxComm q _ ∙∙ (≤→max (- q) q $ <Weaken≤ (- q) q x))
+... | eq x = inr (sym (x⊔[-x]≡abs q) ∙∙ ℚ.maxComm q _ ∙∙ (≤→max (- q) q $ ≡Weaken≤ (- q) q x))
+... | gt x = inl (sym (x⊔[-x]≡abs q) ∙  (≤→max q (- q) (<Weaken≤ q (- q) x) ))
 
 absFrom≤×≤ : ∀ ε q →
                 - ε ≤ q
@@ -983,14 +982,17 @@ clamp : ℚ → ℚ → ℚ → ℚ
 clamp d u x = ℚ.min (ℚ.max d x) u
 
 ≠→0<abs : ∀ q r → ¬ q ≡ r → 0< ℚ.abs (q ℚ.- r)
-≠→0<abs q r u with q ≟ r
-... | lt x = <→0< (ℚ.abs (q ℚ.- r)) $ isTrans<≤ 0 (r ℚ.- q) (ℚ.abs (q ℚ.- r))
-                 (-< q r x)
-                   (subst (_≤ abs (q - r))
-                     (-[x-y]≡y-x q r) $ ≤max' (q - r) (ℚ.- (q - r)))
-... | eq x = ⊥.rec (u x)
-... | gt x = <→0< (ℚ.abs (q ℚ.- r)) $ isTrans<≤ 0 (q ℚ.- r) (ℚ.abs (q ℚ.- r))
-                 (-< r q x) (≤max (q - r) (ℚ.- (q - r)))
+≠→0<abs q r q≠r with q ≟ r
+... | lt q<r = <→0< (ℚ.abs (q ℚ.- r)) $ subst (0 <_) (x⊔[-x]≡abs (q ℚ.- r)) $
+  isTrans<≤ 0 (r ℚ.- q) (ℚ.max (q ℚ.- r) (- (q ℚ.- r)))
+    (-< q r q<r)
+    (subst (_≤ ℚ.max (q ℚ.- r) (- (q ℚ.- r)))
+           (-[x-y]≡y-x q r) $ ≤max' (q - r) (ℚ.- (q - r)))
+... | eq q≡r = ⊥.elim (q≠r q≡r)
+... | gt q>r = <→0< (ℚ.abs (q ℚ.- r)) $ subst (0 <_) (x⊔[-x]≡abs (q ℚ.- r)) $
+  isTrans<≤ 0 (q ℚ.- r)
+    (ℚ.max (q ℚ.- r) (- (q ℚ.- r)))
+    (-< r q q>r) (≤max (q - r) (ℚ.- (q - r)))
 
 ≤→≡⊎< : ∀ q r → q ≤ r → (q ≡ r) ⊎ (q < r)
 ≤→≡⊎< q r y with q ≟ r
