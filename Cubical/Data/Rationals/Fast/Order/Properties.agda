@@ -1,4 +1,4 @@
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --safe #-}
 module Cubical.Data.Rationals.Fast.Order.Properties where
 
 open import Cubical.Foundations.Prelude
@@ -345,80 +345,80 @@ sign = Rec.go w
  let ((y , _) , (y' , _) , (y'' , _)) = <≃sign x
  in (y , y' , y'')
 
-abs≡sign· : ∀ x → abs x ≡ x · (sign x)
-abs≡sign· x = abs'≡abs x ∙ ElimProp.go w x
+abs≡sign· : ∀ x → x⊔[-x] x ≡ x · (sign x)
+abs≡sign· x = x⊔[-x]≡abs x ∙ ElimProp.go w x
  where
- w : ElimProp (λ z → abs' z ≡ z · sign z)
+ w : ElimProp (λ z → abs z ≡ z · sign z)
  w .ElimProp.isPropB _ = isSetℚ _ _
  w .ElimProp.f x@(ℤ.pos zero , snd₁)    = decℚ?
  w .ElimProp.f x@(ℤ.pos (suc n) , snd₁) = sym (·CancelR 1)
  w .ElimProp.f x@(ℤ.negsuc n , snd₁)    = sym (·CancelR 1)
 
-absPos : ∀ x → 0 < x → abs x ≡ x
+absPos : ∀ x → 0 < x → x⊔[-x] x ≡ x
 absPos x 0<x = abs≡sign· x ∙∙ cong (x ·_) (fst (<→sign x) 0<x)  ∙∙ (·IdR x)
 
-absNonNeg : ∀ x → 0 ≤ x → abs x ≡ x
+absNonNeg : ∀ x → 0 ≤ x → x⊔[-x] x ≡ x
 absNonNeg x 0<x with x ≟ 0
 ... | lt x₁ = ⊥.rec $ ≤→≯ 0 x 0<x x₁
-... | eq x₁ = cong abs x₁ ∙ sym x₁
+... | eq x₁ = cong x⊔[-x] x₁ ∙ sym x₁
 ... | gt x₁ = absPos x x₁
 
 
 
-absNeg : ∀ x → x < 0 → abs x ≡ - x
+absNeg : ∀ x → x < 0 → x⊔[-x] x ≡ - x
 absNeg x x<0 = abs≡sign· x ∙∙ cong (x ·_) (snd (snd (<→sign x)) x<0)
                  ∙∙ ·Comm x -1
 
 
 
-0≤abs : ∀ x → 0 ≤ abs x
+0≤abs : ∀ x → 0 ≤ x⊔[-x] x
 0≤abs x with x ≟ 0
 ... | lt x₁ = subst (0 ≤_) (sym (absNeg x x₁)) ((<Weaken≤ 0 (- x) (minus-< x 0 x₁) ))
-... | eq x₁ = subst ((0 ≤_) ∘ abs) (sym x₁) (isRefl≤ 0)
+... | eq x₁ = subst ((0 ≤_) ∘ x⊔[-x]) (sym x₁) (isRefl≤ 0)
 ... | gt x₁ = subst (0 ≤_) (sym (absPos x x₁)) (<Weaken≤ 0 x x₁)
 
 
-abs+pos : ∀ x y → 0 < x → abs (x + y) ≤ x + abs y
+abs+pos : ∀ x y → 0 < x → x⊔[-x] (x + y) ≤ x + x⊔[-x] y
 abs+pos x y x₁ with y ≟ 0
 ... | lt x₂ =
  let xx = (≤-o+ y (- y) x
             (<Weaken≤ y (- y) $ isTrans< y 0 (- y) x₂ ((minus-< y 0 x₂))))
- in subst (λ yy → abs (x + y) ≤ x + yy)
+ in subst (λ yy → x⊔[-x] (x + y) ≤ x + yy)
         (sym (absNeg y x₂)) (absFrom≤×≤ (x - y) _
           (subst (_≤ x + y)
             (sym (-Distr' x y)) (≤-+o (- x) x y
              (<Weaken≤ (- x) x $ isTrans< (- x) 0 x (minus-< 0 x x₁) x₁))) xx)
 ... | eq x₂ = subst2 _≤_ (sym (absPos x x₁)
-        ∙ cong abs (sym (+IdR x) ∙ cong (x +_) ( (sym x₂))))
-   (sym (+IdR x) ∙ cong (x +_) (cong abs (sym x₂))  ) (isRefl≤ x)
+        ∙ cong x⊔[-x] (sym (+IdR x) ∙ cong (x +_) ( (sym x₂))))
+   (sym (+IdR x) ∙ cong (x +_) (cong x⊔[-x] (sym x₂))  ) (isRefl≤ x)
 ... | gt x₂ = subst2 _≤_ (sym (absPos _ (<Monotone+ 0 x 0 y x₁ x₂)))
     (cong (x +_) (sym (absPos y x₂)))
    $ isRefl≤ (x + y)
 
-abs+≤abs+abs : ∀ x y → abs (x + y) ≤ abs x + abs y
+abs+≤abs+abs : ∀ x y → x⊔[-x] (x + y) ≤ x⊔[-x] x + x⊔[-x] y
 abs+≤abs+abs x y with (x ≟ 0) | (y ≟ 0)
 ... | _ | gt x₁ = subst2 (_≤_)
-                   (cong abs (+Comm y x))
-            ((+Comm y (abs x)) ∙ cong ((abs x) +_ ) (sym (absPos y x₁)))
+                   (cong x⊔[-x] (+Comm y x))
+            ((+Comm y (x⊔[-x] x)) ∙ cong ((x⊔[-x] x) +_ ) (sym (absPos y x₁)))
              (abs+pos y x x₁)
-... | eq x₁ | _ = subst2 _≤_ (cong abs (sym (+IdL y) ∙
+... | eq x₁ | _ = subst2 _≤_ (cong x⊔[-x] (sym (+IdL y) ∙
     cong (_+ y) (sym x₁) ))
-                    (sym (+IdL (abs y)) ∙
-                     cong (_+ (abs y)) (cong abs (sym x₁)))
-                      (isRefl≤ (abs y))
-... | gt x₁ | _ = subst (abs (x + y) ≤_)
-            (cong (_+ (abs y)) (sym (absPos x x₁)))
+                    (sym (+IdL (x⊔[-x] y)) ∙
+                     cong (_+ (x⊔[-x] y)) (cong x⊔[-x] (sym x₁)))
+                      (isRefl≤ (x⊔[-x] y))
+... | gt x₁ | _ = subst (x⊔[-x] (x + y) ≤_)
+            (cong (_+ (x⊔[-x] y)) (sym (absPos x x₁)))
               (abs+pos x y x₁)
 ... | lt x₁ | lt x₂ =
   subst2 _≤_ (sym (-Distr x y) ∙ sym (absNeg (x + y)
     (<Monotone+ x 0 y 0 x₁ x₂)))
      (cong₂ _+_ (sym (absNeg x x₁)) (sym (absNeg y x₂))) (isRefl≤ ((- x) - y) )
 ... | lt x₁ | eq x₂ =
-  subst2 _≤_ ((cong abs (sym (+IdR x) ∙
+  subst2 _≤_ ((cong x⊔[-x] (sym (+IdR x) ∙
     cong (x +_) (sym x₂))))
-     (sym (+IdR (abs x)) ∙
-                     cong ((abs x) +_ ) (cong abs (sym x₂)))
-    ((isRefl≤ (abs x)))
+     (sym (+IdR (x⊔[-x] x)) ∙
+                     cong ((x⊔[-x] x) +_ ) (cong x⊔[-x] (sym x₂)))
+    ((isRefl≤ (x⊔[-x] x)))
 
 data Trichotomy0· (m n : ℚ) : Type₀ where
   eqₘ₌₀ : m ≡ 0 → m · n ≡ 0  → Trichotomy0· m n
@@ -478,19 +478,19 @@ signX·signX x y = sign·sign x x ∙
     (⊎.rec (λ z → 0<-m·n _ _ z z)
       ((λ z → subst (0 <_) (-·- _ _) (0<-m·n _ _ z z)) ∘S minus-< x 0) y)
 
-abs·abs : ∀ x y → abs x · abs y ≡ abs (x · y)
+abs·abs : ∀ x y → x⊔[-x] x · x⊔[-x] y ≡ x⊔[-x] (x · y)
 abs·abs x y = cong₂ _·_ (abs≡sign· x) (abs≡sign· y)
  ∙∙ (sym (·Assoc _ _ _)) ∙∙
   cong (x ·_) (( (·Assoc _ _ _)) ∙∙
   cong (_· sign y) (·Comm (sign x) y) ∙∙ (sym (·Assoc _ _ _))) ∙∙ (·Assoc _ _ _)
  ∙∙ (λ i → x · y · sign·sign x y i) ∙ sym (abs≡sign· (x · y))
 
-abs'·abs' : ∀ x y → abs' x · abs' y ≡ abs' (x · y)
-abs'·abs' x y = cong₂ _·_ (sym (abs'≡abs _)) (sym (abs'≡abs _))
-  ∙∙ abs·abs x y ∙∙ abs'≡abs _
+abs'·abs' : ∀ x y → abs x · abs y ≡ abs (x · y)
+abs'·abs' x y = cong₂ _·_ (sym (x⊔[-x]≡abs _)) (sym (x⊔[-x]≡abs _))
+  ∙∙ abs·abs x y ∙∙ x⊔[-x]≡abs _
 
-pos·abs : ∀ x y → 0 ≤ x →  abs (x · y) ≡ x · (abs y)
-pos·abs x y 0≤x = sym (abs·abs x y) ∙ cong (_· (abs y))
+pos·abs : ∀ x y → 0 ≤ x →  x⊔[-x] (x · y) ≡ x · (x⊔[-x] y)
+pos·abs x y 0≤x = sym (abs·abs x y) ∙ cong (_· (x⊔[-x] y))
   (absNonNeg x 0≤x)
 
 clamp≤ : ∀ L L' x → clamp L L' x ≤ L'
@@ -560,11 +560,11 @@ clamped≤ : ∀ L L' x → L ≤ x → clamp L L' x ≤ x
 clamped≤ L L' x L≤x = subst (_≤ x)
   (cong (flip min L') (sym (≤→max L x L≤x))) (min≤ x L')
 
-absComm- : ∀ x y → abs (x - y) ≡ abs (y - x)
+absComm- : ∀ x y → x⊔[-x] (x - y) ≡ x⊔[-x] (y - x)
 absComm- x y i = maxComm (-[x-y]≡y-x y x (~ i)) (-[x-y]≡y-x x y i) i
 
-abs'Comm- : ∀ x y → abs' (x - y) ≡ abs' (y - x)
-abs'Comm- x y = sym (abs'≡abs _) ∙∙ absComm- x y ∙∙ abs'≡abs _
+abs'Comm- : ∀ x y → abs (x - y) ≡ abs (y - x)
+abs'Comm- x y = sym (x⊔[-x]≡abs _) ∙∙ absComm- x y ∙∙ x⊔[-x]≡abs _
 
 ≤MonotoneClamp : ∀ L L' x y → x ≤ y → clamp L L' x ≤ clamp L L' y
 ≤MonotoneClamp L L' x y p =
@@ -579,29 +579,29 @@ inClamps L L' x u v =
   cong (λ y → min y L') (≤→max L x u)
     ∙ ≤→min x L' v
 
-≤abs : ∀ x → x ≤ abs x
+≤abs : ∀ x → x ≤ x⊔[-x] x
 ≤abs x = ≤max x (- x)
 
-≤abs' : ∀ x → x ≤ abs' x
-≤abs' x = subst (x ≤_) (abs'≡abs x) (≤abs x)
+≤abs' : ∀ x → x ≤ abs x
+≤abs' x = subst (x ≤_) (x⊔[-x]≡abs x) (≤abs x)
 
 
--abs : ∀ x → abs x ≡ abs (- x)
+-abs : ∀ x → x⊔[-x] x ≡ x⊔[-x] (- x)
 -abs x = maxComm _ _
   ∙ cong (max (- x)) (sym (-Invol x))
 
--abs' : ∀ x → abs' x ≡ abs' (- x)
--abs' x = sym (abs'≡abs x) ∙∙ -abs x ∙∙ abs'≡abs (- x)
+-abs' : ∀ x → abs x ≡ abs (- x)
+-abs' x = sym (x⊔[-x]≡abs x) ∙∙ -abs x ∙∙ x⊔[-x]≡abs (- x)
 
--≤abs' : ∀ x → - x ≤ abs' x
+-≤abs' : ∀ x → - x ≤ abs x
 -≤abs' x = subst (- x ≤_) (sym (-abs' x)) (≤abs' (- x))
 
--≤abs : ∀ x → - x ≤ abs x
+-≤abs : ∀ x → - x ≤ x⊔[-x] x
 -≤abs x = subst (- x ≤_) (sym (-abs x)) (≤abs (- x))
 
 
 absTo≤×≤ : ∀ ε q
-                → abs q ≤ ε
+                → x⊔[-x] q ≤ ε
                 → (- ε ≤ q) × (q ≤ ε)
 
 absTo≤×≤ ε q abs[q]≤ε .fst =
@@ -612,26 +612,26 @@ absTo≤×≤ ε q abs[q]≤ε .snd = isTrans≤ _ _ _ (≤abs q) abs[q]≤ε
 Dichotomyℚ : ∀ (n m : ℚ) → (n ≤ m) ⊎ (m < n)
 Dichotomyℚ n m = decRec inr (inl ∘ ≮→≥ _ _) (<Dec m n)
 
-sign·abs : ∀ x → abs x · (sign x) ≡ x
+sign·abs : ∀ x → x⊔[-x] x · (sign x) ≡ x
 sign·abs x with 0 ≟ x
 ... | lt x₁ =
  cong₂ _·_ (absPos x x₁) (fst (<→sign x) x₁)
     ∙ ·IdR x
-... | eq x₁ = cong (abs x ·_) ( (fst (snd (<→sign x)) x₁))
- ∙ ·AnnihilR (abs x) ∙ x₁
+... | eq x₁ = cong (x⊔[-x] x ·_) ( (fst (snd (<→sign x)) x₁))
+ ∙ ·AnnihilR (x⊔[-x] x) ∙ x₁
 ... | gt x₁ =
   cong₂ _·_ (absNeg x x₁) (snd (snd (<→sign x)) x₁)
     ∙ -·- _ _ ∙ ·IdR x
 
 
-0#→0<abs' : ∀ q → 0 # q → 0 < abs' q
+0#→0<abs' : ∀ q → 0 # q → 0 < abs q
 0#→0<abs' q (inl x) =
-  subst (0 <_) (sym (absPos q x) ∙ (abs'≡abs q)) x
+  subst (0 <_) (sym (absPos q x) ∙ (x⊔[-x]≡abs q)) x
 0#→0<abs' q (inr y) =
-  subst (0 <_) (sym (absNeg q y) ∙ (abs'≡abs q)) (minus-< q 0 y)
+  subst (0 <_) (sym (absNeg q y) ∙ (x⊔[-x]≡abs q)) (minus-< q 0 y)
 
 0#→ℚ₊ : ∀ q → 0 # q → ℚ₊
-0#→ℚ₊ q x = abs' q , <→0< _ (0#→0<abs' q x)
+0#→ℚ₊ q x = abs q , <→0< _ (0#→0<abs' q x)
 
 ·Monotone0# : ∀ q q' → 0 # q → 0 # q' → 0 # (q · q')
 ·Monotone0# q q' (inl x) (inl x₁) =
@@ -672,11 +672,11 @@ sign·abs x with 0 ≟ x
 --                        (fromNat k + q ≡ fst x ) × (q < 1)
 -- ceil-fracℚ₊ = uncurry (SQ.Elim.go w)
 
-boundℕ : ∀ q → Σ[ k ∈ ℕ₊₁ ] (abs q < ([ ℕ₊₁→ℤ k , 1 ]))
-boundℕ q with ≤→≡⊎< 0 (abs q) (0≤abs q)
+boundℕ : ∀ q → Σ[ k ∈ ℕ₊₁ ] (x⊔[-x] q < ([ ℕ₊₁→ℤ k , 1 ]))
+boundℕ q with ≤→≡⊎< 0 (x⊔[-x] q) (0≤abs q)
 ... | inl x = 1 , subst (_< 1) x (decℚ<? {0} {1})
 ... | inr x =
- let ((k , f) , e , e' , e'') = floor-fracℚ₊ (abs q , <→0< _ x)
+ let ((k , f) , e , e' , e'') = floor-fracℚ₊ (x⊔[-x] q , <→0< _ x)
  in (1+ k , subst2 (_<_)
           (+Comm f _ ∙ e)
            (ℕ+→ℚ+ 1 k) ((<-+o f 1 [ pos k / 1+ 0 ] e'')))
@@ -1431,7 +1431,7 @@ invℚ q p = sign q · fst (invℚ₊ (0#→ℚ₊ q p))
 
 invℚ₊≡invℚ : ∀ q p → invℚ (fst q) p ≡ fst (invℚ₊ q)
 invℚ₊≡invℚ q p = cong₂ _·_ (fst (<→sign (fst q)) (0<ℚ₊ q)
-    ) (cong (fst ∘ invℚ₊) (ℚ₊≡ (sym (abs'≡abs (fst q)) ∙
+    ) (cong (fst ∘ invℚ₊) (ℚ₊≡ (sym (x⊔[-x]≡abs (fst q)) ∙
      absPos (fst q) ((0<ℚ₊ q))))) ∙ ·IdL (fst (invℚ₊ q))
 
 fromNat-invℚ : ∀ n p → invℚ [ pos (suc n) / 1 ] p ≡ [ 1 / 1+ n ]
@@ -1485,7 +1485,7 @@ invℚInvol q 0#q 0#invQ =
     (inl (0<ℚ₊ (invℚ₊ ((0#→ℚ₊ q 0#q)) )))
     0#invQ )
     ∙∙ cong₂ _·_ (sym (invℚ-sign _ _))
-     ((invℚ₊≡invℚ _ _ ∙ invℚ₊-invol (0#→ℚ₊ q 0#q)) ∙  sym (abs'≡abs q))  ∙∙
+     ((invℚ₊≡invℚ _ _ ∙ invℚ₊-invol (0#→ℚ₊ q 0#q)) ∙  sym (x⊔[-x]≡abs q))  ∙∙
      (·Comm _ _ ∙ (sign·abs q))
 
 
@@ -1499,7 +1499,7 @@ q ／ℚ[ r , 0＃r ] = q · (invℚ r 0＃r)
   ∙ cong (abs r ·_) (·Assoc _ _ _ ∙∙
     cong (_· fst (invℚ₊ (0#→ℚ₊ r y))) (signX·signX r y) ∙∙
       ·IdL _)
-  ∙ cong (_· fst (invℚ₊ (0#→ℚ₊ r y))) (abs'≡abs _)
+  ∙ cong (_· fst (invℚ₊ (0#→ℚ₊ r y))) (x⊔[-x]≡abs _)
    ∙ x·invℚ₊[x] (0#→ℚ₊ r y)
 
 ℚ-[x·y]/y : ∀ x r → (0＃r : 0 # r) → ((x · r) ／ℚ[ r , 0＃r ]) ≡ x

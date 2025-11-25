@@ -954,7 +954,7 @@ pos[-x≤x] ε = isTrans≤ (ℚ.- (fst ε)) 0 (fst ε) (-ℚ₊≤0 ε) (0≤�
 -ℚ₊≤ℚ₊ ε ε' = isTrans≤ (ℚ.- fst ε) 0 (fst ε') (-ℚ₊≤0 ε) (0≤ℚ₊ ε')
 
 
-absCases : (q : ℚ) → (abs q ≡ - q) ⊎ (abs q ≡ q)
+absCases : (q : ℚ) → (x⊔[-x] q ≡ - q) ⊎ (x⊔[-x] q ≡ q)
 absCases q with (- q) ≟ q
 ... | lt x = inr (ℚ.maxComm q (- q) ∙ (≤→max (- q) q $ <Weaken≤ (- q) q x))
 ... | eq x = inr (ℚ.maxComm q (- q) ∙ (≤→max (- q) q $ ≡Weaken≤ (- q) q x))
@@ -964,7 +964,7 @@ absCases q with (- q) ≟ q
 absFrom≤×≤ : ∀ ε q →
                 - ε ≤ q
                 → q ≤ ε
-                → abs q ≤ ε
+                → x⊔[-x] q ≤ ε
 absFrom≤×≤ ε q x x₁ with absCases q
 ... | inl x₂ = subst2 (_≤_) (sym x₂) (-Invol ε) (minus-≤ (- ε) q x  )
 ... | inr x₂ = subst (_≤ ε) (sym x₂) x₁
@@ -973,7 +973,7 @@ absFrom≤×≤ ε q x x₁ with absCases q
 absFrom<×< : ∀ ε q →
                 - ε < q
                 → q < ε
-                → abs q < ε
+                → x⊔[-x] q < ε
 absFrom<×< ε q x x₁ with absCases q
 ... | inl x₂ = subst2 (_<_) (sym x₂) (-Invol ε) (minus-< (- ε) q x  )
 ... | inr x₂ = subst (_< ε) (sym x₂) x₁
@@ -982,14 +982,14 @@ absFrom<×< ε q x x₁ with absCases q
 clamp : ℚ → ℚ → ℚ → ℚ
 clamp d u x = ℚ.min (ℚ.max d x) u
 
-≠→0<abs : ∀ q r → ¬ q ≡ r → 0< ℚ.abs (q ℚ.- r)
+≠→0<abs : ∀ q r → ¬ q ≡ r → 0< ℚ.x⊔[-x] (q ℚ.- r)
 ≠→0<abs q r u with q ≟ r
-... | lt x = <→0< (ℚ.abs (q ℚ.- r)) $ isTrans<≤ 0 (r ℚ.- q) (ℚ.abs (q ℚ.- r))
+... | lt x = <→0< (ℚ.x⊔[-x] (q ℚ.- r)) $ isTrans<≤ 0 (r ℚ.- q) (ℚ.x⊔[-x] (q ℚ.- r))
                  (-< q r x)
-                   (subst (_≤ abs (q - r))
+                   (subst (_≤ x⊔[-x] (q - r))
                      (-[x-y]≡y-x q r) $ ≤max' (q - r) (ℚ.- (q - r)))
 ... | eq x = ⊥.rec (u x)
-... | gt x = <→0< (ℚ.abs (q ℚ.- r)) $ isTrans<≤ 0 (q ℚ.- r) (ℚ.abs (q ℚ.- r))
+... | gt x = <→0< (ℚ.x⊔[-x] (q ℚ.- r)) $ isTrans<≤ 0 (q ℚ.- r) (ℚ.x⊔[-x] (q ℚ.- r))
                  (-< r q x) (≤max (q - r) (ℚ.- (q - r)))
 
 ≤→≡⊎< : ∀ q r → q ≤ r → (q ≡ r) ⊎ (q < r)

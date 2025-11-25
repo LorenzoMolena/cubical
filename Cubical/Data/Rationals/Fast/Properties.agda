@@ -642,11 +642,11 @@ x - y = x + (- y)
 +CancelL- x y z p = (sym (+IdR x)  ∙ cong (x +_) (sym (+InvR y)))
   ∙∙  (+Assoc x y (- y)) ∙∙ cong (_- y) p
 
-abs : ℚ → ℚ
-abs x = max x (- x)
+x⊔[-x] : ℚ → ℚ
+x⊔[-x] x = max x (- x)
 
-abs' : ℚ → ℚ
-abs' = SetQuotient.Rec.go w
+abs : ℚ → ℚ
+abs = SetQuotient.Rec.go w
  where
  w : SetQuotient.Rec ℚ
  w .SetQuotient.Rec.isSetB = isSetℚ
@@ -658,11 +658,11 @@ abs' = SetQuotient.Rec.go w
      ∙∙ sym ((sym (ℤ.pos·pos (ℤ.abs a') (suc b)) ∙
       cong ℤ.pos (sym (ℤ.abs· (a') (ℕ₊₁→ℤ (1+ b))) ))))
 
-abs'≡abs : ∀ x → abs x ≡ abs' x
-abs'≡abs = SetQuotient.ElimProp.go λ where
+x⊔[-x]≡abs : ∀ x → x⊔[-x] x ≡ abs x
+x⊔[-x]≡abs = SetQuotient.ElimProp.go λ where
   .SetQuotient.ElimProp.isPropB _ → isSetℚ _ _
   .SetQuotient.ElimProp.f (a , b) →
-    abs [ a / b ]
+    x⊔[-x] [ a / b ]
                             ≡⟨⟩
     max [ a / b ] [ -1 ·ℤ a / 1 ·₊₁ b ]
                             ≡[ i ]⟨ max [ a / b ] [ ℤ.-1·x≡-x a i / ·₊₁-identityˡ b i ] ⟩
@@ -676,7 +676,7 @@ abs'≡abs = SetQuotient.ElimProp.go λ where
                             ≡⟨ sym $ cong [_/ b ] (ℤ.abs-max a) ⟩
     [ pos ∣ a ∣ℤ / b ]
                             ≡⟨⟩
-    abs' [ a / b ]
+    abs [ a / b ]
                             ∎
 
 
