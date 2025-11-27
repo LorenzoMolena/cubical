@@ -130,6 +130,10 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     where
 
     subtype = Σ[ x ∈ R ] ⟨ P x ⟩
+    ι : subtype → R
+    ι = fst
+    _-subtype_ : subtype → subtype → R
+    _-subtype_ x y = ι x - ι y
 
   module AdditiveAndMultiplicativeSubType
     (P : R → hProp ℓ'')
@@ -156,7 +160,13 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         0r · y   <⟨ ·MonoR< 0r x y 0<y 0<x ⟩
         x · y     ◾
     open AdditiveAndMultiplicativeSubType 0<ₚ_ 0<+Closed 0<·Closed
-      renaming (subtype to R₊)
+      renaming (subtype to R₊ ; ι to ⟨_⟩₊ ; _-subtype_ to _-₊_) public
+
+    _<₊_ : R₊ → R₊ → Type ℓ'
+    _<₊_ x y = ⟨ x ⟩₊ < ⟨ y ⟩₊
+
+    _≤₊_ : R₊ → R₊ → Type ℓ'
+    _≤₊_ x y = ⟨ x ⟩₊ ≤ ⟨ y ⟩₊
 
     R₀≡ = Σ≡Prop (is-prop-valued< 0r)
 
@@ -170,6 +180,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         isSG .IsSemigroup.is-set = isSetΣSndProp is-set (is-prop-valued< 0r)
         isSG .IsSemigroup.·Assoc = λ _ _ _ → R₀≡ (+Assoc _ _ _)
 
+    open SemigroupStr (snd R₊AdditiveSemigroup) using () renaming (_·_ to _+₊_) public
 
     R₊MultiplicativeCommMonoid : CommMonoid _
     fst R₊MultiplicativeCommMonoid = R₊
@@ -201,7 +212,13 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         0r · y    ≤⟨ ·MonoR≤ 0r x y 0≤y 0≤x ⟩
         x · y     ◾
     open AdditiveAndMultiplicativeSubType 0≤ₚ_ 0≤+Closed 0≤·Closed
-        renaming (subtype to R₀₊)
+      renaming (subtype to R₀₊ ; ι to ⟨_⟩₀₊ ; _-subtype_ to _-₀₊_) public
+
+    _<₀₊_ : R₀₊ → R₀₊ → Type ℓ'
+    _<₀₊_ x y = ⟨ x ⟩₀₊ < ⟨ y ⟩₀₊
+
+    _≤₀₊_ : R₀₊ → R₀₊ → Type ℓ'
+    _≤₀₊_ x y = ⟨ x ⟩₀₊ ≤ ⟨ y ⟩₀₊
 
     R₀₊≡ = Σ≡Prop (is-prop-valued≤ 0r)
 
