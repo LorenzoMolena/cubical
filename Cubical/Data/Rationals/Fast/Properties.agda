@@ -1,15 +1,26 @@
 module Cubical.Data.Rationals.Fast.Properties where
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Function
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.GroupoidLaws hiding (_⁻¹)
 open import Cubical.Foundations.Univalence
+open import Cubical.Foundations.HLevels
 
 open import Cubical.Data.Int.Fast as ℤ using (ℤ; pos·pos; pos0+)
 open import Cubical.HITs.SetQuotients as SetQuotient using () renaming (_/_ to _//_)
 
-open import Cubical.Data.Nat as ℕ using (ℕ; zero; suc)
+open import Cubical.Data.Empty as ⊥
+
+open import Cubical.Data.Int.Fast as ℤ using (ℤ; pos·pos; pos0+; pos; negsuc) renaming
+  (_+_ to _+ℤ_ ; _·_ to _·ℤ_ ; -_ to -ℤ_ ; abs to ∣_∣ℤ ; sign to sgn)
+open import Cubical.HITs.SetQuotients as SetQuotient using () renaming (_/_ to _//_)
+
+open import Cubical.Data.Nat as ℕ using (ℕ; zero; suc) renaming
+  (_+_ to _+ℕ_ ; _·_ to _·ℕ_)
+open import Cubical.Data.Nat.GCD
+open import Cubical.Data.Nat.Coprime
 open import Cubical.Data.NatPlusOne
 open import Cubical.Data.Sigma
 
@@ -17,6 +28,16 @@ open import Cubical.Data.Sum
 open import Cubical.Relation.Nullary
 
 open import Cubical.Data.Rationals.Fast.Base
+
+∼→sign≡sign : ∀ a a' b b' → (a , b) ∼ (a' , b') → ℤ.sign a ≡ ℤ.sign a'
+∼→sign≡sign (ℤ.pos zero)    (ℤ.pos zero)    (1+ _) (1+ _) = λ _ → refl
+∼→sign≡sign (ℤ.pos zero)    (ℤ.pos (suc n)) (1+ _) (1+ _) = ⊥.rec ∘ ℕ.znots ∘ ℤ.injPos
+∼→sign≡sign (ℤ.pos (suc m)) (ℤ.pos zero)    (1+ _) (1+ _) = ⊥.rec ∘ ℕ.snotz ∘ ℤ.injPos
+∼→sign≡sign (ℤ.pos (suc m)) (ℤ.pos (suc n)) (1+ _) (1+ _) = λ _ → refl
+∼→sign≡sign (ℤ.pos m)       (ℤ.negsuc n)    (1+ _) (1+ _) = ⊥.rec ∘ ℤ.posNotnegsuc _ _
+∼→sign≡sign (ℤ.negsuc m)    (ℤ.pos n)       (1+ _) (1+ _) = ⊥.rec ∘ ℤ.negsucNotpos _ _
+∼→sign≡sign (ℤ.negsuc m)    (ℤ.negsuc n)    (1+ _) (1+ _) = λ _ → refl
+
 
 ·CancelL : ∀ {a b} (c : ℕ₊₁) → [ ℕ₊₁→ℤ c ℤ.· a / c ·₊₁ b ] ≡ [ a / b ]
 ·CancelL {a} {b} c = eq/ _ _
@@ -31,6 +52,87 @@ open import Cubical.Data.Rationals.Fast.Base
    a ℤ.· (ℕ₊₁→ℤ c ℤ.· ℕ₊₁→ℤ b)  ≡⟨ cong (a ℤ.·_) (ℤ.·Comm (ℕ₊₁→ℤ c) (ℕ₊₁→ℤ b)) ⟩
    a ℤ.· (ℕ₊₁→ℤ b ℤ.· ℕ₊₁→ℤ c)  ≡⟨ cong (a ℤ.·_) (sym (pos·pos (ℕ₊₁→ℕ b) (ℕ₊₁→ℕ c))) ⟩
    a ℤ.· ℕ₊₁→ℤ (b ·₊₁ c) ∎)
+
+module Reduce where
+  private
+    ℕ[_] = ℕ₊₁→ℕ
+    ℤ[_] = ℕ₊₁→ℤ
+    +[_] = ℤ.pos
+
+    Cod : ∀ x → Type
+    Cod x = Σ[ (p , q) ∈ (ℤ × ℕ₊₁) ] areCoprime (ℤ.abs p , ℕ₊₁→ℕ q) × ([ p / q ] ≡ x)
+    isSetValuedCod : ∀ x → isSet (Cod x)
+    isSetValuedCod x = isSetΣSndProp
+      (isSet× ℤ.isSetℤ (subst isSet 1+Path ℕ.isSetℕ))
+      λ _ → isProp× isPropIsGCD (isSetℚ _ _)
+
+    lemma-cop : ∀ {d-1} a c₁ → (c₁ ·ℕ suc d-1 ≡ ∣ a ∣ℤ) → c₁ ≡ ∣ sgn a ·ℤ +[ c₁ ] ∣ℤ
+    lemma-cop (pos zero)    zero     _ = refl
+    lemma-cop (pos zero)    (suc _)  x = ⊥.rec (ℕ.snotz x)
+    lemma-cop (pos (suc n)) c₁       _ = sym $ ℕ.+-zero c₁
+    lemma-cop (negsuc n)    zero     _ = refl
+    lemma-cop (negsuc n)    (suc c₁) _ = cong suc $ sym $ ℕ.+-zero c₁
+
+  module cop ((a , b) : ℤ × ℕ₊₁) where
+    open ToCoprime (∣ a ∣ℤ , b) renaming (toCoprimeAreCoprime to tcac) public
+
+    reduced[] : Cod [ a / b ]
+    reduced[] .fst      = sgn a ·ℤ pos c₁ , c₂
+    reduced[] .snd .fst = subst (areCoprime ∘ (_, ℕ[ c₂ ]))
+                                (lemma-cop a _ (cong (c₁ ·ℕ_) (sym q) ∙ p₁))
+                                tcac
+    reduced[] .snd .snd = eq/ _ _ $
+      sgn a ·ℤ   +[ c₁ ] ·ℤ ℤ[ b ]         ≡⟨ sym $ ℤ.·Assoc (sgn a) _ _ ⟩
+      sgn a ·ℤ ( +[ c₁ ] ·ℤ ℤ[ b ])        ≡⟨⟩
+      sgn a ·ℤ ( +[ c₁ ·ℕ ℕ[ b ] ])        ≡⟨ cong ((sgn a ·ℤ_) ∘ +[_]) $
+                    c₁ ·ℕ ℕ[ b ]           ≡⟨ sym $ cong (c₁ ·ℕ_) p₂ ⟩
+                    c₁ ·ℕ (ℕ[ c₂ ] ·ℕ d)   ≡⟨ cong (c₁ ·ℕ_) (ℕ.·-comm ℕ[ c₂ ] d) ⟩
+                    c₁ ·ℕ (d ·ℕ ℕ[ c₂ ])   ≡⟨ ℕ.·-assoc c₁ d ℕ[ c₂ ] ⟩
+                    c₁ ·ℕ  d ·ℕ ℕ[ c₂ ]    ≡⟨ cong (_·ℕ ℕ[ c₂ ]) p₁ ⟩ refl ⟩
+      sgn a ·ℤ ( +[    ∣ a ∣ℤ ·ℕ ℕ[ c₂ ] ]) ≡⟨⟩
+      sgn a ·ℤ ( +[  ∣ a ∣ℤ ] ·ℤ ℤ[ c₂ ] )  ≡⟨ ℤ.·Assoc (sgn a) _ _ ⟩
+      sgn a ·ℤ   +[  ∣ a ∣ℤ ] ·ℤ ℤ[ c₂ ]    ≡⟨ cong (_·ℤ ℤ[ c₂ ]) (ℤ.sign·abs a) ⟩
+                           a ·ℤ ℤ[ c₂ ]    ∎
+
+  reduced[]∼ : ∀ x y r → PathP (λ i → Cod (eq/ x y r i)) (cop.reduced[] x) (cop.reduced[] y)
+  reduced[]∼ x@(a , b) y@(a' , b') r = let
+    ∣x∣ = (∣ a  ∣ℤ , b)
+    ∣y∣ = (∣ a' ∣ℤ , b')
+
+    tc∣x∣≡tc∣y∣ =
+      tc ∣x∣                             ≡⟨⟩
+      tc (∣ a ∣ℤ , b)                    ≡⟨ sym $ tc-cancelʳ ∣x∣ b' ⟩
+      tc (∣ a ∣ℤ ·ℕ ℕ[ b' ] , b ·₊₁ b') ≡⟨ cong (tc ∘ (_, b ·₊₁ b')) $
+          ∣ a ∣ℤ ·ℕ ℕ[ b' ]             ≡⟨ sym $ ℤ.abs· a ℤ[ b' ] ⟩
+          ∣ a  ·ℤ ℤ[ b' ] ∣ℤ             ≡⟨ cong ∣_∣ℤ r ⟩
+          ∣ a' ·ℤ ℤ[ b  ] ∣ℤ             ≡⟨ ℤ.abs· a' ℤ[ b ] ⟩ refl ⟩
+      tc (∣ a' ∣ℤ ·ℕ ℕ[ b ] , b ·₊₁ b') ≡⟨ cong (tc ∘ (∣ a' ∣ℤ ·ℕ ℕ[ b ] ,_)) $ ·₊₁-comm b b' ⟩
+      tc (∣ a' ∣ℤ ·ℕ ℕ[ b ] , b' ·₊₁ b) ≡⟨ tc-cancelʳ ∣y∣ b ⟩
+      tc (∣ a' ∣ℤ , b')                  ≡⟨⟩
+      tc ∣y∣                             ∎
+
+    step0 = cong (uncurry (_,_ ∘ (sgn a ·ℤ_) ∘ pos)) tc∣x∣≡tc∣y∣
+    step1 = cong ((_, c₂ ∣y∣) ∘ (_·ℤ pos (c₁ ∣y∣))) (∼→sign≡sign a a' b b' r)
+    in
+      ΣPathPProp (λ _ → isProp× isPropIsGCD (isSetℚ _ _)) $
+        sgn a  ·ℤ pos (c₁ ∣x∣) , c₂ ∣x∣ ≡⟨ step0 ⟩
+        sgn a  ·ℤ pos (c₁ ∣y∣) , c₂ ∣y∣ ≡⟨ step1 ⟩
+        sgn a' ·ℤ pos (c₁ ∣y∣) , c₂ ∣y∣ ∎
+    where
+      open ToCoprime renaming (toCoprime to tc) ; tc-cancelʳ = toCoprime-cancelʳ
+
+  reduced : ∀ x → Cod x
+  reduced = SetQuotient.elim isSetValuedCod cop.reduced[] reduced[]∼
+
+open Reduce public
+
+-- useful functions for defining operations on ℚ
+
+reduce : ℚ → ℚ
+reduce = [_] ∘ fst ∘  reduced
+
+reduce≡id : ∀ x → reduce x ≡ x
+reduce≡id = snd ∘ snd ∘ reduced
 
 -- useful functions for defining operations on ℚ
 
