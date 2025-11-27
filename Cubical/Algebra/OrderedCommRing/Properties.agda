@@ -64,29 +64,30 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
   open ≤-syntax
   open ≡-syntax
 
-  abs : R → R
-  abs z = z ⊔ (- z)
-
-  _#_ : R → R → Type ℓ'
-  x # y = (x < y) L.⊔′ (y < x)
-
-  +MonoL< : ∀ x y z → x < y → z + x < z + y
-  +MonoL< x y z x<y = begin<
-    z + x ≡→≤⟨ +Comm z x ⟩ x + z <⟨ +MonoR< x y z x<y ⟩ y + z ≡→≤⟨ +Comm y z ⟩ z + y ◾
-
-  +MonoL≤ : ∀ x y z → x ≤ y → z + x ≤ z + y
-  +MonoL≤ x y z x≤y = begin≤
-    z + x ≡→≤⟨ +Comm z x ⟩ x + z ≤⟨ +MonoR≤ x y z x≤y ⟩ y + z ≡→≤⟨ +Comm y z ⟩ z + y ◾
-
-  ·MonoL< : ∀ x y z → 0r < z → x < y → z · x < z · y
-  ·MonoL< x y z 0<z x<y = begin<
-    z · x ≡→≤⟨ ·Comm z x ⟩ x · z <⟨ ·MonoR< x y z 0<z x<y ⟩ y · z ≡→≤⟨ ·Comm y z ⟩ z · y ◾
-
-  ·MonoL≤ : ∀ x y z → 0r ≤ z → x ≤ y → z · x ≤ z · y
-  ·MonoL≤ x y z 0≤z x≤y = begin≤
-    z · x ≡→≤⟨ ·Comm z x ⟩ x · z ≤⟨ ·MonoR≤ x y z 0≤z x≤y ⟩ y · z ≡→≤⟨ ·Comm y z ⟩ z · y ◾
 
   module OrderedCommRingTheory where
+    abs : R → R
+    abs z = z ⊔ (- z)
+
+    _#_ : R → R → Type ℓ'
+    x # y = (x < y) L.⊔′ (y < x)
+
+    +MonoL< : ∀ x y z → x < y → z + x < z + y
+    +MonoL< x y z x<y = begin<
+      z + x ≡→≤⟨ +Comm z x ⟩ x + z <⟨ +MonoR< x y z x<y ⟩ y + z ≡→≤⟨ +Comm y z ⟩ z + y ◾
+
+    +MonoL≤ : ∀ x y z → x ≤ y → z + x ≤ z + y
+    +MonoL≤ x y z x≤y = begin≤
+      z + x ≡→≤⟨ +Comm z x ⟩ x + z ≤⟨ +MonoR≤ x y z x≤y ⟩ y + z ≡→≤⟨ +Comm y z ⟩ z + y ◾
+
+    ·MonoL< : ∀ x y z → 0r < z → x < y → z · x < z · y
+    ·MonoL< x y z 0<z x<y = begin<
+      z · x ≡→≤⟨ ·Comm z x ⟩ x · z <⟨ ·MonoR< x y z 0<z x<y ⟩ y · z ≡→≤⟨ ·Comm y z ⟩ z · y ◾
+
+    ·MonoL≤ : ∀ x y z → 0r ≤ z → x ≤ y → z · x ≤ z · y
+    ·MonoL≤ x y z 0≤z x≤y = begin≤
+      z · x ≡→≤⟨ ·Comm z x ⟩ x · z ≤⟨ ·MonoR≤ x y z 0≤z x≤y ⟩ y · z ≡→≤⟨ ·Comm y z ⟩ z · y ◾
+
     -Flip< : ∀ x y → x < y → - y < - x
     -Flip< x y x<y = begin<
       - y           ≡→≤⟨ sym $ +Assoc _ _ _ ∙∙ cong (_- y) (+InvR x) ∙∙ +IdL (- y)  ⟩
@@ -128,6 +129,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     (P : R → hProp ℓ'')
     (+Closed : (x y : R) → ⟨ P x ⟩ → ⟨ P y ⟩ → ⟨ P (x + y) ⟩)
     where
+    open OrderedCommRingTheory
 
     subtype = Σ[ x ∈ R ] ⟨ P x ⟩
     ι : subtype → R
@@ -143,6 +145,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     open AdditiveSubType P +Closed public
 
   module Positive where
+    open OrderedCommRingTheory
     private
       0<ₚ_ : R → hProp ℓ'
       0<ₚ x = (0r < x) , is-prop-valued< 0r x
@@ -195,6 +198,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         (λ _ _   → R₀≡ (·Comm _ _))
 
   module NonNegative where
+    open OrderedCommRingTheory
     private
       0≤ₚ_ : R → hProp ℓ'
       0≤ₚ x = (0r ≤ x) , is-prop-valued≤ 0r x
