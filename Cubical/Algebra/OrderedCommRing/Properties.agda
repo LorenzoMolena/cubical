@@ -132,10 +132,18 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     open OrderedCommRingTheory
 
     subtype = Σ[ x ∈ R ] ⟨ P x ⟩
+
     ι : subtype → R
     ι = fst
+
     _-subtype_ : subtype → subtype → R
     _-subtype_ x y = ι x - ι y
+
+    _<subtype_ : subtype → subtype → Type ℓ'
+    _<subtype_ x y = ι x < ι y
+
+    _≤subtype_ : subtype → subtype → Type ℓ'
+    _≤subtype_ x y = ι x ≤ ι y
 
   module AdditiveAndMultiplicativeSubType
     (P : R → hProp ℓ'')
@@ -162,16 +170,15 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         0r      ≡→≤⟨ sym $ 0LeftAnnihilates y ⟩
         0r · y   <⟨ ·MonoR< 0r x y 0<y 0<x ⟩
         x · y     ◾
-    open AdditiveAndMultiplicativeSubType 0<ₚ_ 0<+Closed 0<·Closed
-      renaming (subtype to R₊ ; ι to ⟨_⟩₊ ; _-subtype_ to _-₊_) public
-
-    _<₊_ : R₊ → R₊ → Type ℓ'
-    _<₊_ x y = ⟨ x ⟩₊ < ⟨ y ⟩₊
-
-    _≤₊_ : R₊ → R₊ → Type ℓ'
-    _≤₊_ x y = ⟨ x ⟩₊ ≤ ⟨ y ⟩₊
+    open AdditiveAndMultiplicativeSubType 0<ₚ_ 0<+Closed 0<·Closed renaming (
+        subtype to R₊ ; ι to ⟨_⟩₊
+      ; _-subtype_ to _-₊_ ; _≤subtype_ to _≤₊_ ; _<subtype_ to _<₊_) public
 
     R₀≡ = Σ≡Prop (is-prop-valued< 0r)
+
+    _⊔₊_ : R₊ → R₊ → R₊
+    (x ⊔₊ y) .fst = ⟨ x ⟩₊ ⊔ ⟨ y ⟩₊
+    (x ⊔₊ y) .snd = begin< 0r <⟨ snd x ⟩ ⟨ x ⟩₊ ≤⟨ L≤⊔ ⟩ ⟨ x ⟩₊ ⊔ ⟨ y ⟩₊ ◾
 
     R₊AdditiveSemigroup : Semigroup _
     fst R₊AdditiveSemigroup = R₊
@@ -215,14 +222,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         0r      ≡→≤⟨ sym $ 0LeftAnnihilates y ⟩
         0r · y    ≤⟨ ·MonoR≤ 0r x y 0≤y 0≤x ⟩
         x · y     ◾
-    open AdditiveAndMultiplicativeSubType 0≤ₚ_ 0≤+Closed 0≤·Closed
-      renaming (subtype to R₀₊ ; ι to ⟨_⟩₀₊ ; _-subtype_ to _-₀₊_) public
-
-    _<₀₊_ : R₀₊ → R₀₊ → Type ℓ'
-    _<₀₊_ x y = ⟨ x ⟩₀₊ < ⟨ y ⟩₀₊
-
-    _≤₀₊_ : R₀₊ → R₀₊ → Type ℓ'
-    _≤₀₊_ x y = ⟨ x ⟩₀₊ ≤ ⟨ y ⟩₀₊
+    open AdditiveAndMultiplicativeSubType 0≤ₚ_ 0≤+Closed 0≤·Closed renaming (
+        subtype to R₀₊ ; ι to ⟨_⟩₀₊
+      ; _-subtype_ to _-₀₊_ ; _≤subtype_ to _≤₀₊_ ; _<subtype_ to _<₀₊_) public
 
     R₀₊≡ = Σ≡Prop (is-prop-valued≤ 0r)
 
