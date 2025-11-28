@@ -10,7 +10,7 @@ open import Cubical.Foundations.SIP
 open import Cubical.Data.Sigma
 
 open import Cubical.Data.Nat as ℕ
-open import Cubical.Data.Nat.Order renaming (_≤_ to _≤ℕ_ ; _<_ to _<ℕ_)
+open import Cubical.Data.Nat.Order as ℕ renaming (_≤_ to _≤ℕ_ ; _<_ to _<ℕ_)
 
 open import Cubical.Data.Rationals.Fast as ℚ hiding (_+_)
 open import Cubical.Data.Rationals.Fast.Order as ℚ hiding (_<_ ; _≤_)
@@ -41,6 +41,9 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
   isCauchySeq : (ℕ → M) → Type ℓ'
   isCauchySeq x = Σ[ N ∈ (ℚ₊ → ℕ) ] (∀ ε m n → N ε ≤ℕ m → N ε ≤ℕ n → x m ≈[ ε ] x n)
 
+  isCauchySeq< : (ℕ → M) → Type ℓ'
+  isCauchySeq< x = Σ[ N ∈ (ℚ₊ → ℕ) ] (∀ ε m n → m <ℕ n → N ε ≤ℕ m → x m ≈[ ε ] x n)
+
   isCauchySeq→isCauchy : ∀ x → isCauchySeq x → Σ[ y ∈ (ℚ₊ → M) ] isCauchy y
   isCauchySeq→isCauchy x (N , N≤→≈) .fst ε   = x (N ε)
   isCauchySeq→isCauchy x (N , N≤→≈) .snd ε δ = isTriangular≈
@@ -48,3 +51,15 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
     (N≤→≈ ε (N ε) (ℕ.max (N ε) (N δ)) (is-refl (N ε)) NPL.L≤∨)
     (N≤→≈ δ (ℕ.max (N ε) (N δ)) (N δ) (NPL.R≤∨ {N ε}) (is-refl (N δ)))
     where open PseudolatticeStr (ℕ≤Pseudolattice .snd)
+
+
+  -- this formalizes "WLOG assume m < n"
+  isCauchySeq<→isCauchySeq : ∀ x → isCauchySeq< x → isCauchySeq x
+  isCauchySeq<→isCauchySeq x (N , xcs<) .fst = N
+  isCauchySeq<→isCauchySeq x (N , xcs<) .snd ε m n with m ℕ.≟ n
+  ... | lt m<n = λ N≤m _   → xcs< ε m n m<n N≤m
+  ... | eq m≡n = λ _   _   → subst ((x m ≈[ ε ]_) ∘ x) m≡n (isRefl≈ ε)
+  ... | gt m>n = λ _   N≤n → isSym≈ ε $ xcs< ε n m m>n N≤n
+
+  isCauchySeq<→isCauchy : ∀ x → isCauchySeq< x → Σ[ y ∈ (ℚ₊ → M) ] isCauchy y
+  isCauchySeq<→isCauchy x = isCauchySeq→isCauchy x ∘ isCauchySeq<→isCauchySeq x

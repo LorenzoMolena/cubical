@@ -3,6 +3,7 @@ module Cubical.Algebra.OrderedCommRing.Properties where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Structure
+open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.SIP using (TypeWithStr)
 
@@ -20,6 +21,10 @@ open import Cubical.Algebra.CommSemiring
 open import Cubical.Algebra.Ring
 open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.OrderedCommRing.Base
+
+open import Cubical.Tactics.CommRingSolver
+
+open import Cubical.Relation.Nullary
 
 open import Cubical.Relation.Binary.Order.Quoset
 open import Cubical.Relation.Binary.Order.StrictOrder
@@ -49,10 +54,11 @@ OrderedCommRing→Quoset = StrictOrder→Quoset ∘ OrderedCommRing→StrictOrde
 
 module _ (R' : OrderedCommRing ℓ ℓ') where
   R = fst R'
+  RCR = OrderedCommRing→CommRing R'
   open OrderedCommRingStr (snd R')
   open RingTheory (OrderedCommRing→Ring R')
   open JoinProperties (OrderedCommRing→PseudoLattice R') renaming (
-    L≤∨ to L≤⊔ ; R≤∨ to R≤⊔ ; ∨LUB to ⊔LUB)
+    L≤∨ to L≤⊔ ; R≤∨ to R≤⊔ ; ∨Comm to ⊔Comm ; ∨LUB to ⊔LUB)
 
   open <-≤-Reasoning R
     (OrderedCommRing→Poset R' .snd)
@@ -66,6 +72,13 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
 
   module OrderedCommRingTheory where
+
+    ≤→¬> : ∀ x y → x ≤ y → ¬ (y < x)
+    ≤→¬> x y = equivFun (≤≃¬> x y)
+
+    ¬<→≥ : ∀ x y → ¬ (x < y) → y ≤ x
+    ¬<→≥ x y = invEq (≤≃¬> y x)
+
     abs : R → R
     abs z = z ⊔ (- z)
 
@@ -76,9 +89,17 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     +MonoL< x y z x<y = begin<
       z + x ≡→≤⟨ +Comm z x ⟩ x + z <⟨ +MonoR< x y z x<y ⟩ y + z ≡→≤⟨ +Comm y z ⟩ z + y ◾
 
+    +Mono< : ∀ x y z w → x < y → z < w → x + z < y + w
+    +Mono< x y z w x<y z<w = begin<
+      x + z <⟨ +MonoR< x y z x<y ⟩ y + z <⟨ +MonoL< z w y z<w ⟩ y + w ◾
+
     +MonoL≤ : ∀ x y z → x ≤ y → z + x ≤ z + y
     +MonoL≤ x y z x≤y = begin≤
       z + x ≡→≤⟨ +Comm z x ⟩ x + z ≤⟨ +MonoR≤ x y z x≤y ⟩ y + z ≡→≤⟨ +Comm y z ⟩ z + y ◾
+
+    +Mono≤ : ∀ x y z w → x ≤ y → z ≤ w → x + z ≤ y + w
+    +Mono≤ x y z w x<y z<w = begin≤
+      x + z ≤⟨ +MonoR≤ x y z x<y ⟩ y + z ≤⟨ +MonoL≤ z w y z<w ⟩ y + w ◾
 
     ·MonoL< : ∀ x y z → 0r < z → x < y → z · x < z · y
     ·MonoL< x y z 0<z x<y = begin<
@@ -90,9 +111,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     -Flip< : ∀ x y → x < y → - y < - x
     -Flip< x y x<y = begin<
-      - y           ≡→≤⟨ sym $ +Assoc _ _ _ ∙∙ cong (_- y) (+InvR x) ∙∙ +IdL (- y)  ⟩
+      - y           ≡→≤⟨ solve! RCR ⟩
       x + (- x - y)   <⟨ +MonoR< x y (- x - y) x<y ⟩
-      y + (- x - y) ≡→≤⟨ +Assoc-comm1 _ _ _ ∙∙ cong (- x +_) (+InvR y) ∙∙ +IdR (- x) ⟩
+      y + (- x - y) ≡→≤⟨ solve! RCR ⟩
       - x             ◾
 
     ≤abs : ∀ z → z ≤ abs z
@@ -104,26 +125,38 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     #→0<abs : ∀ z → z # 0r → 0r < abs z
     #→0<abs z = PT.rec (is-prop-valued< _ _) λ
       { (inl z<0) → begin<
-        0r   ≡→≤⟨ sym 0Selfinverse ⟩
-        - 0r   <⟨ -Flip< z 0r z<0 ⟩
-        - z    ≤⟨ -≤abs _ ⟩
-        abs z ◾
+        0r    ≡→≤⟨ solve! RCR ⟩
+        - 0r    <⟨ -Flip< z 0r z<0 ⟩
+        - z     ≤⟨ -≤abs _ ⟩
+        abs z   ◾
       ; (inr 0<z) → begin<
-        0r      <⟨ 0<z ⟩
-        z      ≤⟨ ≤abs _ ⟩
+        0r    <⟨ 0<z ⟩
+        z     ≤⟨ ≤abs _ ⟩
         abs z ◾ }
 
     triangularInequality : ∀ x y → abs (x + y) ≤ abs x + abs y
     triangularInequality x y = ⊔LUB
       (begin≤
-        x     + y     ≤⟨ +MonoR≤ _ _ _ (≤abs x) ⟩
-        abs x + y     ≤⟨ +MonoL≤ _ _ _ (≤abs y) ⟩
+        x     + y     ≤⟨ +Mono≤ _ _ _ _ (≤abs x) (≤abs y) ⟩
         abs x + abs y ◾)
       (begin≤
-        - (x + y)    ≡→≤⟨ sym $ -Dist x y ⟩
-        (- x) - y      ≤⟨ +MonoR≤ _ _ _ (-≤abs x) ⟩
-        abs x + (- y)  ≤⟨ +MonoL≤ _ _ _ (-≤abs y) ⟩
+        - (x + y)    ≡→≤⟨ solve! RCR ⟩
+        (- x) - y      ≤⟨ +Mono≤ _ _ _ _ (-≤abs x) (-≤abs y) ⟩
         abs x + abs y ◾)
+
+    triangularInequality- : ∀ x y z → abs (x - y) ≤ abs (x - z) + abs (z - y)
+    triangularInequality- x y z = begin≤
+      abs (x - y)               ≡→≤⟨ cong abs (solve! RCR) ⟩
+      abs ((x - z) + (z - y))     ≤⟨ triangularInequality (x - z) (z - y) ⟩
+      abs (x - z) + abs (z - y)   ◾
+
+    abs-Comm : ∀ x y → abs (x - y) ≡ abs (y - x)
+    abs-Comm x y =
+      abs (x - y)             ≡⟨⟩
+      (x - y) ⊔ (- (x - y))   ≡⟨ ⊔Comm ⟩
+      (- (x - y)) ⊔ (x - y)   ≡⟨ cong₂ _⊔_ (solve! RCR) (solve! RCR) ⟩
+      (y - x) ⊔ (- (y - x))   ≡⟨⟩
+      abs (y - x)             ∎
 
   module AdditiveSubType
     (P : R → hProp ℓ'')
@@ -161,13 +194,13 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       0<+Closed : ∀ x y → 0r < x → 0r < y → 0r < x + y
       0<+Closed x y 0<x 0<y = begin<
         0r       <⟨ 0<x ⟩
-        x      ≡→≤⟨ sym $ +IdR x ⟩
+        x      ≡→≤⟨ solve! RCR ⟩
         x + 0r   <⟨ +MonoL< 0r y x 0<y ⟩
         x + y    ◾
 
       0<·Closed : ∀ x y → 0r < x → 0r < y → 0r < x · y
       0<·Closed x y 0<x 0<y = begin<
-        0r      ≡→≤⟨ sym $ 0LeftAnnihilates y ⟩
+        0r      ≡→≤⟨ solve! RCR ⟩
         0r · y   <⟨ ·MonoR< 0r x y 0<y 0<x ⟩
         x · y     ◾
     open AdditiveAndMultiplicativeSubType 0<ₚ_ 0<+Closed 0<·Closed renaming (
@@ -213,13 +246,13 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       0≤+Closed : ∀ x y → 0r ≤ x → 0r ≤ y → 0r ≤ x + y
       0≤+Closed x y 0≤x 0≤y = begin≤
         0r       ≤⟨ 0≤x ⟩
-        x      ≡→≤⟨ sym $ +IdR x ⟩
+        x      ≡→≤⟨ solve! RCR ⟩
         x + 0r   ≤⟨ +MonoL≤ 0r y x 0≤y ⟩
         x + y    ◾
 
       0≤·Closed : ∀ x y → 0r ≤ x → 0r ≤ y → 0r ≤ x · y
       0≤·Closed x y 0≤x 0≤y = begin≤
-        0r      ≡→≤⟨ sym $ 0LeftAnnihilates y ⟩
+        0r      ≡→≤⟨ solve! RCR ⟩
         0r · y    ≤⟨ ·MonoR≤ 0r x y 0≤y 0≤x ⟩
         x · y     ◾
     open AdditiveAndMultiplicativeSubType 0≤ₚ_ 0≤+Closed 0≤·Closed renaming (
@@ -259,3 +292,47 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         (λ _ _ _ → R₀₊≡ (·Assoc _ _ _))
         (λ _     → R₀₊≡ (·IdR _))
         (λ _ _   → R₀₊≡ (·Comm _ _))
+
+  private
+    2r = 1r + 1r
+
+  module Charactersitic≠2 (1/2 : R) (0<1/2 : 0r < 1/2) (1/2≡2⁻¹ : 1/2 · 2r ≡ 1r) where
+    open OrderedCommRingTheory
+
+    1/2+1/2≡1 : 1/2 + 1/2 ≡ 1r
+    1/2+1/2≡1 =
+      1/2 + 1/2           ≡⟨ solve! RCR ⟩
+      1/2 · 2r            ≡⟨ 1/2≡2⁻¹ ⟩
+      1r                  ∎
+
+    0≤1/2 : 0r ≤ 1/2
+    0≤1/2 = <-≤-weaken _ _ 0<1/2
+
+    mean : R → R → R
+    mean x y = (x + y) · 1/2
+
+    meanIdem : ∀ x → mean x x ≡ x
+    meanIdem x =
+      (x + x) · 1/2     ≡⟨ solve! RCR ⟩
+      x · (1/2 + 1/2)   ≡⟨ cong (x ·_) 1/2+1/2≡1 ⟩
+      x · 1r            ≡⟨ solve! RCR ⟩
+      x                 ∎
+
+    <→<mean : ∀ x y → x < y → x < mean x y
+    <→<mean x y x<y = begin<
+      x             ≡→≤⟨ sym (meanIdem x) ⟩
+      (x + x) · 1/2   <⟨ ·MonoR< (x + x) (x + y) 1/2 0<1/2 (+MonoL< x y x x<y) ⟩
+      (x + y) · 1/2   ◾
+
+    <→mean< : ∀ x y → x < y → mean x y < y
+    <→mean< x y x<y = begin<
+      (x + y) · 1/2   <⟨ ·MonoR< (x + y) (y + y) 1/2 0<1/2 (+MonoR< x y y x<y) ⟩
+      (y + y) · 1/2 ≡→≤⟨ meanIdem y ⟩
+      y               ◾
+
+    0≤abs : ∀ z → 0r ≤ abs z
+    0≤abs z = begin≤
+      0r                    ≡→≤⟨ solve! RCR ⟩
+      (z - z) · 1/2           ≤⟨ ·MonoR≤ _ _ _ 0≤1/2 $ +Mono≤ _ _ _ _ (≤abs z) (-≤abs z) ⟩
+      (abs z + abs z) · 1/2 ≡→≤⟨ meanIdem (abs z) ⟩
+      abs z                   ◾
