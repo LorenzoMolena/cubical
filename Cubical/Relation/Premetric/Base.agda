@@ -18,7 +18,10 @@ open import Cubical.Algebra.CommMonoid
 open import Cubical.Algebra.OrderedCommRing
 open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
 
-open Positive ℚOrderedCommRing renaming (R₊ to ℚ₊ ; R₊AdditiveSemigroup to +ℚ₊Semigroup)
+open Positive ℚOrderedCommRing renaming (
+    R₊ to ℚ₊ ; _⊔₊_ to max₊
+  ; R₊AdditiveSemigroup to +ℚ₊Semigroup
+  ; R₊MultiplicativeCommMonoid to ·ℚ₊CommMonoid) public
 
 private
   variable

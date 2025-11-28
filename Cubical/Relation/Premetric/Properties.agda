@@ -12,18 +12,9 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Nat.Order as ℕ renaming (_≤_ to _≤ℕ_ ; _<_ to _<ℕ_)
 
-open import Cubical.Data.Rationals.Fast as ℚ hiding (_+_)
-open import Cubical.Data.Rationals.Fast.Order as ℚ hiding (_<_ ; _≤_)
-
-open import Cubical.Algebra.OrderedCommRing
-open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
-
-open Positive ℚOrderedCommRing renaming (
-  R₊ to ℚ₊ ; R₊AdditiveSemigroup to +ℚ₊Semigroup ; _⊔₊_ to max₊)
-
 open import Cubical.Relation.Binary.Order.Pseudolattice
 open import Cubical.Relation.Binary.Order.Pseudolattice.Instances.Nat
-open module NPL = JoinProperties ℕ≤Pseudolattice
+open module N = JoinProperties ℕ≤Pseudolattice
 
 open import Cubical.Relation.Premetric.Base
 
@@ -48,8 +39,8 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
   isCauchySeq→isCauchy x (N , N≤→≈) .fst ε   = x (N ε)
   isCauchySeq→isCauchy x (N , N≤→≈) .snd ε δ = isTriangular≈
     {x (N ε)} {x (ℕ.max (N ε) (N δ))} {x (N δ)} ε δ
-    (N≤→≈ ε (N ε) (ℕ.max (N ε) (N δ)) (is-refl (N ε)) NPL.L≤∨)
-    (N≤→≈ δ (ℕ.max (N ε) (N δ)) (N δ) (NPL.R≤∨ {N ε}) (is-refl (N δ)))
+    (N≤→≈ ε (N ε) (ℕ.max (N ε) (N δ)) (is-refl (N ε)) N.L≤∨)
+    (N≤→≈ δ (ℕ.max (N ε) (N δ)) (N δ) (N.R≤∨ {N ε}) (is-refl (N δ)))
     where open PseudolatticeStr (ℕ≤Pseudolattice .snd)
 
 

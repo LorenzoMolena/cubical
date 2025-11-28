@@ -5,10 +5,6 @@ module Cubical.Relation.Premetric.Completion.Base {ℓ} {ℓ'}
 
 open import Cubical.Foundations.Prelude
 
-open import Cubical.Algebra.OrderedCommRing
-open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
-open Positive ℚOrderedCommRing renaming (R₊ to ℚ₊ ; R₊AdditiveSemigroup to +ℚ₊Semigroup)
-
 private
   M = M' .fst
   open PremetricStr (M' .snd)

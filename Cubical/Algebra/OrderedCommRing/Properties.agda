@@ -13,10 +13,20 @@ import Cubical.Functions.Logic as L
 
 open import Cubical.Data.Sum
 open import Cubical.Data.Sigma
+open import Cubical.Data.FinData
+open import Cubical.Data.Nat as ℕ renaming (
+  _+_ to _+ℕ_ ; _·_ to _·ℕ_ ; _∸_ to _∸ℕ_ ; _^_ to _^ℕ_)
+open import Cubical.Data.Nat.Order as ℕ renaming (
+  _≤_ to _≤ℕ_ ; _<_ to _<ℕ_)
+
+open import Cubical.Data.Empty as ⊥
 
 open import Cubical.Algebra.Semigroup
+open import Cubical.Algebra.Monoid
+open import Cubical.Algebra.Monoid.BigOp
 open import Cubical.Algebra.CommMonoid
 open import Cubical.Algebra.Semiring
+open import Cubical.Algebra.Semiring.BigOps
 open import Cubical.Algebra.CommSemiring
 open import Cubical.Algebra.Ring
 open import Cubical.Algebra.CommRing
@@ -72,6 +82,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
 
   module OrderedCommRingTheory where
+    open Exponentiation (OrderedCommRing→CommRing R') public
 
     ≤→¬> : ∀ x y → x ≤ y → ¬ (y < x)
     ≤→¬> x y = equivFun (≤≃¬> x y)
@@ -79,8 +90,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     ¬<→≥ : ∀ x y → ¬ (x < y) → y ≤ x
     ¬<→≥ x y = invEq (≤≃¬> y x)
 
-    abs : R → R
+    abs ∣_∣ : R → R
     abs z = z ⊔ (- z)
+    ∣_∣ = abs
 
     _#_ : R → R → Type ℓ'
     x # y = (x < y) L.⊔′ (y < x)
@@ -158,6 +170,81 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       (y - x) ⊔ (- (y - x))   ≡⟨⟩
       abs (y - x)             ∎
 
+  module SumTheory where
+    open OrderedCommRingTheory
+    open Sum (Ring→Semiring (OrderedCommRing→Ring R')) public
+
+    ∑-syntax : ℕ → (ℕ → R) → R
+    ∑-syntax n x = ∑ {suc n} λ k → x (toℕ k)
+
+    syntax ∑-syntax n (λ k → xₖ) = ∑[0 ≤ k ≤ n ] xₖ
+
+    abs∑≤∑abs : ∀ n → (x : ℕ → R) → abs (∑[0 ≤ k ≤ n ] (x k)) ≤ ∑[0 ≤ k ≤ n ] abs (x k)
+    abs∑≤∑abs zero    x = flip (subst (abs (x 0 + 0r) ≤_)) (is-refl _) $
+      abs (x 0 + 0r) ≡⟨ cong abs (solve! RCR) ⟩
+      abs (x 0)      ≡⟨ solve! RCR ⟩
+      abs (x 0) + 0r ∎
+    abs∑≤∑abs (suc n) x = begin≤
+      ∣ x 0 + ∑[0 ≤ k ≤ n ] (x (suc k)) ∣    ≤⟨ triangularInequality (x 0) _ ⟩
+      ∣ x 0 ∣ + ∣ ∑[0 ≤ k ≤ n ] (x (suc k)) ∣ ≤⟨ +MonoL≤ _ _ _ (abs∑≤∑abs n (x ∘ suc)) ⟩
+      ∑[0 ≤ k ≤ suc n ] ∣ x k ∣              ◾
+
+    geometricSum : ∀ n x → (1r - x) · ∑[0 ≤ k ≤ n ] (x ^ k) ≡ 1r - x ^ (1 +ℕ n)
+    geometricSum zero    x = (1r + - x) · (1r + 0r) ≡⟨ solve! RCR ⟩ 1r - (x · 1r) ∎
+    geometricSum (suc n) x =
+      let
+        sₙ = ∑[0 ≤ k ≤ n ] (x ^ k)
+        sₙ₊₁ = 1r + ∑[0 ≤ k ≤ n ] (x · (x ^ k))
+      in
+        (1r - x) · sₙ₊₁                      ≡⟨ step0 ⟩
+        (1r - x) · (1r + x · sₙ)             ≡⟨ step1 sₙ ⟩
+        (1r - x) + x · ((1r - x) · sₙ)       ≡⟨ step2 ⟩
+         1r - x + x · (1r - (x ^ (1 +ℕ n))) ≡⟨ step3 (x ^ (1 +ℕ n)) ⟩
+         1r - x ^ (2 +ℕ n)                  ∎
+      where
+        -- due to the presence of the sum/power term, step1/3 cannot be inlined
+        step0 = sym $ cong (((1r - x) ·_) ∘ (1r +_)) (∑Mulrdist {suc n} x ((x ^_) ∘ toℕ))
+
+        step1 : ∀ s → (1r - x) · (1r + x · s) ≡ (1r - x) + x · ((1r - x) · s)
+        step1 s = solve! RCR
+
+        step2 = cong ((1r - x +_) ∘ (x ·_)) (geometricSum n x)
+
+        step3 : ∀ p → 1r - x + x · (1r - p) ≡ 1r - x · p
+        step3 p = solve! RCR
+
+    0<x<1→x¹⁺ⁿ<1 : ∀ n x → 0r < x → x < 1r → x ^ (1 +ℕ n) < 1r
+    0<x<1→x¹⁺ⁿ<1 zero x 0<x x<1 = begin<
+      x · 1r ≡→≤⟨ solve! RCR ⟩
+      x        <⟨ x<1 ⟩
+      1r       ◾
+    0<x<1→x¹⁺ⁿ<1 (suc n) x 0<x x<1 = begin<
+      x · (x · x ^ n)    <⟨ ·MonoL< _ _ _ 0<x $ 0<x<1→x¹⁺ⁿ<1 n x 0<x x<1 ⟩
+      x · 1r           ≡→≤⟨ solve! RCR ⟩
+      x                  <⟨ x<1 ⟩
+      1r                 ◾
+
+    0<x<1→0<x¹⁺ⁿ : ∀ n x → 0r < x → x < 1r → 0r < x ^ (1 +ℕ n)
+    0<x<1→0<x¹⁺ⁿ zero x 0<x x<1 = begin<
+      0r        <⟨ 0<x ⟩
+      x       ≡→≤⟨ solve! RCR ⟩
+      x · 1r    ◾
+    0<x<1→0<x¹⁺ⁿ (suc n) x 0<x x<1 = begin<
+      0r              ≡→≤⟨ solve! RCR ⟩
+      x · 0r            <⟨ ·MonoL< _ _ _ 0<x $ 0<x<1→0<x¹⁺ⁿ n x 0<x x<1 ⟩
+      x · (x · x ^ n)   ◾
+
+    GeometricSumPos<1 : ∀ n x → 0r < x → x < 1r
+                               → (1r - x) · ∑[0 ≤ k ≤ n ] (x ^ k) ≤ 1r
+    GeometricSumPos<1 n x 0<x x<1 = begin≤
+      (1r - x) · ∑[0 ≤ k ≤ n ] (x ^ k) ≡→≤⟨ geometricSum n x ∙ sym (+IdR _) ⟩
+      1r - x ^ (1 +ℕ n) + 0r             <⟨ +MonoL< _ _ _ (0<x<1→0<x¹⁺ⁿ n x 0<x x<1) ⟩
+      1r - x ^ (1 +ℕ n) + x ^ (1 +ℕ n) ≡→≤⟨ lemma (x ^ (1 +ℕ n))  ⟩
+      1r                                 ◾
+      where
+        lemma : ∀ p → (1r - p) + p ≡ 1r
+        lemma p = solve! RCR
+
   module AdditiveSubType
     (P : R → hProp ℓ'')
     (+Closed : (x y : R) → ⟨ P x ⟩ → ⟨ P y ⟩ → ⟨ P (x + y) ⟩)
@@ -207,7 +294,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         subtype to R₊ ; ι to ⟨_⟩₊
       ; _-subtype_ to _-₊_ ; _≤subtype_ to _≤₊_ ; _<subtype_ to _<₊_) public
 
-    R₀≡ = Σ≡Prop (is-prop-valued< 0r)
+    R₊≡ = Σ≡Prop (is-prop-valued< 0r)
 
     _⊔₊_ : R₊ → R₊ → R₊
     (x ⊔₊ y) .fst = ⟨ x ⟩₊ ⊔ ⟨ y ⟩₊
@@ -221,7 +308,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       where
         isSG : IsSemigroup _
         isSG .IsSemigroup.is-set = isSetΣSndProp is-set (is-prop-valued< 0r)
-        isSG .IsSemigroup.·Assoc = λ _ _ _ → R₀≡ (+Assoc _ _ _)
+        isSG .IsSemigroup.·Assoc = λ _ _ _ → R₊≡ (+Assoc _ _ _)
 
     open SemigroupStr (snd R₊AdditiveSemigroup) using () renaming (_·_ to _+₊_) public
 
@@ -233,9 +320,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     CommMonoidStr.isCommMonoid (snd R₊MultiplicativeCommMonoid) =
       makeIsCommMonoid
         (isSetΣSndProp is-set (is-prop-valued< 0r))
-        (λ _ _ _ → R₀≡ (·Assoc _ _ _))
-        (λ _     → R₀≡ (·IdR _))
-        (λ _ _   → R₀≡ (·Comm _ _))
+        (λ _ _ _ → R₊≡ (·Assoc _ _ _))
+        (λ _     → R₊≡ (·IdR _))
+        (λ _ _   → R₊≡ (·Comm _ _))
 
   module NonNegative where
     open OrderedCommRingTheory
@@ -296,7 +383,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
   private
     2r = 1r + 1r
 
-  module Charactersitic≠2 (1/2 : R) (0<1/2 : 0r < 1/2) (1/2≡2⁻¹ : 1/2 · 2r ≡ 1r) where
+  module Charactersitic≠2 (1/2 : R) (1/2≡2⁻¹ : 1/2 · 2r ≡ 1r) where
     open OrderedCommRingTheory
 
     1/2+1/2≡1 : 1/2 + 1/2 ≡ 1r
@@ -304,6 +391,13 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       1/2 + 1/2           ≡⟨ solve! RCR ⟩
       1/2 · 2r            ≡⟨ 1/2≡2⁻¹ ⟩
       1r                  ∎
+
+    0<1/2 : 0r < 1/2
+    0<1/2 = flip (PT.rec (is-prop-valued< 0r 1/2))
+      (posSum→pos∨pos 1/2 1/2 (subst (0r <_) (sym 1/2+1/2≡1) 0<1)) λ
+      { (inl 0<1/2) → 0<1/2
+      ; (inr 0<1/2) → 0<1/2
+      }
 
     0≤1/2 : 0r ≤ 1/2
     0≤1/2 = <-≤-weaken _ _ 0<1/2
@@ -336,3 +430,4 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       (z - z) · 1/2           ≤⟨ ·MonoR≤ _ _ _ 0≤1/2 $ +Mono≤ _ _ _ _ (≤abs z) (-≤abs z) ⟩
       (abs z + abs z) · 1/2 ≡→≤⟨ meanIdem (abs z) ⟩
       abs z                   ◾
+-- -}
