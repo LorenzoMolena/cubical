@@ -73,10 +73,9 @@ open module Q< = Q.<-syntax
 open module Q≤ = Q.≤-syntax
 open Q.≡-syntax
 -}
-open Positive ℚOrderedCommRing renaming (R₊ to ℚ₊ ; R₊AdditiveSemigroup to +ℚ₊Semigroup)
 
 open OrderedCommRingStr (snd ℚOrderedCommRing)
-open OrderedCommRingTheory (ℚOrderedCommRing)
+open OrderedCommRingTheory (ℚOrderedCommRing) hiding (_^_)
 open RingTheory (CommRing→Ring ℚCommRing)
 open Sum (Ring→Semiring (CommRing→Ring ℚCommRing))
 

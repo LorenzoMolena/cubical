@@ -37,20 +37,18 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
 
   isCauchySeq→isCauchy : ∀ x → isCauchySeq x → Σ[ y ∈ (ℚ₊ → M) ] isCauchy y
   isCauchySeq→isCauchy x (N , N≤→≈) .fst ε   = x (N ε)
-  isCauchySeq→isCauchy x (N , N≤→≈) .snd ε δ = isTriangular≈
-    {x (N ε)} {x (ℕ.max (N ε) (N δ))} {x (N δ)} ε δ
-    (N≤→≈ ε (N ε) (ℕ.max (N ε) (N δ)) (is-refl (N ε)) N.L≤∨)
-    (N≤→≈ δ (ℕ.max (N ε) (N δ)) (N δ) (N.R≤∨ {N ε}) (is-refl (N δ)))
-    where open PseudolatticeStr (ℕ≤Pseudolattice .snd)
-
+  isCauchySeq→isCauchy x (N , N≤→≈) .snd ε δ =
+    isTriangular≈ _ (x (ℕ.max (N ε) (N δ))) _ ε δ
+    (N≤→≈ ε (N ε) (ℕ.max (N ε) (N δ)) (ℕ.≤-refl) (N.L≤∨ {N ε}))
+    (N≤→≈ δ (ℕ.max (N ε) (N δ)) (N δ) (N.R≤∨ {N ε}) (ℕ.≤-refl))
 
   -- this formalizes "WLOG assume m < n"
   isCauchySeq<→isCauchySeq : ∀ x → isCauchySeq< x → isCauchySeq x
   isCauchySeq<→isCauchySeq x (N , xcs<) .fst = N
   isCauchySeq<→isCauchySeq x (N , xcs<) .snd ε m n with m ℕ.≟ n
   ... | lt m<n = λ N≤m _   → xcs< ε m n m<n N≤m
-  ... | eq m≡n = λ _   _   → subst ((x m ≈[ ε ]_) ∘ x) m≡n (isRefl≈ ε)
-  ... | gt m>n = λ _   N≤n → isSym≈ ε $ xcs< ε n m m>n N≤n
+  ... | eq m≡n = λ _   _   → subst ((x m ≈[ ε ]_) ∘ x) m≡n (isRefl≈ _ ε)
+  ... | gt m>n = λ _   N≤n → isSym≈ _ _ ε $ xcs< ε n m m>n N≤n
 
   isCauchySeq<→isCauchy : ∀ x → isCauchySeq< x → Σ[ y ∈ (ℚ₊ → M) ] isCauchy y
   isCauchySeq<→isCauchy x = isCauchySeq→isCauchy x ∘ isCauchySeq<→isCauchySeq x
