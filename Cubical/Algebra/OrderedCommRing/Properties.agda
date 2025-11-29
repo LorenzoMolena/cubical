@@ -129,11 +129,27 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       y + (- x - y) ≡→≤⟨ solve! RCR ⟩
       - x             ◾
 
+    -Flip≤ : ∀ x y → x ≤ y → - y ≤ - x
+    -Flip≤ x y x≤y = begin≤
+      - y           ≡→≤⟨ solve! RCR ⟩
+      x + (- x - y)   ≤⟨ +MonoR≤ x y (- x - y) x≤y ⟩
+      y + (- x - y) ≡→≤⟨ solve! RCR ⟩
+      - x             ◾
+
     ≤abs : ∀ z → z ≤ abs z
     ≤abs z = L≤⊔
 
     -≤abs : ∀ z → - z ≤ abs z
     -≤abs z = R≤⊔
+
+    0≤abs : ∀ z → 0r ≤ abs z
+    0≤abs z = ¬<→≥ (abs z) 0r λ ∣z∣<0 → is-irrefl 0r $ begin<
+      0r      ≡→≤⟨ solve! RCR ⟩
+      - 0r      <⟨ -Flip< _ _ ∣z∣<0 ⟩
+      - abs z   ≤⟨ -Flip≤ _ _ (≤abs z) ⟩
+      - z       ≤⟨ -≤abs z ⟩
+      abs z     <⟨ ∣z∣<0 ⟩
+      0r        ◾
 
     #→0<abs : ∀ z → z # 0r → 0r < abs z
     #→0<abs z = PT.rec (is-prop-valued< _ _) λ
@@ -398,9 +414,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     1/2+1/2≡1 : 1/2 + 1/2 ≡ 1r
     1/2+1/2≡1 =
-      1/2 + 1/2           ≡⟨ solve! RCR ⟩
-      1/2 · 2r            ≡⟨ 1/2≡2⁻¹ ⟩
-      1r                  ∎
+      1/2 + 1/2 ≡⟨ solve! RCR ⟩
+      1/2 · 2r  ≡⟨ 1/2≡2⁻¹ ⟩
+      1r        ∎
 
     0<1/2 : 0r < 1/2
     0<1/2 = flip (PT.rec (is-prop-valued< 0r 1/2))
@@ -434,8 +450,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       (y + y) · 1/2 ≡→≤⟨ meanIdem y ⟩
       y               ◾
 
-    0≤abs : ∀ z → 0r ≤ abs z
-    0≤abs z = begin≤
+    -- alternative proof of 0≤abs without using ¬<→≥ , but assuming charcateristic ≠ 2
+    0≤abs' : ∀ z → 0r ≤ abs z
+    0≤abs' z = begin≤
       0r                    ≡→≤⟨ solve! RCR ⟩
       (z - z) · 1/2           ≤⟨ ·MonoR≤ _ _ _ 0≤1/2 $ +Mono≤ _ _ _ _ (≤abs z) (-≤abs z) ⟩
       (abs z + abs z) · 1/2 ≡→≤⟨ meanIdem (abs z) ⟩
