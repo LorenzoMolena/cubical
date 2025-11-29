@@ -7,6 +7,13 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.SIP
 
+open import Cubical.Data.Sigma
+
+open import Cubical.Displayed.Base
+open import Cubical.Displayed.Auto
+open import Cubical.Displayed.Record
+open import Cubical.Displayed.Universe
+
 import Cubical.Functions.Logic as L
 
 open import Cubical.Relation.Nullary.Base
@@ -18,6 +25,8 @@ open import Cubical.Relation.Binary.Order.Poset hiding (isPseudolattice)
 open import Cubical.Relation.Binary.Order.StrictOrder
 
 open import Cubical.Relation.Binary.Order.Pseudolattice
+
+open import Cubical.Reflection.RecordEquiv
 
 open BinaryRelation
 
@@ -134,3 +143,51 @@ OrderedCommRing→CommRing : OrderedCommRing ℓ ℓ' → CommRing ℓ
 OrderedCommRing→CommRing R .fst = R .fst
 OrderedCommRing→CommRing R .snd = commringstr _ _ _ _ _ isCommRing where
   open OrderedCommRingStr (str R)
+
+record IsOrderedCommRingHom {ℓ<≤} {ℓ<≤'} {A : Type ℓ} {B : Type ℓ'}
+  (R : OrderedCommRingStr ℓ<≤ A)
+  (f : A → B)
+  (S : OrderedCommRingStr ℓ<≤' B)
+  : Type (ℓ-suc (ℓ-max ℓ (ℓ-max ℓ' (ℓ-max ℓ<≤ ℓ<≤'))))
+  where
+  no-eta-equality
+  private
+    module R = OrderedCommRingStr R
+    module S = OrderedCommRingStr S
+
+  field
+    pres0    : f R.0r ≡ S.0r
+    pres1    : f R.1r ≡ S.1r
+    pres+    : (x y : A) → f (x R.+ y) ≡ f x S.+ f y
+    pres·    : (x y : A) → f (x R.· y) ≡ f x S.· f y
+    pres-    : (x : A) → f (R.- x) ≡ S.- (f x)
+    pres≤    : (x y : A) → x R.≤ y → f x S.≤ f y
+    reflect< : (x y : A) → f x S.< f y → x R.< y
+
+unquoteDecl IsOrderedCommRingHomIsoΣ = declareRecordIsoΣ IsOrderedCommRingHomIsoΣ (quote IsOrderedCommRingHom)
+
+OrderedCommRingHom : ∀ {ℓ<≤} {ℓ<≤'}
+                     → (R : OrderedCommRing ℓ ℓ<≤)
+                     → (S : OrderedCommRing ℓ' ℓ<≤')
+                     → Type _
+OrderedCommRingHom R S = Σ[ f ∈ (⟨ R ⟩ → ⟨ S ⟩) ] IsOrderedCommRingHom (R .snd) f (S .snd)
+
+IsOrderedCommRingEquiv : ∀ {ℓ<≤} {ℓ<≤'} {A : Type ℓ} {B : Type ℓ'}
+                         → (R : OrderedCommRingStr ℓ<≤  A)
+                         → (e : A ≃ B)
+                         → (S : OrderedCommRingStr ℓ<≤' B)
+                         → Type _
+IsOrderedCommRingEquiv R e S = IsOrderedCommRingHom R (e .fst) S
+
+OrderedCommRingEquiv : ∀ {ℓ<≤} {ℓ<≤'}
+                       → (R : OrderedCommRing ℓ ℓ<≤)
+                       → (S : OrderedCommRing ℓ' ℓ<≤')
+                       → Type _
+OrderedCommRingEquiv R S = Σ[ e ∈ (R .fst ≃ S .fst) ] IsOrderedCommRingEquiv (R .snd) e (S .snd)
+
+OrderedCommRingEquiv→OrderedCommRingHom : ∀ {ℓ<≤} {ℓ<≤'}
+                                          → {A : OrderedCommRing ℓ  ℓ<≤}
+                                          → {B : OrderedCommRing ℓ' ℓ<≤'}
+                                          → OrderedCommRingEquiv A B
+                                          → OrderedCommRingHom A B
+OrderedCommRingEquiv→OrderedCommRingHom (e , eIsHom) = e .fst , eIsHom

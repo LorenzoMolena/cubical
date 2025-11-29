@@ -63,8 +63,9 @@ OrderedCommRing→Quoset : OrderedCommRing ℓ ℓ' → Quoset ℓ ℓ'
 OrderedCommRing→Quoset = StrictOrder→Quoset ∘ OrderedCommRing→StrictOrder
 
 module _ (R' : OrderedCommRing ℓ ℓ') where
-  R = fst R'
-  RCR = OrderedCommRing→CommRing R'
+  private
+    R = fst R'
+    RCR = OrderedCommRing→CommRing R'
   open OrderedCommRingStr (snd R')
   open RingTheory (OrderedCommRing→Ring R')
   open JoinProperties (OrderedCommRing→PseudoLattice R') renaming (
@@ -324,6 +325,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         (λ _     → R₊≡ (·IdR _))
         (λ _ _   → R₊≡ (·Comm _ _))
 
+    open CommMonoidStr (snd R₊MultiplicativeCommMonoid) using () renaming (
+      ε to 1₊ ; _·_ to _·₊_) public
+
   module NonNegative where
     open OrderedCommRingTheory
     private
@@ -368,6 +372,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         (λ _     → R₀₊≡ (0LeftAnnihilates _))
         (λ _ _   → R₀₊≡ (·Comm _ _))
 
+    open CommSemiringStr (snd R₀₊CommSemiring) using () renaming (
+      0r to 0₀₊ ; 1r to 1₀₊ ; _+_ to _+₀₊_ ; _·_ to _·₀₊_) public
+
     R₀₊MultiplicativeCommMonoid : CommMonoid _
     fst R₀₊MultiplicativeCommMonoid = R₀₊
     CommMonoidStr.ε (snd R₀₊MultiplicativeCommMonoid) = 1r , <-≤-weaken _ _ 0<1
@@ -379,6 +386,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         (λ _ _ _ → R₀₊≡ (·Assoc _ _ _))
         (λ _     → R₀₊≡ (·IdR _))
         (λ _ _   → R₀₊≡ (·Comm _ _))
+
+    open CommMonoidStr (snd R₀₊MultiplicativeCommMonoid) using () renaming (
+      ε to 1₀₊ ; _·_ to _·₀₊_) public
 
   private
     2r = 1r + 1r
@@ -430,4 +440,3 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       (z - z) · 1/2           ≤⟨ ·MonoR≤ _ _ _ 0≤1/2 $ +Mono≤ _ _ _ _ (≤abs z) (-≤abs z) ⟩
       (abs z + abs z) · 1/2 ≡→≤⟨ meanIdem (abs z) ⟩
       abs z                   ◾
--- -}

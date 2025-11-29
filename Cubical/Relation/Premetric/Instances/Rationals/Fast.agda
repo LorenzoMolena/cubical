@@ -29,9 +29,6 @@ open import Cubical.Relation.Binary.Order.Poset.Instances.Rationals.Fast
 open import Cubical.Relation.Binary.Order.Quoset
 open import Cubical.Relation.Binary.Order.Quoset.Instances.Rationals.Fast
 
-open import Cubical.Relation.Binary.Order.Pseudolattice
-open import Cubical.Relation.Binary.Order.Pseudolattice.Instances.Rationals.Fast
-
 open import Cubical.Relation.Binary.Order.QuosetReasoning
 
 open <-≤-Reasoning ℚ (ℚ≤Poset .snd) (ℚ<Quoset .snd)
@@ -42,11 +39,9 @@ open <-syntax
 open ≤-syntax
 open ≡-syntax
 
-open Positive ℚOrderedCommRing renaming (R₊ to ℚ₊ ; R₊AdditiveSemigroup to +ℚ₊Semigroup)
-
 open OrderedCommRingStr (snd ℚOrderedCommRing)
 open OrderedCommRingTheory (ℚOrderedCommRing)
-open Charactersitic≠2 ℚOrderedCommRing [ 1 / 2 ] (0 , refl) (eq/ _ _ refl)
+open Charactersitic≠2 ℚOrderedCommRing [ 1 / 2 ] (eq/ _ _ refl)
 open RingTheory (CommRing→Ring ℚCommRing)
 
 
@@ -60,7 +55,7 @@ isPremetric (snd ℚPremetricSpace) = isPMℚ
   where
     open IsPremetric
 
-    isPMℚ : IsPremetric (λ x ε y → abs (x - y) <ℚ ⟨ ε ⟩₊)
+    isPMℚ : IsPremetric _
     isPMℚ .isSetM = isSetℚ
     isPMℚ .isProp≈ x y ε = isProp< (abs (x - y)) ⟨ ε ⟩₊
     isPMℚ .isRefl≈ {x} ε = subst ((_<ℚ ⟨ ε ⟩₊) ∘ abs) (sym (+InvR x)) (ε .snd)
