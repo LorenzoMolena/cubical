@@ -344,6 +344,30 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     open CommMonoidStr (snd R₊MultiplicativeCommMonoid) using () renaming (
       ε to 1₊ ; _·_ to _·₊_) public
 
+    selfSeparated : ∀ (x y : R) → (∀ (z : R₊) → abs(x - y) < ⟨ z ⟩₊) → x ≡ y
+    selfSeparated x y ∀[•]∣x-y∣<• =
+      let
+        ∣x-y∣≤0 : abs(x - y) ≤ 0r
+        ∣x-y∣≤0 = ¬<→≥ 0r (abs(x - y)) λ 0<∣x-y∣ → is-irrefl (abs(x - y)) $ begin<
+          abs(x - y) <⟨ ∀[•]∣x-y∣<• (abs(x - y) , 0<∣x-y∣) ⟩
+          abs(x - y) ◾
+
+        x-y≡0 : x - y ≡ 0r
+        x-y≡0 = is-antisym (x - y) 0r
+          (begin≤
+            x - y      ≤⟨ ≤abs (x - y) ⟩
+            abs(x - y) ≤⟨ ∣x-y∣≤0 ⟩
+            0r         ◾)
+          (begin≤
+            0r           ≡→≤⟨ solve! RCR ⟩
+            - 0r           ≤⟨ -Flip≤ _ _ ∣x-y∣≤0 ⟩
+            - abs(x - y)   ≤⟨ -Flip≤ _ _ $ -≤abs (x - y) ⟩
+            - - (x - y)  ≡→≤⟨ solve! RCR ⟩
+            x - y          ◾)
+      in
+        equalByDifference x y x-y≡0
+
+
   module NonNegative where
     open OrderedCommRingTheory
     private
