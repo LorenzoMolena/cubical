@@ -60,13 +60,7 @@ isPremetric (snd ℚPremetricSpace) = isPMℚ
     isPMℚ .isProp≈ x y ε = isProp< (abs (x - y)) ⟨ ε ⟩₊
     isPMℚ .isRefl≈ x ε = subst ((_<ℚ ⟨ ε ⟩₊) ∘ abs) (sym (+InvR x)) (ε .snd)
     isPMℚ .isSym≈ x y ε = subst (_<ℚ ⟨ ε ⟩₊) $ abs-Comm x y
-    isPMℚ .isSeparated≈ x y ∀[ε]•<ε =
-      equalByDifference x y $ case (discreteℚ (x - y) 0) return (λ _ → x - y ≡ 0) of λ
-      { (yes p) → p
-      ; (no ¬p) → ⊥.rec $
-          isIrrefl< (abs(x - y)) $
-          ∀[ε]•<ε (abs(x - y) , #→0<abs (x - y) ∣ inequalityImplies# (x - y) 0 ¬p ∣₁)
-      }
+    isPMℚ .isSeparated≈ = selfSeparated
     isPMℚ .isTriangular≈ x y z ε δ <ε <δ = begin<
       abs (x - z)                 ≤⟨ triangularInequality- x z y ⟩
       abs (x - y) + abs (y - z)   <⟨ +Mono< (abs (x - y)) ⟨ ε ⟩₊ _ _ <ε <δ ⟩

@@ -36,6 +36,8 @@ open import Cubical.Tactics.CommRingSolver
 
 open import Cubical.Relation.Nullary
 
+open import Cubical.Relation.Binary
+open import Cubical.Relation.Binary.Order.Apartness
 open import Cubical.Relation.Binary.Order.Quoset
 open import Cubical.Relation.Binary.Order.StrictOrder
 open import Cubical.Relation.Binary.Order.Poset hiding (isPseudolattice)
@@ -62,6 +64,25 @@ OrderedCommRing→Poset = Pseudolattice→Poset ∘ OrderedCommRing→PseudoLatt
 OrderedCommRing→Quoset : OrderedCommRing ℓ ℓ' → Quoset ℓ ℓ'
 OrderedCommRing→Quoset = StrictOrder→Quoset ∘ OrderedCommRing→StrictOrder
 
+OrderedCommRing→Apartness : OrderedCommRing ℓ ℓ' → Apartness ℓ ℓ'
+OrderedCommRing→Apartness = StrictOrder→Apartness ∘ OrderedCommRing→StrictOrder
+
+module OrderedCommRingReasoning (R' : OrderedCommRing ℓ ℓ') where
+  private R = fst R'
+  open OrderedCommRingStr (snd R')
+  open <-≤-Reasoning
+    R
+    (str (OrderedCommRing→Poset  R'))
+    (str (OrderedCommRing→Quoset R'))
+    (λ x {y} {z} → <-≤-trans x y z)
+    (λ x {y} {z} → ≤-<-trans x y z)
+    (λ   {x} {y} → <-≤-weaken x y)
+    public
+
+  open <-syntax public
+  open ≤-syntax public
+  open ≡-syntax public
+
 module _ (R' : OrderedCommRing ℓ ℓ') where
   private
     R = fst R'
@@ -71,19 +92,13 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
   open JoinProperties (OrderedCommRing→PseudoLattice R') renaming (
     L≤∨ to L≤⊔ ; R≤∨ to R≤⊔ ; ∨Comm to ⊔Comm ; ∨LUB to ⊔LUB)
 
-  open <-≤-Reasoning R
-    (OrderedCommRing→Poset R' .snd)
-    (OrderedCommRing→Quoset R' .snd)
-    (λ x {y} {z} → <-≤-trans x y z)
-    (λ x {y} {z} → ≤-<-trans x y z)
-    (λ   {x} {y} → <-≤-weaken x y)
-  open <-syntax
-  open ≤-syntax
-  open ≡-syntax
-
+  open OrderedCommRingReasoning R'
 
   module OrderedCommRingTheory where
     open Exponentiation (OrderedCommRing→CommRing R') public
+    open BinaryRelation
+
+    open ApartnessStr (str (OrderedCommRing→Apartness R')) using (_#_) public
 
     ≤→¬> : ∀ x y → x ≤ y → ¬ (y < x)
     ≤→¬> x y = equivFun (≤≃¬> x y)
@@ -95,8 +110,11 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     abs z = z ⊔ (- z)
     ∣_∣ = abs
 
-    _#_ : R → R → Type ℓ'
-    x # y = (x < y) L.⊔′ (y < x)
+    -- _#_ : R → R → Type ℓ'
+    -- x # y = (x < y) L.⊔′ (y < x)
+
+    -- isApartness : IsApartness _#_
+    -- isApartness = ?
 
     +MonoL< : ∀ x y z → x < y → z + x < z + y
     +MonoL< x y z x<y = begin<
@@ -152,16 +170,15 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       0r        ◾
 
     #→0<abs : ∀ z → z # 0r → 0r < abs z
-    #→0<abs z = PT.rec (is-prop-valued< _ _) λ
-      { (inl z<0) → begin<
-        0r    ≡→≤⟨ solve! RCR ⟩
-        - 0r    <⟨ -Flip< z 0r z<0 ⟩
-        - z     ≤⟨ -≤abs _ ⟩
-        abs z   ◾
-      ; (inr 0<z) → begin<
-        0r    <⟨ 0<z ⟩
-        z     ≤⟨ ≤abs _ ⟩
-        abs z ◾ }
+    #→0<abs z (inl z<0) = begin<
+      0r    ≡→≤⟨ solve! RCR ⟩
+      - 0r    <⟨ -Flip< z 0r z<0 ⟩
+      - z     ≤⟨ -≤abs _ ⟩
+      abs z   ◾
+    #→0<abs z (inr 0<z) = begin<
+      0r    <⟨ 0<z ⟩
+      z     ≤⟨ ≤abs _ ⟩
+      abs z ◾
 
     triangularInequality : ∀ x y → abs (x + y) ≤ abs x + abs y
     triangularInequality x y = ⊔LUB

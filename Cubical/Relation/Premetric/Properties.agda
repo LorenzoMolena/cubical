@@ -12,9 +12,18 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Nat.Order as ℕ renaming (_≤_ to _≤ℕ_ ; _<_ to _<ℕ_)
 
+open import Cubical.Relation.Binary.Order.Poset.Instances.Nat
+open import Cubical.Relation.Binary.Order.Quoset.Instances.Nat
 open import Cubical.Relation.Binary.Order.Pseudolattice
 open import Cubical.Relation.Binary.Order.Pseudolattice.Instances.Nat
 open module N = JoinProperties ℕ≤Pseudolattice
+
+open import Cubical.Relation.Binary.Order.QuosetReasoning
+open <-≤-Reasoning ℕ (str ℕ≤Poset) (str ℕ<Quoset)
+  (λ _ → ℕ.<≤-trans) (λ _ → ℕ.≤<-trans) ℕ.<-weaken
+open <-syntax
+open ≤-syntax
+open ≡-syntax
 
 open import Cubical.Relation.Premetric.Base
 
@@ -25,6 +34,8 @@ private
 module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
   M = fst M'
   open PremetricStr (snd M')
+
+  -- Cauchy Approximations/Sequences
 
   isCauchy : (ℚ₊ → M) → Type ℓ'
   isCauchy x = ∀ (ε δ : ℚ₊) → x ε ≈[ ε +₊ δ ] x δ
@@ -49,6 +60,11 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
   ... | lt m<n = λ N≤m _   → xcs< ε m n m<n N≤m
   ... | eq m≡n = λ _   _   → subst ((x m ≈[ ε ]_) ∘ x) m≡n (isRefl≈ _ ε)
   ... | gt m>n = λ _   N≤n → isSym≈ _ _ ε $ xcs< ε n m m>n N≤n
+
+  isCauchySeq→isCauchySeq< : ∀ x → isCauchySeq x → isCauchySeq< x
+  isCauchySeq→isCauchySeq< x (N , xcs) .fst = N
+  isCauchySeq→isCauchySeq< x (N , xcs) .snd ε m n m<n N≤m = xcs ε m n N≤m $ begin≤
+    N ε ≤⟨ N≤m ⟩ m <⟨ m<n ⟩ n ◾
 
   isCauchySeq<→isCauchy : ∀ x → isCauchySeq< x → Σ[ y ∈ (ℚ₊ → M) ] isCauchy y
   isCauchySeq<→isCauchy x = isCauchySeq→isCauchy x ∘ isCauchySeq<→isCauchySeq x
