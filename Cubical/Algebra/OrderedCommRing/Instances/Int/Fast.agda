@@ -66,4 +66,5 @@ isOrderedCommRing (snd ℤOrderedCommRing) = isOrderedCommRingℤ
     isOrderedCommRingℤ .≤-<-trans       = λ x y z → ≤<-trans {x} {y} {z}
     isOrderedCommRingℤ .·MonoR≤         = λ x y z → 0≤o→≤-·o {z} {x} {y}
     isOrderedCommRingℤ .·MonoR<         = λ x y z → 0<o→<-·o {z} {x} {y}
+    isOrderedCommRingℤ .·CancelR<       = λ x y z → 0<o→<-·o-cancel {z} {x} {y}
     isOrderedCommRingℤ .0<1             = isRefl≤

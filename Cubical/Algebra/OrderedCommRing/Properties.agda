@@ -111,16 +111,14 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     ∣_∣ = abs
 
     +MonoL< : ∀ x y z → x < y → z + x < z + y
-    +MonoL< x y z x<y = begin<
-      z + x ≡→≤⟨ +Comm z x ⟩ x + z <⟨ +MonoR< x y z x<y ⟩ y + z ≡→≤⟨ +Comm y z ⟩ z + y ◾
+    +MonoL< x y z = subst2 _<_ (+Comm _ _) (+Comm _ _) ∘ +MonoR< x y z
 
     +Mono< : ∀ x y z w → x < y → z < w → x + z < y + w
     +Mono< x y z w x<y z<w = begin<
       x + z <⟨ +MonoR< x y z x<y ⟩ y + z <⟨ +MonoL< z w y z<w ⟩ y + w ◾
 
     +MonoL≤ : ∀ x y z → x ≤ y → z + x ≤ z + y
-    +MonoL≤ x y z x≤y = begin≤
-      z + x ≡→≤⟨ +Comm z x ⟩ x + z ≤⟨ +MonoR≤ x y z x≤y ⟩ y + z ≡→≤⟨ +Comm y z ⟩ z + y ◾
+    +MonoL≤ x y z = subst2 _≤_ (+Comm _ _) (+Comm _ _) ∘ +MonoR≤ x y z
 
     +Mono≤ : ∀ x y z w → x ≤ y → z ≤ w → x + z ≤ y + w
     +Mono≤ x y z w x<y z<w = begin≤
@@ -133,6 +131,15 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     ·MonoL≤ : ∀ x y z → 0r ≤ z → x ≤ y → z · x ≤ z · y
     ·MonoL≤ x y z 0≤z x≤y = begin≤
       z · x ≡→≤⟨ ·Comm z x ⟩ x · z ≤⟨ ·MonoR≤ x y z 0≤z x≤y ⟩ y · z ≡→≤⟨ ·Comm y z ⟩ z · y ◾
+
+    ·CancelL≤ : ∀ x y z → 0r < z → z · x ≤ z · y → x ≤ y
+    ·CancelL≤ x y z 0<z zx≤zy = ¬<→≥ y x $ ≤→¬> _ _ zx≤zy ∘ ·MonoL< _ _ z 0<z
+
+    ·CancelR≤ : ∀ x y z → 0r < z → x · z ≤ y · z → x ≤ y
+    ·CancelR≤ x y z 0<z zx≤zy = ¬<→≥ y x $ ≤→¬> _ _ zx≤zy ∘ ·MonoR< _ _ z 0<z
+
+    ·CancelL< : ∀ x y z → 0r < z → z · x < z · y → x < y
+    ·CancelL< x y z 0<z = ·CancelR< x y z 0<z ∘ subst2 _<_ (·Comm _ _) (·Comm _ _)
 
     -Flip< : ∀ x y → x < y → - y < - x
     -Flip< x y x<y = begin<

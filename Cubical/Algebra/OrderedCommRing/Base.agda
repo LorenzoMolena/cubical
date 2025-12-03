@@ -54,6 +54,7 @@ record IsOrderedCommRing
     ≤-<-trans       : ∀ x y z → x ≤ y → y < z → x < z
     ·MonoR≤         : ∀ x y z → 0r ≤ z → x ≤ y → (x · z) ≤ (y · z)
     ·MonoR<         : ∀ x y z → 0r < z → x < y → (x · z) < (y · z)
+    ·CancelR<       : ∀ x y z → 0r < z → (x · z) < (y · z) → x < y
     0<1             : 0r < 1r
 
   open IsCommRing isCommRing public
@@ -112,6 +113,7 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
   (≤-<-trans : ∀ x y z → x ≤ y → y < z → x < z)
   (·MonoR≤ : ∀ x y z → 0r ≤ z → x ≤ y → (x · z) ≤ (y · z))
   (·MonoR< : ∀ x y z → 0r < z → x < y → (x · z) < (y · z))
+  (·CancelR< : ∀ x y z → 0r < z → (x · z) < (y · z) → x < y)
   (0<1 : 0r < 1r) where
   makeIsOrderedCommRing : IsOrderedCommRing 0r 1r _+_ _·_ -_ _<_ _≤_
   makeIsOrderedCommRing = OCR where
@@ -132,6 +134,7 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
     IsOrderedCommRing.≤-<-trans OCR = ≤-<-trans
     IsOrderedCommRing.·MonoR≤ OCR = ·MonoR≤
     IsOrderedCommRing.·MonoR< OCR = ·MonoR<
+    IsOrderedCommRing.·CancelR< OCR = ·CancelR<
     IsOrderedCommRing.0<1 OCR = 0<1
 
 OrderedCommRing→PseudoLattice : OrderedCommRing ℓ ℓ' → Pseudolattice ℓ ℓ'
