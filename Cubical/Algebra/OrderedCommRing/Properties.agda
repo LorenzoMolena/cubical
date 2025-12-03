@@ -90,7 +90,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
   open OrderedCommRingStr (snd R')
   open RingTheory (OrderedCommRing→Ring R')
   open JoinProperties (OrderedCommRing→PseudoLattice R') renaming (
-    L≤∨ to L≤⊔ ; R≤∨ to R≤⊔ ; ∨Comm to ⊔Comm ; ∨LUB to ⊔LUB)
+    L≤∨ to L≤⊔ ; R≤∨ to R≤⊔ ; ∨Comm to ⊔Comm ; ∨Idem to ⊔Idem ; ∨LUB to ⊔LUB)
 
   open OrderedCommRingReasoning R'
 
@@ -109,12 +109,6 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     abs ∣_∣ : R → R
     abs z = z ⊔ (- z)
     ∣_∣ = abs
-
-    -- _#_ : R → R → Type ℓ'
-    -- x # y = (x < y) L.⊔′ (y < x)
-
-    -- isApartness : IsApartness _#_
-    -- isApartness = ?
 
     +MonoL< : ∀ x y z → x < y → z + x < z + y
     +MonoL< x y z x<y = begin<
@@ -203,6 +197,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       (- (x - y)) ⊔ (x - y)   ≡⟨ cong₂ _⊔_ (solve! RCR) (solve! RCR) ⟩
       (y - x) ⊔ (- (y - x))   ≡⟨⟩
       abs (y - x)             ∎
+
+    abs0 : abs 0r ≡ 0r
+    abs0 = cong (0r ⊔_) (solve! RCR) ∙ ⊔Idem
 
   module SumTheory where
     open OrderedCommRingTheory
