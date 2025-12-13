@@ -58,24 +58,24 @@ module _ (R' : ArchimedeanRing ℓ ℓ') where
   open OrderedCommRingReasoning ROCR
 
 {-
-  w : R → R → (z : ℚ) → (0 ℚ.< z) → hProp ℓ'
-  w x y [ pos zero    , 1+ b ] = ⊥.rec ∘ ℤ.isIrrefl<
-  w x y [ pos (suc a) , 1+ b ] = λ _ → (ι₊₁ b · abs(x - y) < ι₊₁ a) , is-prop-valued< _ _
-  w x y [ negsuc a    , 1+ b ] = ⊥.rec ∘ ℤ.¬pos≤negsuc
-  w x y (eq/ (pos zero    , (1+ b)) (c , (1+ d)) r i) = {! ⊥.rec ∘ ℤ.isIrrefl<  !}
-  w x y (eq/ (pos (suc n) , (1+ b)) (c , (1+ d)) r i) = {!   !}
-  w x y (eq/ (negsuc n    , (1+ b)) (c , (1+ d)) r i) = {!   !}
-  w x y (squash/ z w p q i j) = (isSetΠ (λ _ → isSetHProp)) _ _ {! p  !} {!  q !} i j
+  -- w : R → R → (z : ℚ) → (0 ℚ.< z) → hProp ℓ'
+  -- w x y [ pos zero    , 1+ b ] = ⊥.rec ∘ ℤ.isIrrefl<
+  -- w x y [ pos (suc a) , 1+ b ] = λ _ → (ι₊₁ b · abs(x - y) < ι₊₁ a) , is-prop-valued< _ _
+  -- w x y [ negsuc a    , 1+ b ] = ⊥.rec ∘ ℤ.¬pos≤negsuc
+  -- w x y (eq/ (pos zero    , (1+ b)) (c , (1+ d)) r i) = {! ⊥.rec ∘ ℤ.isIrrefl<  !}
+  -- w x y (eq/ (pos (suc n) , (1+ b)) (c , (1+ d)) r i) = {!   !}
+  -- w x y (eq/ (negsuc n    , (1+ b)) (c , (1+ d)) r i) = {!   !}
+  -- w x y (squash/ z w p q i j) = (isSetΠ (λ _ → isSetHProp)) _ _ {! p  !} {!  q !} i j
 
-  close : R → R → (z : ℚ) → (0 <ℚ z) → hProp ℓ'
-  close x y = SQ.elim (λ _ → isSetΠ λ _ → isSetHProp)
-    (λ { (pos zero    , 1+ b) → ⊥.rec ∘ ℤ.isIrrefl<
-       ; (pos (suc a) , 1+ b) → λ _ → (ι₊₁ b · abs(x - y) < ι₊₁ a) , is-prop-valued< _ _
-       ; (negsuc n    , 1+ b) → ⊥.rec ∘ ℤ.¬pos≤negsuc })
-    λ { (pos zero    , 1+ b) (c , 1+ d) p → {!   !}
-      ; (pos (suc n) , 1+ b) (c , 1+ d) p → {!   !}
-      ; (negsuc n    , 1+ b) (c , 1+ d) p → {!   !} }
--}
+  -- close : R → R → (z : ℚ) → (0 <ℚ z) → hProp ℓ'
+  -- close x y = SQ.elim (λ _ → isSetΠ λ _ → isSetHProp)
+  --   (λ { (pos zero    , 1+ b) → ⊥.rec ∘ ℤ.isIrrefl<
+  --      ; (pos (suc a) , 1+ b) → λ _ → (ι₊₁ b · abs(x - y) < ι₊₁ a) , is-prop-valued< _ _
+  --      ; (negsuc n    , 1+ b) → ⊥.rec ∘ ℤ.¬pos≤negsuc })
+  --   λ { (pos zero    , 1+ b) (c , 1+ d) p → {!   !}
+  --     ; (pos (suc n) , 1+ b) (c , 1+ d) p → {!   !}
+  --     ; (negsuc n    , 1+ b) (c , 1+ d) p → {!   !} }
+
 
 
   _≈[_]ₚR_ : R → ℚ₊ → R → hProp ℓ'
@@ -83,14 +83,12 @@ module _ (R' : ArchimedeanRing ℓ ℓ') where
     (λ (n , 1+ b) p → (ι₊₁ b · abs(x - y) < ι₀₊ ∣ n ∣ℤ) , is-prop-valued< _ _)
     (λ (n , 1+ b) (m , 1+ d) p → {!   !})
 
-  {-
-    SQ.rec isSetHProp
-    (λ { (pos zero    , (1+ b)) → ⊥.rec (ℚ.isIrrefl< 0 {!   !})
-       ; (pos (suc a) , (1+ b)) → {!   !}
-       ; (negsuc a    , 1+ b)   → {!   !}
-       })
-    {!   !} ε
-  -}
+    -- SQ.rec isSetHProp
+    -- (λ { (pos zero    , (1+ b)) → ⊥.rec (ℚ.isIrrefl< 0 {!   !})
+    --    ; (pos (suc a) , (1+ b)) → {!   !}
+    --    ; (negsuc a    , 1+ b)   → {!   !}
+    --    })
+    -- {!   !} ε
 
   0<ℤ : ℤ → Type
   0<ℤ (pos zero)    = ⊥
@@ -142,13 +140,11 @@ module _ (R' : ArchimedeanRing ℓ ℓ') where
   <ℚ≡0<ℚ : ∀ x → (0 <ℚ x) ≡ (0<ℚ x)
   <ℚ≡0<ℚ x = ua (<ℚ≃0<ℚ x)
 
-{-
-  ℚ₊Cases : ∀ {ℓ} → {Y : ℚ₊ → Type ℓ}
-            → ((x : ℚ) → (p : 0<ℚ x) → Y (x , transport p (sym <ℚ≡0<ℚ)))
-            → (x : ℚ₊) → (Y x)
-  ℚ₊Cases {Y = Y} f =
-    transport (λ X → ((x : X) → (Y x))) (λ i → Σ ℚ λ x → <ℚ≡0<ℚ x (~ i)) $ uncurry f
--}
+  -- ℚ₊Cases : ∀ {ℓ} → {Y : ℚ₊ → Type ℓ}
+  --           → ((x : ℚ) → (p : 0<ℚ x) → Y (x , transport p (sym <ℚ≡0<ℚ)))
+  --           → (x : ℚ₊) → (Y x)
+  -- ℚ₊Cases {Y = Y} f =
+  --   transport (λ X → ((x : X) → (Y x))) (λ i → Σ ℚ λ x → <ℚ≡0<ℚ x (~ i)) $ uncurry f
 
   _≈[_]ₚ_ : R → ℚ₊ → R → hProp ℓ'
   _≈[_]ₚ_ x = flip λ y →
@@ -253,16 +249,15 @@ module _ (R' : ArchimedeanRing ℓ ℓ') where
         (λ { (pos zero    , 1+ b) → {!   !}
            ; (pos (suc n) , 1+ b) → {!   !}
            ; (negsuc n    , 1+ b) → {!   !} }) ε
-      {-
-        λ x → uncurry $ SQ.elimProp
-        (λ ε → isPropΠ λ 0<ε → snd (x ≈[ ε , 0<ε ]ₚ x))
-        λ { (pos (suc n) , 1+ b) p → begin<
-          ι₊₁ b · abs(x - x) ≡→≤⟨ _ ≡⟨ cong (ι₊₁ b ·_) (cong abs (solve! RCR) ∙ abs0) ⟩
-          ι₊₁ b · 0r           ≡⟨ solve! RCR ⟩ (sym pres0) ⟩
-          ι₀₊ 0                  <⟨ pres< 0 (pos (suc n)) {!   !} ⟩
-          {!   !} }
-      -}
+        -- λ x → uncurry $ SQ.elimProp
+        -- (λ ε → isPropΠ λ 0<ε → snd (x ≈[ ε , 0<ε ]ₚ x))
+        -- λ { (pos (suc n) , 1+ b) p → begin<
+        --   ι₊₁ b · abs(x - x) ≡→≤⟨ _ ≡⟨ cong (ι₊₁ b ·_) (cong abs (solve! RCR) ∙ abs0) ⟩
+        --   ι₊₁ b · 0r           ≡⟨ solve! RCR ⟩ (sym pres0) ⟩
+        --   ι₀₊ 0                  <⟨ pres< 0 (pos (suc n)) {!   !} ⟩
+        --   {!   !} }
       isPM .isSym≈ = {!   !}
       isPM .isSeparated≈ = {!   !}
       isPM .isTriangular≈ = {!   !}
       isPM .isRounded≈ = {!   !}
+-- -}

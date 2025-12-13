@@ -162,6 +162,18 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       y + (- x - y) ≡→≤⟨ solve! RCR ⟩
       - x             ◾
 
+    <→0<- : ∀ x y → x < y → 0r < y - x
+    <→0<- x y x<y = begin< 0r ≡→≤⟨ solve! RCR ⟩ x - x <⟨ +MonoR< _ _ _ x<y ⟩ y - x ◾
+
+    ≤→0≤- : ∀ x y → x ≤ y → 0r ≤ y - x
+    ≤→0≤- x y x≤y = begin≤ 0r ≡→≤⟨ solve! RCR ⟩ x - x ≤⟨ +MonoR≤ _ _ _ x≤y ⟩ y - x ◾
+
+    0<-→< : ∀ x y → 0r < y - x → x < y
+    0<-→< x y 0<y-x = subst2 _<_ (solve! RCR) (solve! RCR) (+MonoR< _ _ x 0<y-x)
+
+    0≤-→≤ : ∀ x y → 0r ≤ y - x → x ≤ y
+    0≤-→≤ x y 0≤y-x = subst2 _≤_ (solve! RCR) (solve! RCR) (+MonoR≤ _ _ x 0≤y-x)
+
     ≤abs : ∀ z → z ≤ abs z
     ≤abs z = L≤⊔
 
@@ -176,6 +188,19 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       - z       ≤⟨ -≤abs z ⟩
       abs z     <⟨ ∣z∣<0 ⟩
       0r        ◾
+
+    abs≤0→≡0 : ∀ z → abs z ≤ 0r → z ≡ 0r
+    abs≤0→≡0 z ∣z∣≤0 = is-antisym z 0r
+      (begin≤
+        z     ≤⟨ ≤abs z ⟩
+        abs z ≤⟨ ∣z∣≤0 ⟩
+        0r         ◾)
+      (begin≤
+        0r        ≡→≤⟨ solve! RCR ⟩
+        - 0r        ≤⟨ -Flip≤ _ _ ∣z∣≤0 ⟩
+        - (abs z)   ≤⟨ -Flip≤ _ _ $ -≤abs z ⟩
+        - - z     ≡→≤⟨ solve! RCR ⟩
+        z           ◾)
 
     #→0<abs : ∀ z → z # 0r → 0r < abs z
     #→0<abs z (inl z<0) = begin<
@@ -537,17 +562,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
           abs(x - y) ◾
 
         x-y≡0 : x - y ≡ 0r
-        x-y≡0 = is-antisym (x - y) 0r
-          (begin≤
-            x - y      ≤⟨ ≤abs (x - y) ⟩
-            abs(x - y) ≤⟨ ∣x-y∣≤0 ⟩
-            0r         ◾)
-          (begin≤
-            0r           ≡→≤⟨ solve! RCR ⟩
-            - 0r           ≤⟨ -Flip≤ _ _ ∣x-y∣≤0 ⟩
-            - abs(x - y)   ≤⟨ -Flip≤ _ _ $ -≤abs (x - y) ⟩
-            - - (x - y)  ≡→≤⟨ solve! RCR ⟩
-            x - y          ◾)
+        x-y≡0 = abs≤0→≡0 (x - y) ∣x-y∣≤0
       in
         equalByDifference x y x-y≡0
 

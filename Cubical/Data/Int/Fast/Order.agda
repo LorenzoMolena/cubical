@@ -256,6 +256,9 @@ suc-< {m} {n} p = pred-≤-pred {sucℤ m} (≤-suc {sucℤ (sucℤ m)} p)
 ≤-predℤ : predℤ n ≤ n
 ≤-predℤ {n} = 1 , sym (predℤ+ n 1) ∙ cong predℤ (+Comm n 1 ∙ sym (sucℤ≡1+ _)) ∙ predSuc n
 
+predℤ'< : n - 1 < n
+predℤ'< {n} = 0 , (+IdR _ ∙ sucℤ≡1+ (n - 1) ∙ +Comm 1 (n - 1) ∙ minusPlus 1 n)
+
 isTrans≤ : m ≤ n → n ≤ o → m ≤ o
 isTrans≤ {m} {n} {o} (i , p) (j , q) .fst = i ℕ.+ j
 isTrans≤ {m} {n} {o} (i , p) (j , q) .snd =

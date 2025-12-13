@@ -20,7 +20,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Sum as ⊎ using (_⊎_; inl; inr; isProp⊎)
 
 open import Cubical.HITs.PropositionalTruncation as ∥₁ using (isPropPropTrunc; ∣_∣₁)
-open import Cubical.HITs.SetQuotients
+open import Cubical.HITs.SetQuotients renaming (_/_ to _//_)
 
 open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary.Base
@@ -652,3 +652,6 @@ m ≟ n with discreteℚ m n
 ... | no 0≮m | no 0≮n = ⊥.rec (≤→≯ (m ℚ.+ n) 0 (≤Monotone+ m 0 n 0 (≮→≥ 0 m 0≮m) (≮→≥ 0 n 0≮n)) 0<m+n)
 ... | no _    | yes 0<n = inr 0<n
 ... | yes 0<m | _ = inl 0<m
+
+<ℤ→<ℚ : ∀ m n k → m ℤ.< n → [ m / k ] < [ n / k ]
+<ℤ→<ℚ m n (1+ k) m<n = ℤ.<-·o {m} m<n
