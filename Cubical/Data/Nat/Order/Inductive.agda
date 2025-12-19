@@ -8,6 +8,7 @@ open import Cubical.Data.Nat.Order
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Unit
 open import Cubical.Data.Sigma
+open import Cubical.Data.Bool.Base using (Bool→Type)
 
 open import Cubical.Relation.Nullary
 
@@ -15,9 +16,12 @@ open import Cubical.Relation.Nullary
 
 -- inductive definition of <
 _<ᵗ_ : (n m : ℕ) → Type
+n <ᵗ m = Bool→Type (n <ᵇ m)
+{-
 n <ᵗ zero = ⊥
 zero <ᵗ suc m = Unit
 suc n <ᵗ suc m = n <ᵗ m
+-}
 
 data Trichotomyᵗ (m n : ℕ) : Type₀ where
   lt : m <ᵗ n → Trichotomyᵗ m n

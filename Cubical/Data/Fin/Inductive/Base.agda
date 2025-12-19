@@ -36,6 +36,10 @@ fzero = 0 , tt
 fone : ∀ {m} → Fin (suc (suc m))
 fone {m} = suc zero , tt
 
+fromℕ< : (m n : ℕ) → m <ᵗ suc n → Fin (suc n)
+fromℕ< m _ = m ,_
+
+
 -- Sums
 sumFinGen : ∀ {ℓ} {A : Type ℓ} {n : ℕ}
   (_+_ : A → A → A) (0A : A) (f : Fin n → A) → A
