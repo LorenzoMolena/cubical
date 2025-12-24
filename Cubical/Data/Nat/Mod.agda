@@ -5,9 +5,16 @@ open import Agda.Builtin.Nat using () renaming (
   div-helper to hdiv ;
   mod-helper to hmod)
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Isomorphism
 open import Cubical.Data.Nat
 open import Cubical.Data.Nat.Order
-open import Cubical.Data.Empty
+open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Sigma
+
+open import Cubical.Relation.Nullary
+
+open import Cubical.Reflection.RecordEquiv
 
 -- Defining x mod 0 to be 0. This way all the theorems below are true
 -- for n : ℕ instead of n : ℕ₊₁.
@@ -259,6 +266,9 @@ quotient'_/_ : (x n : ℕ) → ℕ
 quotient' x / zero = 0
 quotient' x / suc n = hdiv 0 n x n
 
+_mod'_ : ℕ → ℕ → ℕ
+_mod'_ = quotient'_/_
+
 ≡remainder'+quotient' : (n x : ℕ)
   → (remainder' x / n) + n · (quotient' x / n) ≡ x
 ≡remainder'+quotient' zero    x = +-zero x
@@ -274,6 +284,85 @@ quotient' x / suc n = hdiv 0 n x n
 
 mod'< : ∀ n x → remainder' x / suc n < suc n
 mod'< n x = suc-≤-suc (mod-lemma-≤ 0 x n)
+
+record QuotRemℕ (m n : ℕ) : Type where
+  no-eta-equality
+  constructor quotrem
+  field
+    div : ℕ
+    rem : ℕ
+    quotEq : rem + (suc n) · div ≡ m
+    remIneq : rem < suc n
+
+unquoteDecl QuotRemIsoΣ = declareRecordIsoΣ QuotRemIsoΣ (quote QuotRemℕ)
+
+isPropQuotRemℕ : ∀ m n → isProp (QuotRemℕ m n)
+isPropQuotRemℕ m n = isOfHLevelRetractFromIso 1 QuotRemIsoΣ
+  λ (q₁ , r₁ , eq₁ , rem<₁) (q₂ , r₂ , eq₂ , rem<₂) →
+  cong (Iso.fun Σ-assoc-Iso)
+       (Σ≡Prop (λ (q , r) → isProp× (isSetℕ (r + (suc n) · q) m) isProp≤)
+               (ΣPathP (proof q₁ r₁ eq₁ rem<₁ q₂ r₂ eq₂ rem<₂)))
+  where
+    open <-Reasoning
+    proof : ∀ (q₁ r₁ : ℕ) → (eq₁ : r₁ + (suc n) · q₁ ≡ m) → (rem<₁ : r₁ < suc n)
+            → (q₂ r₂ : ℕ) → (eq₂ : r₂ + (suc n) · q₂ ≡ m) → (rem<₂ : r₂ < suc n)
+            → (q₁ ≡ q₂) × (r₁ ≡ r₂)
+    proof q₁ r₁ eq₁ rem<₁ q₂ r₂ eq₂ rem<₂ = fst≡ , snd≡
+      where
+        lemma : ∀ (q  r  : ℕ) → (p  : r  + (suc n) · q  ≡ m) → (rem< : r < suc n)
+                → (q' r' : ℕ) → (p' : r' + (suc n) · q' ≡ m)
+                → ¬ (q < q')
+        lemma q r p rem< q' r' p' q<q' = ¬m<m (
+          m                   ≡<⟨ sym p ⟩
+          r       + suc n · q <≤⟨ <-+k rem< ⟩
+          (suc n) + suc n · q ≡≤⟨ cong (suc n +_) (·-comm (suc n) q) ⟩
+          (suc n) + q · suc n ≡≤⟨ refl ⟩
+          (suc q)     · suc n  ≤⟨ ≤-·k q<q' ⟩
+          q'          · suc n ≤≡⟨ ≤SumRight ⟩
+          r' + q' · suc n      ≡⟨ cong (r' +_) (·-comm q' (suc n)) ⟩
+          r' + suc n · q'      ≡⟨ p' ⟩
+          m                    ∎)
+
+        fst≡ : q₁ ≡ q₂
+        fst≡ with q₁ ≟ q₂
+        ... | lt q₁<q₂ = ⊥.rec (lemma q₁ r₁ eq₁ rem<₁ q₂ r₂ eq₂ q₁<q₂)
+        ... | eq q₁≡q₂ = q₁≡q₂
+        ... | gt q₁>q₂ = ⊥.rec (lemma q₂ r₂ eq₂ rem<₂ q₁ r₁ eq₁ q₁>q₂)
+
+        snd≡ : r₁ ≡ r₂
+        snd≡ =
+          r₁                           ≡⟨ sym (+∸ r₁ (suc n · q₁)) ⟩
+          r₁ + suc n · q₁ ∸ suc n · q₁ ≡⟨ cong (_∸ suc n · q₁) eq₁ ⟩
+          m ∸ suc n · q₁               ≡⟨ cong (λ t → m ∸ suc n · t) fst≡ ⟩
+          m ∸ suc n · q₂               ≡⟨ sym (cong (_∸ suc n · q₂) eq₂) ⟩
+          r₂ + suc n · q₂ ∸ suc n · q₂ ≡⟨ +∸ r₂ (suc n · q₂) ⟩
+          r₂                           ∎
+
+quotRemℕ : ∀ m n → QuotRemℕ m n
+quotRemℕ m n .QuotRemℕ.div     = quotient m / suc n
+quotRemℕ m n .QuotRemℕ.rem     = remainder m / suc n
+quotRemℕ m n .QuotRemℕ.quotEq  = ≡remainder+quotient (suc n) m
+quotRemℕ m n .QuotRemℕ.remIneq = mod< n m
+
+quotRemℕ' : ∀ m n → QuotRemℕ m n
+quotRemℕ' m n .QuotRemℕ.div     = quotient' m / suc n
+quotRemℕ' m n .QuotRemℕ.rem     = remainder' m / suc n
+quotRemℕ' m n .QuotRemℕ.quotEq  = ≡remainder'+quotient' (suc n) m
+quotRemℕ' m n .QuotRemℕ.remIneq = mod'< n m
+
+quotient≡quotient' : ∀ m n → quotient m / n ≡ quotient' m / n
+quotient≡quotient' m zero    = refl
+quotient≡quotient' m (suc n) =
+  cong (QuotRemℕ.div) (isPropQuotRemℕ m n (quotRemℕ m n) (quotRemℕ' m n))
+
+remainder≡remainder' : ∀ m n → remainder m / n ≡ remainder' m / n
+remainder≡remainder' m zero    = refl
+remainder≡remainder' m (suc n) =
+  cong (QuotRemℕ.rem) (isPropQuotRemℕ m n (quotRemℕ m n) (quotRemℕ' m n))
+
+isContrQuotRemℕ : ∀ m n → isContr (QuotRemℕ m n)
+isContrQuotRemℕ m n .fst = quotRemℕ m n
+isContrQuotRemℕ m n .snd = isPropQuotRemℕ m n _
 
 private
   test₀ : 100 mod 81 ≡ 19
