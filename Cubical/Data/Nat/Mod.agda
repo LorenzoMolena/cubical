@@ -304,25 +304,26 @@ isPropQuotRemℕ m n = isOfHLevelRetractFromIso 1 QuotRemIsoΣ
                (ΣPathP (proof q₁ r₁ eq₁ rem<₁ q₂ r₂ eq₂ rem<₂)))
   where
     open <-Reasoning
+
+    lemma : ∀ (q  r  : ℕ) → (p  : r  + (suc n) · q  ≡ m) → (rem< : r < suc n)
+            → (q' r' : ℕ) → (p' : r' + (suc n) · q' ≡ m)
+            → ¬ (q < q')
+    lemma q r p rem< q' r' p' q<q' = ¬m<m (
+      m                   ≡<⟨ sym p ⟩
+      r       + suc n · q <≤⟨ <-+k rem< ⟩
+      (suc n) + suc n · q ≡≤⟨ cong (suc n +_) (·-comm (suc n) q) ⟩
+      (suc n) + q · suc n ≡≤⟨ refl ⟩
+      (suc q)     · suc n  ≤⟨ ≤-·k q<q' ⟩
+      q'          · suc n ≤≡⟨ ≤SumRight ⟩
+      r' + q' · suc n      ≡⟨ cong (r' +_) (·-comm q' (suc n)) ⟩
+      r' + suc n · q'      ≡⟨ p' ⟩
+      m                    ∎)
+
     proof : ∀ (q₁ r₁ : ℕ) → (eq₁ : r₁ + (suc n) · q₁ ≡ m) → (rem<₁ : r₁ < suc n)
             → (q₂ r₂ : ℕ) → (eq₂ : r₂ + (suc n) · q₂ ≡ m) → (rem<₂ : r₂ < suc n)
             → (q₁ ≡ q₂) × (r₁ ≡ r₂)
     proof q₁ r₁ eq₁ rem<₁ q₂ r₂ eq₂ rem<₂ = fst≡ , snd≡
       where
-        lemma : ∀ (q  r  : ℕ) → (p  : r  + (suc n) · q  ≡ m) → (rem< : r < suc n)
-                → (q' r' : ℕ) → (p' : r' + (suc n) · q' ≡ m)
-                → ¬ (q < q')
-        lemma q r p rem< q' r' p' q<q' = ¬m<m (
-          m                   ≡<⟨ sym p ⟩
-          r       + suc n · q <≤⟨ <-+k rem< ⟩
-          (suc n) + suc n · q ≡≤⟨ cong (suc n +_) (·-comm (suc n) q) ⟩
-          (suc n) + q · suc n ≡≤⟨ refl ⟩
-          (suc q)     · suc n  ≤⟨ ≤-·k q<q' ⟩
-          q'          · suc n ≤≡⟨ ≤SumRight ⟩
-          r' + q' · suc n      ≡⟨ cong (r' +_) (·-comm q' (suc n)) ⟩
-          r' + suc n · q'      ≡⟨ p' ⟩
-          m                    ∎)
-
         fst≡ : q₁ ≡ q₂
         fst≡ with q₁ ≟ q₂
         ... | lt q₁<q₂ = ⊥.rec (lemma q₁ r₁ eq₁ rem<₁ q₂ r₂ eq₂ q₁<q₂)
