@@ -632,7 +632,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       (λ (X : R → Type _) → (((z : Σ R X) → abs(x - y) < (fst z)) → x ≡ y))
       (λ i x → 0<≡0<ᵗ x i)
       (selfSeparated' x y)
-{-
+
   module NonNegative where
     open OrderedCommRingTheory
     private
@@ -746,4 +746,3 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       (z - z) · 1/2           ≤⟨ ·MonoR≤ _ _ _ 0≤1/2 $ +Mono≤ _ _ _ _ (≤abs z) (-≤abs z) ⟩
       (abs z + abs z) · 1/2 ≡→≤⟨ meanIdem (abs z) ⟩
       abs z                   ◾
--}
