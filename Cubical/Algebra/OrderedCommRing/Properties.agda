@@ -566,6 +566,31 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       in
         equalByDifference x y x-y≡0
 
+    plusMinus₊ : ∀ x y → (x +₊ y) -₊ y ≡ ⟨ x ⟩₊
+    plusMinus₊ (x , _) (y , _) = solve! RCR
+
+    minusPlus₊ : ∀ x y → (x -₊ y) + ⟨ y ⟩₊ ≡ ⟨ x ⟩₊
+    minusPlus₊ (x , _) (y , _) = solve! RCR
+
+    ≡₊→0< : ∀ {x} y → x ≡ ⟨ y ⟩₊ → 0r < x
+    ≡₊→0< y p = subst (0r <_) (sym p) (snd y)
+
+    [_-₊_]⟨_⟩ : ∀ x y → y <₊ x → R₊
+    [_-₊_]⟨_⟩ x y y<x = (x -₊ y) , (<→0<- ⟨ y ⟩₊ ⟨ x ⟩₊ y<x)
+
+    <₊SumLeft : ∀ x y → x <₊ (x +₊ y)
+    <₊SumLeft (x , _) (y , 0<y) = begin<
+      x ≡→≤⟨ solve! RCR ⟩ x + 0r <⟨ +MonoL< _ _ _ 0<y ⟩ x + y ◾
+
+    <₊SumRight : ∀ x y → x <₊ (y +₊ x)
+    <₊SumRight (x , _) (y , 0<y) = begin<
+      x ≡→≤⟨ solve! RCR ⟩ 0r + x <⟨ +MonoR< _ _ _ 0<y ⟩ y + x ◾
+
+    Δ<₊ : ∀ x y → (x -₊ y) < ⟨ x ⟩₊
+    Δ<₊ (x , _) (y , 0<y) = begin<
+      x - y <⟨ +MonoL< _ _ _ (-Flip< 0r y 0<y) ⟩ x - 0r ≡→≤⟨ solve! RCR ⟩ x ◾
+
+
   -- this module can be used to form the positive cone,
   -- using an alternative implementation of the comparison wit 0.
   module Positiveᵗ
@@ -717,6 +742,12 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     0≤1/2 : 0r ≤ 1/2
     0≤1/2 = <-≤-weaken _ _ 0<1/2
 
+    _/2 : R → R
+    _/2 = _· 1/2
+
+    _/4 : R → R
+    _/4 = _/2 ∘ _/2
+
     mean : R → R → R
     mean x y = (x + y) · 1/2
 
@@ -746,3 +777,32 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       (z - z) · 1/2           ≤⟨ ·MonoR≤ _ _ _ 0≤1/2 $ +Mono≤ _ _ _ _ (≤abs z) (-≤abs z) ⟩
       (abs z + abs z) · 1/2 ≡→≤⟨ meanIdem (abs z) ⟩
       abs z                   ◾
+
+    /2+/2≡id : ∀ x → x /2 + x /2 ≡ x
+    /2+/2≡id x = solve! RCR ∙ meanIdem x
+
+    id-/2≡/2 : ∀ x → x - x /2 ≡ x /2
+    id-/2≡/2 x = cong (_- x /2) (sym (/2+/2≡id x)) ∙ solve! RCR
+
+    /4+/4≡/2 : ∀ x → x /4 + x /4 ≡ x /2
+    /4+/4≡/2 = /2+/2≡id ∘ (_/2)
+
+    /2-/4≡/4 : ∀ x → x /2 - x /4 ≡ x /4
+    /2-/4≡/4 = id-/2≡/2 ∘ (_/2)
+
+    id-[/4+/4]≡/2 : ∀ x → x - (x /4 + x /4) ≡ x /2
+    id-[/4+/4]≡/2 x = cong (_-_ x) (/4+/4≡/2 x) ∙ id-/2≡/2 x
+
+    open Positive
+
+    _/2₊ : R₊ → R₊
+    _/2₊ = _·₊ (1/2 , 0<1/2)
+
+    _/4₊ : R₊ → R₊
+    _/4₊ = _/2₊ ∘ _/2₊
+
+    id-/2₊ : ∀ x → 0r < x -₊ (x /2₊)
+    id-/2₊ x = subst (0r <_) (sym (id-/2≡/2 ⟨ x ⟩₊)) (snd (x /2₊))
+
+    id-[/4+/4]₊ : ∀ x → 0r < x -₊ (x /4₊ +₊ x /4₊)
+    id-[/4+/4]₊ x = subst (0r <_) (cong (_-_ ⟨ x ⟩₊) (sym (/4+/4≡/2 ⟨ x ⟩₊))) (id-/2₊ x)
