@@ -28,6 +28,7 @@ open import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.Relation.Binary.Properties
 
 open import Cubical.Algebra.Semigroup
+open import Cubical.Algebra.Ring
 open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.OrderedCommRing
 open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
@@ -42,8 +43,10 @@ private
   M = M' .fst
   ℚOCR = ℚOrderedCommRing
   ℚCR  = OrderedCommRing→CommRing ℚOCR
+  ℚR   = OrderedCommRing→Ring ℚOCR
   open OrderedCommRingReasoning ℚOCR
   open OrderedCommRingTheory ℚOCR
+  open RingTheory ℚR
   open IsSemigroup (SemigroupStr.isSemigroup (snd +ℚ₊Semigroup)) using () renaming (
     ·Assoc to +₊Assoc)
   open PremetricStr (M' .snd)
@@ -57,6 +60,20 @@ private
 
     lemma2 : ∀ x y z w → x +r y +r (z -r (w +r y)) ≡ (x +r z) -r w
     lemma2 x y z w = solve! R
+
+    lemma3 : ∀ x y z w → (x -r y) +r (z -r w) ≡ (x +r z) -r (y +r w)
+    lemma3 x y z w = solve! R
+
+    lemma4 : ∀ x y z u v → (x -r (y +r z)) +r (z +r u) +r (v -r u) ≡ (x +r v) -r y
+    lemma4 x y z u v = solve! R
+
+    lemma5 : ∀ x y z u v w →
+      (x -r (y +r z)) +r (z +r u) +r (v -r (u +r w)) ≡ (x +r v) -r (y +r w)
+    lemma5 x y z u v w = solve! R
+
+    lemma6 : ∀ x y z u v w →
+      (x -r (y +r z)) +r (z +r u) +r (v -r (w +r u)) ≡ (x +r v) -r (y +r w)
+    lemma6 x y z u v w = solve! R
 
 subst∼ : ∀ x y {ε ε'} → ⟨ ε ⟩₊ ≡ ⟨ ε' ⟩₊ → x ∼[ ε ] y → x ∼[ ε' ] y
 subst∼ x y p = subst (x ∼[_] y) (ℚ₊≡ p)
@@ -78,13 +95,15 @@ lim-lim+₊ x y ε δ η xc yc p = lim-lim x y (ε +₊ (δ +₊ η)) δ η xc y
 
 -- Lemma 3.5
 isRefl∼ : ∀ x ε → x ∼[ ε ] x
-isRefl∼ = Elimℭ-Prop.go λ where
-  .Elimℭ-Prop.ιA      → λ x ε → ι-ι x x ε (isRefl≈ x ε)
-  .Elimℭ-Prop.limA    → λ x xc IH ε →
+isRefl∼ = Elimℭ-Prop.go e where
+  e : Elimℭ-Prop (λ x → ∀ ε → x ∼[ ε ] x)
+  Elimℭ-Prop.ιA      e x ε       = ι-ι x x ε (isRefl≈ x ε)
+  Elimℭ-Prop.limA    e x xc IH ε =
     lim-lim x x ε (ε /4₊) (ε /4₊) xc xc (id-[/4+/4]₊ ε)
       ((IH (ε /4₊) (ε -₊ (ε /4₊ +₊ ε /4₊) , id-[/4+/4]₊ ε))
       :> x (ε /4₊) ∼[ ε -₊ (ε /4₊ +₊ ε /4₊) , _ ] x (ε /4₊))
-  .Elimℭ-Prop.isPropA → λ _ → isPropΠ (λ _ → isProp∼ _ _ _)
+    :>   lim x xc  ∼[ ε ]                         lim x xc
+  Elimℭ-Prop.isPropA e = λ _ → isPropΠ (λ _ → isProp∼ _ _ _)
 
 -- lemma 3.6
 isSetℭ : isSet ℭM
@@ -93,30 +112,78 @@ isSetℭ = reflPropRelImpliesIdentity→isSet
 
 -- lemma 3.7
 isSym∼ : ∀ x y ε → x ∼[ ε ] y → y ∼[ ε ] x
-isSym∼ _ _ ε (ι-ι x y .ε p)                 = ι-ι y x ε (isSym≈ x y ε p)
-isSym∼ _ _ ε (ι-lim x y .ε δ yc Δ p)        = lim-ι y x ε δ yc Δ $
-  isSym∼ (ι x) (y δ) (ε -₊ δ , Δ) p
-isSym∼ _ _ ε (lim-ι x y .ε δ xc Δ p)        = ι-lim y x ε δ xc Δ $
-  isSym∼ (x δ) (ι y) (ε -₊ δ , Δ) p
-isSym∼ _ _ ε (lim-lim x y .ε δ η xc yc Δ p) = let
-    lemma : ε -₊ (δ +₊ η) ≡ ε -₊ (η +₊ δ)
-    lemma = cong (ℚ._-_ ⟨ ε ⟩₊) (ℚ.+Comm ⟨ δ ⟩₊ ⟨ η ⟩₊)
-    Δ' : 0 <ℚ ε -₊ (η +₊ δ)
-    Δ' = subst (0 <ℚ_) lemma Δ
-  in
-    lim-lim y x ε η δ yc xc Δ'
-    (subst∼ (y η) (x δ) lemma (isSym∼ (x δ) (y η) (_ , Δ) p))
-isSym∼ _ _ ε (isProp∼ x .ε y p q i)         = isProp∼ y ε x
-  (isProp∼ y ε x (isSym∼ _ _ ε p) (isSym∼ _ _ ε q) i)
-  (isProp∼ y ε x (isSym∼ _ _ ε p) (isSym∼ _ _ ε q) i) i
+isSym∼ = λ _ _ _ → Recℭ∼.go∼ r where
+  r : Recℭ∼ λ x y ε → y ∼[ ε ] x
+  Recℭ∼.ι-ι-B     r x y ε x≈y             = ι-ι y x ε (isSym≈ x y ε x≈y)
+  Recℭ∼.ι-lim-B   r x y ε δ yc Δ _ q      = lim-ι y x ε δ yc Δ q
+  Recℭ∼.lim-ι-B   r x y ε δ xc Δ _ q      = ι-lim y x ε δ xc Δ q
+  Recℭ∼.lim-lim-B r x y ε δ η xc yc Δ _ q =
+    let
+      p : ε -₊ (δ +₊ η) ≡ ε -₊ (η +₊ δ)
+      p = cong (ℚ._-_ ⟨ ε ⟩₊) (ℚ.+Comm ⟨ δ ⟩₊ ⟨ η ⟩₊)
+
+      Δ' : 0 <ℚ ε -₊ (η +₊ δ)
+      Δ' = subst (0 <ℚ_) p Δ
+    in
+      lim-lim y x ε η δ yc xc Δ' (subst∼ (y η) (x δ) p q)
+  Recℭ∼.isPropB   r x y ε                 = isProp∼ y ε x
+
+-- Using isSym∼, we can introduce a variant for Casesℭ:
+
+record CasesℭSym {ℓA} {ℓB} (A : Type ℓA)
+              (B : A → A → ℚ₊ → Type ℓB) : Type (ℓ-max ℓ (ℓ-max ℓ' (ℓ-max ℓA ℓB))) where
+
+  no-eta-equality
+
+  field
+    ιA        : M → A
+    limA      : (x : ℚ₊ → ℭM) → ((δ ε : ℚ₊) → x δ ∼[ δ +₊ ε ] x ε) → A
+    eqA       : ∀ a a' → (∀ ε → B a a' ε) → a ≡ a'
+
+    ι-ι-B     : ∀ x y ε
+                → x ≈[ ε ] y
+                → B (ιA x) (ιA y) ε
+    ι-lim-B   : ∀ x y ε δ yc Δ
+                → ι x ∼[ ε -₊ δ , Δ ] y δ
+                → (a∘x : ℚ₊ → A)
+                → ((ε' δ' : ℚ₊) → B (a∘x ε') (a∘x δ') (ε' +₊ δ'))
+                → B (ιA x) (a∘x δ) (ε -₊ δ , Δ)
+                → B (ιA x) (limA y yc) ε
+    lim-lim-B : ∀ x y ε δ η xc yc Δ
+                → x δ ∼[ ε -₊ (δ +₊ η) , Δ ] y η
+                → (a∘x : ℚ₊ → A)
+                → ((ε' δ' : ℚ₊) → B (a∘x ε') (a∘x δ') (ε' +₊ δ'))
+                → (a∘y : ℚ₊ → A)
+                → ((ε' δ' : ℚ₊) → B (a∘y ε') (a∘y δ') (ε' +₊ δ'))
+                → B (a∘x δ) (a∘y η) (ε -₊ (δ +₊ η) , Δ)
+                → B (limA x xc) (limA y yc) ε
+    isSymB    : ∀ a a' ε → B a a' ε → B a' a ε
+    isPropB   : ∀ a a' ε → isProp (B a a' ε)
+
+  private
+    c : Casesℭ A B
+    Casesℭ.ιA        c = ιA
+    Casesℭ.limA      c = limA
+    Casesℭ.eqA       c = eqA
+    Casesℭ.ι-ι-B     c = ι-ι-B
+    Casesℭ.ι-lim-B   c = ι-lim-B
+    Casesℭ.lim-ι-B   c = λ x y ε δ xc Δ xδ∼y Bx Bxc Bxδ,y →
+      isSymB (ιA y) (limA x xc) ε
+        (ι-lim-B y x ε δ xc Δ
+          (isSym∼ (x δ) (ι y) (ε -₊ δ , Δ) xδ∼y)
+          Bx
+          Bxc
+          (isSymB (Bx δ) (ιA y) (ε -₊ δ , Δ) Bxδ,y))
+    Casesℭ.lim-lim-B c = lim-lim-B
+    Casesℭ.isPropB   c = isPropB
+
+  go : ℭM → A
+  go = Casesℭ.go c
+
+  go∼ : {x y : ℭM} {ε : ℚ₊} → x ∼[ ε ] y → B (go x) (go y) ε
+  go∼ = Casesℭ.go∼ c
 
 -- Definition 3.8
--- Balls : Type (ℓ-max (ℓ-suc ℓ) (ℓ-suc ℓ'))
--- Balls = Σ[ B ∈ (ℚ₊ → ℭM → hProp (ℓ-max ℓ ℓ')) ]
---   (∀ ε y → ⟨ B ε y ⟩ ≃ (∃[ δ ∈ ℚ₊ ] (δ <₊ ε × ⟨ B δ y ⟩)))
---   × (∀ ε δ y z → y ∼[ ε ] z → ⟨ B δ y ⟩ → ⟨ B (ε +₊ δ) z ⟩)
-
--- Record Definition(?)
 record IsBall (B : ℚ₊ → ℭM → Type (ℓ-max ℓ ℓ')) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
   no-eta-equality
   constructor isball
@@ -159,12 +226,6 @@ isPropIsBall B = isOfHLevelRetractFromIso 1
     (isPropΠ3 λ _ _ _ → squash₁)
     (isPropΠ6 λ _ _ _ _ _ _ → isPropBall _ _)
 
--- Idea: reassociate the sigma type (using IsBallIsoΣ) to prove that B and B'
--- can be seen as in B , B' : ℚ₊ → M → hProp _, then use isSetΠ2, isSethProp,
--- and isSetΣSndProp with isPropIsBall
--- isSetBalls : isSet Balls
--- isSetBalls (B , p) (B' , q) = {! isProp  !}
-
 _≈ᴮ[_]_ : Balls → ℚ₊ → Balls → Type (ℓ-max ℓ ℓ')
 (B , _) ≈ᴮ[ ε ] (B' , _) = ∀ δ y → (B δ y → B' (δ +₊ ε) y) × (B' δ y → B (δ +₊ ε) y)
 
@@ -174,6 +235,9 @@ isProp≈ᴮ (B , isBallB) (B' , isBallB') ε =
   where
     module B  = IsBall isBallB
     module B' = IsBall isBallB'
+
+isSym≈ᴮ : ∀ B B' ε → B ≈ᴮ[ ε ] B' → B' ≈ᴮ[ ε ] B
+isSym≈ᴮ B B' ε B≈B' δ y = fst Σ-swap-≃ (B≈B' δ y)
 
 -- Defintion 3.9
 record IsUpperCut (U : ℚ₊ → Type (ℓ-max ℓ ℓ')) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
@@ -203,6 +267,9 @@ isProp≈ᵁ (U , isUpperCutU) (U' , isUpperCutU') ε =
   where
     module U  = IsUpperCut isUpperCutU
     module U' = IsUpperCut isUpperCutU'
+
+isSym≈ᵁ : ∀ U U' ε → U ≈ᵁ[ ε ] U' → U' ≈ᵁ[ ε ] U
+isSym≈ᵁ U U' ε U≈U' δ = fst Σ-swap-≃ (U≈U' δ)
 
 -- Lemma 3.10
 isSeparated≈ᴮ : ∀ B B' → (∀ ε → B ≈ᴮ[ ε ] B') → B ≡ B'
@@ -234,6 +301,100 @@ isSeparated≈ᵁ (U , isUpperCutU) (U' , isUpperCutU') U≈U' = Σ≡Prop isPro
     module U  = IsUpperCut isUpperCutU
     module U' = IsUpperCut isUpperCutU'
 
+isBall→isUpperCut : (B : Balls) → ∀ y → IsUpperCut (flip (fst B) y)
+isBall→isUpperCut B y = isUC where
+  open IsBall
+  open IsUpperCut
+
+  isUC : IsUpperCut _
+  isPropUpperCut    isUC = flip (isPropBall (snd B)) y
+  isRoundedUpperCut isUC = flip (isRoundedBall (B .snd)) y
+
+UpperCut≈ : (x y : M) → UpperCuts
+fst (UpperCut≈ x y) = Lift {ℓ'} {ℓ} ∘ (x ≈[_] y)
+snd (UpperCut≈ x y) = isUC where
+  open IsUpperCut
+  isUC : IsUpperCut _
+  isPropUpperCut    isUC ε (lift p) (lift q) = cong lift (isProp≈ x y ε p q)
+  isRoundedUpperCut isUC ε (lift p) = PT.map (λ (δ , δ<ε , q) → (δ , δ<ε , lift q))
+                                             (isRounded≈ x y ε p)
+
+UpperCut∃< : (U : ℚ₊ → UpperCuts) → UpperCuts
+fst (UpperCut∃< U) ε = ∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ (δ <₊ ε) ] fst (U δ) [ ε -₊ δ ]⟨ δ<ε ⟩
+snd (UpperCut∃< U) = isUC∃< where
+  module UC (η : ℚ₊) = IsUpperCut (snd (U η))
+  open IsUpperCut
+
+  isUC∃< : IsUpperCut _
+  isPropUpperCut    isUC∃< _ = squash₁
+  isRoundedUpperCut isUC∃< ε = PT.rec squash₁ λ (δ , δ<ε , Uδ[ε-δ]) →
+    flip PT.map (UC.isRoundedUpperCut δ _ Uδ[ε-δ]) λ (ξ , ξ<ε-δ , Uδ[ξ]) →
+
+      let
+        δ<ξ+δ : δ <₊ (ξ +₊ δ)
+        δ<ξ+δ = <₊SumRight δ ξ
+
+        ξ+δ<ε : (ξ +₊ δ) <₊ ε
+        ξ+δ<ε = begin<
+          ⟨ ξ +₊ δ ⟩₊         <⟨ ℚ.<-+o ⟨ ξ ⟩₊ (ε -₊ δ) ⟨ δ ⟩₊ ξ<ε-δ ⟩
+          ε -₊ δ ℚ.+ ⟨ δ ⟩₊ ≡→≤⟨ minusPlus₊ ε δ ⟩
+          ⟨ ε ⟩₊              ◾
+
+        Uδ[ξ+δ-δ] : fst (U δ) [ (ξ +₊ δ) -₊ δ ]⟨ δ<ξ+δ ⟩
+        Uδ[ξ+δ-δ] = subst (fst (U δ)) (ℚ₊≡ (sym (plusMinus₊ ξ δ))) Uδ[ξ]
+
+      in
+        ξ +₊ δ , ξ+δ<ε , ∣ δ , δ<ξ+δ , Uδ[ξ+δ-δ] ∣₁
+
+UpperCut∃₂< : (U : ℚ₊ → ℚ₊ → UpperCuts) → UpperCuts
+fst (UpperCut∃₂< U) = λ ε →
+  ∃[ δ ∈ ℚ₊ ] Σ[ η ∈ ℚ₊ ] Σ[ δ+η<ε ∈ _ ] fst (U δ η) [ ε -₊ (δ +₊ η) ]⟨ δ+η<ε ⟩
+snd (UpperCut∃₂< U) = isUC∃₂< where
+  module UC (δ η : ℚ₊) = IsUpperCut (snd (U δ η))
+  open IsUpperCut
+
+  isUC∃₂< : IsUpperCut _
+  isPropUpperCut    isUC∃₂< ε = squash₁
+  isRoundedUpperCut isUC∃₂< ε = PT.rec squash₁ λ (δ , η , δ+η<ε , Uδ,η[ε-[δ+η]]) →
+    flip PT.map (UC.isRoundedUpperCut δ η _ Uδ,η[ε-[δ+η]]) λ (ξ , ξ<ε-[δ+η] , Uδ,η[ξ]) →
+      let
+
+        δ+η<ξ+δ+η : (δ +₊ η) <₊ (ξ +₊ (δ +₊ η))
+        δ+η<ξ+δ+η = <₊SumRight (δ +₊ η) ξ
+
+        ξ+δ+η<ε : (ξ +₊ (δ +₊ η)) <₊ ε
+        ξ+δ+η<ε = begin<
+          ⟨ ξ +₊ (δ +₊ η) ⟩₊                <⟨ ℚ.<-+o ⟨ ξ ⟩₊ _ _ ξ<ε-[δ+η] ⟩
+          (ε -₊ (δ +₊ η)) ℚ.+ ⟨ δ +₊ η ⟩₊ ≡→≤⟨ minusPlus₊ ε (δ +₊ η) ⟩
+          ⟨ ε ⟩₊                            ◾
+
+        Uδ,η[ξ+δ+η-[δ+η]] : fst (U δ η) [ ξ +₊ (δ +₊ η) -₊ δ +₊ η ]⟨ δ+η<ξ+δ+η ⟩
+        Uδ,η[ξ+δ+η-[δ+η]] =
+          subst (fst (U δ η)) (ℚ₊≡ (sym (plusMinus₊ ξ (δ +₊ η)))) Uδ,η[ξ]
+
+      in
+        ξ +₊ (δ +₊ η) , ξ+δ+η<ε , ∣ δ , η , δ+η<ξ+δ+η , Uδ,η[ξ+δ+η-[δ+η]] ∣₁
+
+UpperCut∃<→UpperCut∃₂< : ∀ U ε δ δ<ε →
+  fst (UpperCut∃< (flip U δ)) [ ε -₊ δ ]⟨ δ<ε ⟩ → fst (UpperCut∃₂< U) ε
+UpperCut∃<→UpperCut∃₂< U ε δ δ<ε = PT.map λ (η , η<ε-δ , U[ε-δ-η]η,δ) →
+  let
+    η+δ<ε : (η +₊ δ) <₊ ε
+    η+δ<ε = begin<
+      ⟨ η +₊ δ ⟩₊           <⟨ ℚ.<-+o ⟨ η ⟩₊ (ε -₊ δ) ⟨ δ ⟩₊ η<ε-δ ⟩
+      (ε -₊ δ) ℚ.+ ⟨ δ ⟩₊ ≡→≤⟨ minusPlus₊ ε δ ⟩
+      ⟨ ε ⟩₊                ◾
+
+    U[ε-[η+δ]]η,δ : fst (U η δ) [ ε -₊ (η +₊ δ) ]⟨ η+δ<ε ⟩
+    U[ε-[η+δ]]η,δ = flip (subst (fst (U η δ))) U[ε-δ-η]η,δ $ ℚ₊≡ $
+      (ε -₊ δ) ℚ.- ⟨ η ⟩₊                 ≡⟨ sym $ ℚ.+Assoc ⟨ ε ⟩₊ (ℚ.- ⟨ δ ⟩₊) _ ⟩
+      ⟨ ε ⟩₊ ℚ.+ ((ℚ.- ⟨ δ ⟩₊) ℚ.- ⟨ η ⟩₊) ≡⟨ cong (⟨ ε ⟩₊ ℚ.+_) (-Dist ⟨ δ ⟩₊ ⟨ η ⟩₊) ⟩
+      ε -₊ (δ +₊ η)                       ≡⟨ cong (ℚ._-_ ⟨ ε ⟩₊) (ℚ.+Comm ⟨ δ ⟩₊ ⟨ η ⟩₊) ⟩
+      ε -₊ (η +₊ δ)                       ∎
+
+  in
+    η , δ , η+δ<ε , U[ε-[η+δ]]η,δ
+
 nonExpanding∼→≈ᵁ : (ℭM → UpperCuts) → Type (ℓ-max ℓ ℓ')
 nonExpanding∼→≈ᵁ B = ∀ x y ε → x ∼[ ε ] y → B x ≈ᵁ[ ε ] B y
 
@@ -247,47 +408,21 @@ isNonExpanding∼→≈ᵁ→isBall B isNE = isBall where
   open IsUpperCut
 
   isBall : IsBall _
-  isBall .isPropBall       = λ ε y → isPropUpperCut (snd (B y)) ε
-  isBall .isRoundedBall    = λ ε y → isRoundedUpperCut (snd (B y)) ε
-  isBall .isTriangularBall = λ ε δ y z ⟨By⟩ε y∼δz → fst (isNE y z δ y∼δz ε) ⟨By⟩ε
+  isPropBall       isBall ε y                = isPropUpperCut (snd (B y)) ε
+  isRoundedBall    isBall ε y                = isRoundedUpperCut (snd (B y)) ε
+  isTriangularBall isBall ε δ y z ⟨By⟩ε y∼δz = fst (isNE y z δ y∼δz ε) ⟨By⟩ε
 
-open Recℭ
+open RecℭSym
 
-BallsCenteredAtι[Rec] : M → Recℭ UpperCuts (flip ∘ _≈ᵁ[_]_)
-BallsCenteredAtι[Rec] x .ιA y .fst = Lift {ℓ'} {ℓ} ∘ (x ≈[_] y)
-BallsCenteredAtι[Rec] x .ιA y .snd = isUC where
-  open IsUpperCut
-
-  isUC : IsUpperCut _
-  isUC .isPropUpperCut    = λ ε (lift p) (lift q) → cong lift (isProp≈ x y ε p q)
-  isUC .isRoundedUpperCut = λ ε (lift p) → PT.map (λ (δ , δ<ε , q) → (δ , δ<ε , lift q))
-                                                  (isRounded≈ x y ε p)
-BallsCenteredAtι[Rec] x .limA Bx,y_ _ .fst =
-  λ ε → ∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ (δ <₊ ε) ] fst (Bx,y δ) [ ε -₊ δ ]⟨ δ<ε ⟩
-BallsCenteredAtι[Rec] x .limA Bx,y_ _ .snd = isUC where
-  open IsUpperCut
-
-  isUC : IsUpperCut _
-  isUC .isPropUpperCut    = λ ε → squash₁
-  isUC .isRoundedUpperCut = λ ε → PT.rec squash₁ λ (δ , δ<ε , B[ε-δ]x,yδ) →
-    let
-    ∃η : ∃[ η ∈ ℚ₊ ] (η <₊ [ ε -₊ δ ]⟨ δ<ε ⟩) × fst (Bx,y δ) η
-    ∃η = By.isRoundedUpperCut δ [ ε -₊ δ ]⟨ δ<ε ⟩ B[ε-δ]x,yδ
-    in
-    flip PT.map ∃η λ (η , η<ε-δ , B[η]x,yδ) →
-    let
-    η+δ<ε = subst (⟨ η +₊ δ ⟩₊ <ℚ_) (minusPlus₊ ε δ) (ℚ.<-+o ⟨ η ⟩₊ (ε -₊ δ) ⟨ δ ⟩₊ η<ε-δ)
-    B[η+δ-δ]x,yδ = subst (fst (Bx,y δ)) (ℚ₊≡ (sym (plusMinus₊ η δ))) B[η]x,yδ
-    in
-    (η +₊ δ) , η+δ<ε , ∣ δ , <₊SumRight δ η , B[η+δ-δ]x,yδ ∣₁
-    where
-      module By (η : ℚ₊) = IsUpperCut (snd (Bx,y η))
-BallsCenteredAtι[Rec] x .eqA       = isSeparated≈ᵁ
-BallsCenteredAtι[Rec] x .ι-ι-B y z ε y≈z δ .fst (lift x≈y) =
+BallsAtι[Rec] : M → RecℭSym UpperCuts (flip ∘ _≈ᵁ[_]_)
+ιA   (BallsAtι[Rec] x) y       = UpperCut≈ x y
+limA (BallsAtι[Rec] x) Bx,y_ _ = UpperCut∃< Bx,y_
+eqA  (BallsAtι[Rec] x)         = isSeparated≈ᵁ
+fst  (ι-ι-B (BallsAtι[Rec] x) y z ε y≈z δ) (lift x≈y) =
   lift (isTriangular≈ x y z δ ε x≈y y≈z)
-BallsCenteredAtι[Rec] x .ι-ι-B y z ε y≈z δ .snd (lift x≈z) =
+snd  (ι-ι-B (BallsAtι[Rec] x) y z ε y≈z δ) (lift x≈z) =
   lift (isTriangular≈ x z y δ ε x≈z (isSym≈ y z ε y≈z))
-BallsCenteredAtι[Rec] x .ι-lim-B y Bx,z_ ε δ _ Δ Bx,y≈ᵁBx,zδ η .fst (lift x≈y) =
+fst  (ι-lim-B (BallsAtι[Rec] x) y Bx,z_ ε δ Bx,zc Δ Bx,y≈ᵁBx,zδ η) (lift x≈y) =
   ∣ δ , δ<η+ε , B[η+ε-δ]x,zδ ∣₁
   where
     δ<η+ε : δ <₊ (η +₊ ε)
@@ -299,7 +434,7 @@ BallsCenteredAtι[Rec] x .ι-lim-B y Bx,z_ ε δ _ Δ Bx,y≈ᵁBx,zδ η .fst (
     B[η+ε-δ]x,zδ : fst (Bx,z δ) [ (η +₊ ε) -₊ δ ]⟨ δ<η+ε ⟩
     B[η+ε-δ]x,zδ = subst (fst (Bx,z δ)) (ℚ₊≡ (ℚ.+Assoc ⟨ η ⟩₊ ⟨ ε ⟩₊ _))
                                         (fst (Bx,y≈ᵁBx,zδ η) (lift x≈y))
-BallsCenteredAtι[Rec] x .ι-lim-B y Bx,z_ ε δ Bx,zc Δ Bx,y≈ᵁBx,zδ η .snd B[η]x,limz =
+snd  (ι-lim-B (BallsAtι[Rec] x) y Bx,z_ ε δ Bx,zc Δ Bx,y≈ᵁBx,zδ η) B[η]x,limz =
   subst (Lift {ℓ'} {ℓ} ∘ (x ≈[_] y)) η+δ+ε-δ≡η+ε x≈[η+δ+ε-δ]y
   where
     module Bz (η : ℚ₊) = IsUpperCut (snd (Bx,z η))
@@ -330,50 +465,7 @@ BallsCenteredAtι[Rec] x .ι-lim-B y Bx,z_ ε δ Bx,zc Δ Bx,y≈ᵁBx,zδ η .s
       ⟨ η ⟩₊ ℚ.+ (⟨ δ ⟩₊ ℚ.+ (ε -₊ δ)) ≡⟨ cong (⟨ η ⟩₊ ℚ.+_) (ℚ.+Comm ⟨ δ ⟩₊ (ε -₊ δ)) ⟩
       ⟨ η ⟩₊ ℚ.+ ((ε -₊ δ) ℚ.+ ⟨ δ ⟩₊) ≡⟨ cong (⟨ η ⟩₊ ℚ.+_) (minusPlus₊ ε δ) ⟩
       ⟨ η +₊ ε ⟩₊                      ∎
-BallsCenteredAtι[Rec] x .lim-ι-B Bx,y_ z ε δ Bx,yc Δ Bx,yδ≈ᵁBx,z η .fst B[η]x,limy =
-  subst (Lift {ℓ'} {ℓ} ∘ (x ≈[_] z)) η+δ+ε-δ≡η+ε x≈[η+δ+ε-δ]z
-  where
-    module By (η : ℚ₊) = IsUpperCut (snd (Bx,y η))
-
-    Bx,yc→ : ∀ ε' δ' η' → fst (Bx,y ε') η' → fst (Bx,y δ') (η' +₊ (ε' +₊ δ'))
-    Bx,yc→ ε' δ' η' = fst (Bx,yc ε' δ' η')
-
-    B[η+δ]x,yδ : fst (Bx,y δ) (η +₊ δ)
-    B[η+δ]x,yδ = flip (PT.rec (By.isPropUpperCut δ (η +₊ δ))) B[η]x,limy λ
-      { (δ' , δ'<η , B[η-δ']x,yδ') →
-        let
-          B[η-δ'+δ'+δ]x,yδ = Bx,yc→ δ' δ [ η -₊ δ' ]⟨ δ'<η ⟩ B[η-δ']x,yδ'
-
-          η-δ'+δ'+δ≡η+δ : [ η -₊ δ' ]⟨ δ'<η ⟩ +₊ (δ' +₊ δ) ≡ η +₊ δ
-          η-δ'+δ'+δ≡η+δ = ℚ₊≡ $ ℚ.+Assoc (η -₊ δ') _ _ ∙ cong (ℚ._+ _) (minusPlus₊ η δ')
-        in
-          subst (fst (Bx,y δ)) η-δ'+δ'+δ≡η+δ B[η-δ'+δ'+δ]x,yδ }
-
-    Bx,yδ→x≈[+ε-δ]z : ∀ ξ → fst (Bx,y δ) ξ → Lift {ℓ'} {ℓ} (x ≈[ ξ +₊ ((ε -₊ δ) , Δ) ] z)
-    Bx,yδ→x≈[+ε-δ]z = λ ξ → fst (Bx,yδ≈ᵁBx,z ξ)
-
-    x≈[η+δ+ε-δ]z : Lift {ℓ'} {ℓ} (x ≈[ (η +₊ δ) +₊ ((ε -₊ δ) , Δ) ] z)
-    x≈[η+δ+ε-δ]z = Bx,yδ→x≈[+ε-δ]z (η +₊ δ) B[η+δ]x,yδ
-
-    η+δ+ε-δ≡η+ε : (η +₊ δ) +₊ ((ε -₊ δ) , Δ) ≡ η +₊ ε
-    η+δ+ε-δ≡η+ε = ℚ₊≡ $
-      ⟨ η +₊ δ ⟩₊ ℚ.+ (ε -₊ δ)         ≡⟨ sym $ ℚ.+Assoc ⟨ η ⟩₊ ⟨ δ ⟩₊ (ε -₊ δ) ⟩
-      ⟨ η ⟩₊ ℚ.+ (⟨ δ ⟩₊ ℚ.+ (ε -₊ δ)) ≡⟨ cong (⟨ η ⟩₊ ℚ.+_) (ℚ.+Comm ⟨ δ ⟩₊ (ε -₊ δ)) ⟩
-      ⟨ η ⟩₊ ℚ.+ ((ε -₊ δ) ℚ.+ ⟨ δ ⟩₊) ≡⟨ cong (⟨ η ⟩₊ ℚ.+_) (minusPlus₊ ε δ) ⟩
-      ⟨ η +₊ ε ⟩₊                      ∎
-BallsCenteredAtι[Rec] x .lim-ι-B Bx,y_ z ε δ Bx,yc Δ Bx,yδ≈ᵁBx,z η .snd (lift x≈z) =
-  ∣ δ , δ<η+ε , B[η+ε-δ]x,yδ ∣₁
-  where
-    δ<η+ε : δ <₊ (η +₊ ε)
-    δ<η+ε = begin<
-      ⟨ δ ⟩₊      <⟨ 0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ ⟩
-      ⟨ ε ⟩₊      <⟨ <₊SumRight ε η ⟩
-      ⟨ η +₊ ε ⟩₊ ◾
-
-    B[η+ε-δ]x,yδ : fst (Bx,y δ) [ (η +₊ ε) -₊ δ ]⟨ δ<η+ε ⟩
-    B[η+ε-δ]x,yδ = subst (fst (Bx,y δ)) (ℚ₊≡ (ℚ.+Assoc ⟨ η ⟩₊ ⟨ ε ⟩₊ _))
-                                        (snd (Bx,yδ≈ᵁBx,z η) (lift x≈z))
-BallsCenteredAtι[Rec] x .lim-lim-B Bx,y_ Bx,z_ ε δ η Bx,yc Bx,zc Δ Bx,yδ≈ᵁBx,zη θ .fst =
+fst  (lim-lim-B (BallsAtι[Rec] x) Bx,y_ Bx,z_ ε δ η Bx,yc Bx,zc Δ Bx,yδ≈ᵁBx,zη θ) =
   PT.map λ (δ' , δ'<θ , B[θ-δ']x,yδ') →
     let
 
@@ -402,7 +494,7 @@ BallsCenteredAtι[Rec] x .lim-lim-B Bx,y_ Bx,z_ ε δ η Bx,yc Bx,zc Δ Bx,yδ�
         (θ +₊ ε) -₊ η                   ∎
     in
       η , η<θ+ε , B[θ+ε-η]x,zη
-BallsCenteredAtι[Rec] x .lim-lim-B Bx,y_ Bx,z_ ε δ η Bx,yc Bx,zc Δ Bx,yδ≈ᵁBx,zη θ .snd =
+snd  (lim-lim-B (BallsAtι[Rec] x) Bx,y_ Bx,z_ ε δ η Bx,yc Bx,zc Δ Bx,yδ≈ᵁBx,zη θ) =
   PT.map λ (δ' , δ'<θ , B[θ-δ']x,zδ') →
     let
 
@@ -432,73 +524,332 @@ BallsCenteredAtι[Rec] x .lim-lim-B Bx,y_ Bx,z_ ε δ η Bx,yc Bx,zc Δ Bx,yδ�
 
     in
       δ , δ<θ+ε , B[θ+ε-δ]x,yδ
-BallsCenteredAtι[Rec] x .isPropB   = isProp≈ᵁ
+isSymB    (BallsAtι[Rec] x) = isSym≈ᵁ
+isPropB   (BallsAtι[Rec] x) = isProp≈ᵁ
 
 -- Defintion 3.13 (first part)
 B⟨ι_,_⟩ : M → ℭM → UpperCuts
-B⟨ι_,_⟩ = Recℭ.go ∘ BallsCenteredAtι[Rec]
+B⟨ι_,_⟩ = RecℭSym.go ∘ BallsAtι[Rec]
 
 B[_]⟨ι_,_⟩ : ℚ₊ → M → ℭM → Type (ℓ-max ℓ ℓ')
 B[ ε ]⟨ι x , y ⟩ = fst B⟨ι x , y ⟩ ε
 
 isNonExpanding∼→≈ᵁB⟨ι_,⟩ : ∀ (x : M) → nonExpanding∼→≈ᵁ B⟨ι x ,_⟩
-isNonExpanding∼→≈ᵁB⟨ι_,⟩ x = λ y z ε → go∼ (BallsCenteredAtι[Rec] x)
+isNonExpanding∼→≈ᵁB⟨ι_,⟩ x y z ε = RecℭSym.go∼ (BallsAtι[Rec] x)
 
 B⟨ι_,⟩ : M → Balls
-B⟨ι_,⟩ x .fst = B[_]⟨ι x ,_⟩
-B⟨ι_,⟩ x .snd = isNonExpanding∼→≈ᵁ→isBall B⟨ι x ,_⟩ isNonExpanding∼→≈ᵁB⟨ι x ,⟩
+fst B⟨ι x ,⟩ = B[_]⟨ι x ,_⟩
+snd B⟨ι x ,⟩ = isNonExpanding∼→≈ᵁ→isBall B⟨ι x ,_⟩ isNonExpanding∼→≈ᵁB⟨ι x ,⟩
+
+module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ] Bx δ) where
+
+  module isBx (η : ℚ₊) = IsBall (snd (Bx η))
+  open CasesℭSym
+
+  BallsAtlim[Cases] : CasesℭSym UpperCuts (flip ∘ _≈ᵁ[_]_)
+  ιA   BallsAtlim[Cases] y    = UpperCut∃< λ δ →
+    flip (fst (Bx δ)) (ι y) , isBall→isUpperCut (Bx δ) (ι y)
+  limA BallsAtlim[Cases] y yc = UpperCut∃₂< λ δ η →
+    flip (fst (Bx δ)) (y η) , isBall→isUpperCut (Bx δ) (y η)
+  eqA  BallsAtlim[Cases]      = isSeparated≈ᵁ
+  fst (ι-ι-B BallsAtlim[Cases] y z ε y≈z δ) =
+    PT.map λ (η , η<δ , B[δ-η]xη,y) →
+      let
+
+        η<δ+ε : η <₊ (δ +₊ ε)
+        η<δ+ε = begin<
+          ⟨ η ⟩₊      <⟨ η<δ ⟩
+          ⟨ δ ⟩₊      <⟨ <₊SumLeft δ ε ⟩
+          ⟨ δ +₊ ε ⟩₊ ◾
+
+        B[δ-η+ε]xη,z : fst (Bx η) ([ δ -₊ η ]⟨ η<δ ⟩ +₊ ε) (ι z)
+        B[δ-η+ε]xη,z = isBx.isTriangularBall η
+          [ δ -₊ η ]⟨ η<δ ⟩ ε (ι y) (ι z) B[δ-η]xη,y (ι-ι y z ε y≈z)
+
+        B[δ+ε-η]xη,z : fst (Bx η) [ δ +₊ ε -₊ η ]⟨ η<δ+ε ⟩ (ι z)
+        B[δ+ε-η]xη,z = flip (subst (flip (fst (Bx η)) (ι z))) B[δ-η+ε]xη,z $ ℚ₊≡ $
+          (δ -₊ η) ℚ.+ ⟨ ε ⟩₊                 ≡⟨ sym $ ℚ.+Assoc ⟨ δ ⟩₊ (ℚ.- ⟨ η ⟩₊) _ ⟩
+          ⟨ δ ⟩₊ ℚ.+ ((ℚ.- ⟨ η ⟩₊) ℚ.+ ⟨ ε ⟩₊) ≡⟨ cong (ℚ._+_ ⟨ δ ⟩₊) (ℚ.+Comm _ ⟨ ε ⟩₊) ⟩
+          ⟨ δ ⟩₊ ℚ.+ (ε -₊ η)                 ≡⟨ ℚ.+Assoc ⟨ δ ⟩₊ ⟨ ε ⟩₊ _ ⟩
+          (δ +₊ ε) -₊ η                       ∎
+      in
+        η , η<δ+ε , B[δ+ε-η]xη,z
+  snd (ι-ι-B BallsAtlim[Cases] y z ε y≈z δ) =
+    PT.map λ (η , η<δ , B[δ-η]xη,z) →
+      let
+
+        η<δ+ε : η <₊ (δ +₊ ε)
+        η<δ+ε = begin<
+          ⟨ η ⟩₊      <⟨ η<δ ⟩
+          ⟨ δ ⟩₊      <⟨ <₊SumLeft δ ε ⟩
+          ⟨ δ +₊ ε ⟩₊ ◾
+
+        B[δ-η+ε]xη,y : fst (Bx η) ([ δ -₊ η ]⟨ η<δ ⟩ +₊ ε) (ι y)
+        B[δ-η+ε]xη,y = isBx.isTriangularBall η
+          [ δ -₊ η ]⟨ η<δ ⟩ ε (ι z) (ι y) B[δ-η]xη,z (ι-ι z y ε (isSym≈ _ _ _ y≈z))
+
+        B[δ+ε-η]xη,y : fst (Bx η) [ δ +₊ ε -₊ η ]⟨ η<δ+ε ⟩ (ι y)
+        B[δ+ε-η]xη,y = flip (subst (flip (fst (Bx η)) (ι y))) B[δ-η+ε]xη,y $ ℚ₊≡ $
+          (δ -₊ η) ℚ.+ ⟨ ε ⟩₊                 ≡⟨ sym $ ℚ.+Assoc ⟨ δ ⟩₊ (ℚ.- ⟨ η ⟩₊) _ ⟩
+          ⟨ δ ⟩₊ ℚ.+ ((ℚ.- ⟨ η ⟩₊) ℚ.+ ⟨ ε ⟩₊) ≡⟨ cong (ℚ._+_ ⟨ δ ⟩₊) (ℚ.+Comm _ ⟨ ε ⟩₊) ⟩
+          ⟨ δ ⟩₊ ℚ.+ (ε -₊ η)                 ≡⟨ ℚ.+Assoc ⟨ δ ⟩₊ ⟨ ε ⟩₊ _ ⟩
+          (δ +₊ ε) -₊ η                       ∎
+
+      in
+        η , η<δ+ε , B[δ+ε-η]xη,y
+  fst (ι-lim-B BallsAtlim[Cases] y z ε δ zc Δ y∼zδ _ _ _ η) =
+    PT.map λ (θ , θ<η , B[η-θ]xθ,y) →
+      let
+        θ+δ<η+ε : (θ +₊ δ) <₊ (η +₊ ε)
+        θ+δ<η+ε = begin<
+          ⟨ θ +₊ δ ⟩₊ <⟨ +Mono< ⟨ θ ⟩₊ ⟨ η ⟩₊ _ _ θ<η (0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ) ⟩
+          ⟨ η +₊ ε ⟩₊ ◾
+
+        B[η+ε-[θ+δ]]xθ,zδ : fst (Bx θ) [ (η +₊ ε) -₊ (θ +₊ δ) ]⟨ θ+δ<η+ε ⟩ (z δ)
+        B[η+ε-[θ+δ]]xθ,zδ = subst (flip (fst (Bx θ)) (z δ))
+          (ℚ₊≡ (lemma3 ℚCR ⟨ η ⟩₊ ⟨ θ ⟩₊ ⟨ ε ⟩₊ ⟨ δ ⟩₊))
+          (isBx.isTriangularBall θ [ η -₊ θ ]⟨ θ<η ⟩ (ε -₊ δ , Δ)
+            (ι y) (z δ)
+          (B[η-θ]xθ,y
+            :> fst (Bx θ) [ η -₊ θ ]⟨ θ<η ⟩ (ι y))
+          (y∼zδ
+            :> (ι y ∼[ (ε -₊ δ) , Δ ] z δ))
+            :> Bx θ .fst ([ η -₊ θ ]⟨ θ<η ⟩ +₊ ((ε -₊ δ) , Δ)) (z δ))
+
+      in
+        θ , δ , θ+δ<η+ε , B[η+ε-[θ+δ]]xθ,zδ
+  snd (ι-lim-B BallsAtlim[Cases] y z ε δ zc Δ y∼zδ _ _ _ η) =
+    PT.map λ (ξ , ζ , ξ+ζ<η , B[η-[ξ+ζ]]xξ,zζ) →
+      let
+        ξ<η+ε : ξ <₊ (η +₊ ε)
+        ξ<η+ε = begin<
+          ⟨ ξ ⟩₊      <⟨ <₊SumLeft ξ ζ ⟩
+          ⟨ ξ +₊ ζ ⟩₊ <⟨ ξ+ζ<η ⟩
+          ⟨ η ⟩₊      <⟨ <₊SumLeft η ε ⟩
+          ⟨ η +₊ ε ⟩₊ ◾
+
+        B[η+ε-ξ]xξ,y : fst (Bx ξ) [ η +₊ ε -₊ ξ ]⟨ ξ<η+ε ⟩ (ι y)
+        B[η+ε-ξ]xξ,y = subst (flip (fst (Bx ξ)) (ι y))
+          (ℚ₊≡ (lemma4 ℚCR ⟨ η ⟩₊ ⟨ ξ ⟩₊ ⟨ ζ ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊))
+          (isBx.isTriangularBall ξ ([ η -₊ ξ +₊ ζ ]⟨ ξ+ζ<η ⟩ +₊ (ζ +₊ δ)) (ε -₊ δ , Δ)
+            (z δ) (ι y)
+          (isBx.isTriangularBall ξ [ η -₊ ξ +₊ ζ ]⟨ ξ+ζ<η ⟩ (ζ +₊ δ)
+            (z ζ) (z δ)
+          (B[η-[ξ+ζ]]xξ,zζ
+            :> fst (Bx ξ) [ η -₊ ξ +₊ ζ ]⟨ ξ+ζ<η ⟩ (z ζ))
+          (zc ζ δ
+            :> (z ζ) ∼[ ζ +₊ δ ] (z δ))
+            :> fst (Bx ξ) ([ η -₊ ξ +₊ ζ ]⟨ ξ+ζ<η ⟩ +₊ (ζ +₊ δ)) (z δ))
+          (isSym∼ (ι y) (z δ) ((ε -₊ δ) , Δ) y∼zδ
+            :> (z δ) ∼[ ε -₊ δ , Δ ] (ι y))
+            :> fst (Bx ξ) ([ η -₊ ξ +₊ ζ ]⟨ ξ+ζ<η ⟩ +₊ (ζ +₊ δ) +₊ ((ε -₊ δ) , Δ)) (ι y))
+
+      in
+        ξ , ξ<η+ε , B[η+ε-ξ]xξ,y
+  fst (lim-lim-B BallsAtlim[Cases] y z ε δ η yc zc Δ yδ∼zη _ _ _ _ _ θ) =
+    PT.map λ (ξ , ζ , ξ+ζ<θ , B[θ-[ξ+ζ]]xξ,yζ) →
+      let
+        ξ+η<θ+ε : (ξ +₊ η) <₊ (θ +₊ ε)
+        ξ+η<θ+ε = begin<
+          ⟨ ξ +₊ η ⟩₊               <⟨ +Mono< ⟨ ξ ⟩₊ _ ⟨ η ⟩₊ _
+                                      (<₊SumLeft ξ ζ) (<₊SumRight η δ) ⟩
+          ⟨ (ξ +₊ ζ) +₊ (δ +₊ η) ⟩₊ <⟨ +Mono< ⟨ ξ +₊ ζ ⟩₊ ⟨ θ ⟩₊ ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊
+                                      ξ+ζ<θ (0<-→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ) ⟩
+          ⟨ θ +₊ ε ⟩₊               ◾
+
+        B[θ+ε-[ξ+η]]xξ,zη : fst (Bx ξ) [ (θ +₊ ε) -₊ (ξ +₊ η) ]⟨ ξ+η<θ+ε ⟩ (z η)
+        B[θ+ε-[ξ+η]]xξ,zη = subst (flip (fst (Bx ξ)) (z η))
+          (ℚ₊≡ (lemma5 ℚCR ⟨ θ ⟩₊ ⟨ ξ ⟩₊ ⟨ ζ ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊ ⟨ η ⟩₊))
+          (isBx.isTriangularBall ξ
+            ([ θ -₊ (ξ +₊ ζ) ]⟨ ξ+ζ<θ ⟩ +₊ (ζ +₊ δ)) (ε -₊ (δ +₊ η) , Δ)
+            (y δ) (z η)
+          (isBx.isTriangularBall ξ [ θ -₊ (ξ +₊ ζ) ]⟨ ξ+ζ<θ ⟩ (ζ +₊ δ)
+            (y ζ) (y δ)
+          (B[θ-[ξ+ζ]]xξ,yζ
+            :> fst (Bx ξ) [ θ -₊ (ξ +₊ ζ) ]⟨ ξ+ζ<θ ⟩ (y ζ))
+          (yc ζ δ
+            :> (y ζ ∼[ ζ +₊ δ ] y δ))
+            :> fst (Bx ξ) ([ θ -₊ ξ +₊ ζ ]⟨ ξ+ζ<θ ⟩ +₊ (ζ +₊ δ)) (y δ))
+          (yδ∼zη
+            :> y δ ∼[ ε -₊ (δ +₊ η) , Δ ] z η)
+            :> fst (Bx ξ) ([ θ -₊ ξ +₊ ζ ]⟨ ξ+ζ<θ ⟩ +₊ (ζ +₊ δ) +₊ ((ε -₊ (δ +₊ η)) , Δ))
+                    (z η))
+
+      in
+        ξ , η , ξ+η<θ+ε , B[θ+ε-[ξ+η]]xξ,zη
+  snd (lim-lim-B BallsAtlim[Cases] y z ε δ η yc zc Δ yδ∼zη By Byc Bz Bzc Byδ≈Bzη θ) =
+    PT.map λ (ξ , ζ , ξ+ζ<θ , B[θ-[ξ+ζ]]xξ,zζ) →
+      let
+        ξ+δ<θ+ε : (ξ +₊ δ) <₊ (θ +₊ ε)
+        ξ+δ<θ+ε = begin<
+          ⟨ ξ +₊ δ ⟩₊               <⟨ +Mono< ⟨ ξ ⟩₊ _ ⟨ δ ⟩₊ _
+                                      (<₊SumLeft ξ ζ) (<₊SumLeft δ η) ⟩
+          ⟨ (ξ +₊ ζ) +₊ (δ +₊ η) ⟩₊ <⟨ +Mono< ⟨ ξ +₊ ζ ⟩₊ ⟨ θ ⟩₊ ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊
+                                      ξ+ζ<θ (0<-→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ) ⟩
+          ⟨ θ +₊ ε ⟩₊               ◾
+
+        B[θ+ε-[ξ+δ]]xξ,zδ : fst (Bx ξ) [ (θ +₊ ε) -₊ (ξ +₊ δ) ]⟨ ξ+δ<θ+ε ⟩ (y δ)
+        B[θ+ε-[ξ+δ]]xξ,zδ = subst (flip (fst (Bx ξ)) (y δ))
+          (ℚ₊≡ (lemma6 ℚCR ⟨ θ ⟩₊ ⟨ ξ ⟩₊ ⟨ ζ ⟩₊ ⟨ η ⟩₊ ⟨ ε ⟩₊ ⟨ δ ⟩₊))
+          (isBx.isTriangularBall ξ
+            ([ θ -₊ ξ +₊ ζ ]⟨ ξ+ζ<θ ⟩ +₊ (ζ +₊ η)) (ε -₊ (δ +₊ η) , Δ)
+            (z η) (y δ)
+          (isBx.isTriangularBall ξ [ θ -₊ ξ +₊ ζ ]⟨ ξ+ζ<θ ⟩ (ζ +₊ η)
+            (z ζ) (z η)
+          (B[θ-[ξ+ζ]]xξ,zζ
+            :> fst (Bx ξ) [ θ -₊ ξ +₊ ζ ]⟨ ξ+ζ<θ ⟩ (z ζ))
+          (zc ζ η
+            :> z ζ ∼[ ζ +₊ η ] z η)
+            :> fst (Bx ξ) ([ θ -₊ (ξ +₊ ζ) ]⟨ ξ+ζ<θ ⟩ +₊ (ζ +₊ η)) (z η))
+          (isSym∼ (y δ) (z η) (ε -₊ (δ +₊ η) , Δ) yδ∼zη
+            :> (z η ∼[ (ε -₊ (δ +₊ η)) , Δ ] y δ))
+            :> fst (Bx ξ) ([ θ -₊ (ξ +₊ ζ) ]⟨ ξ+ζ<θ ⟩ +₊ (ζ +₊ η) +₊ (ε -₊ (δ +₊ η) , Δ))
+                    (y δ))
+
+      in
+        ξ , δ , ξ+δ<θ+ε , B[θ+ε-[ξ+δ]]xξ,zδ
+  isSymB    BallsAtlim[Cases] = isSym≈ᵁ
+  isPropB   BallsAtlim[Cases] = isProp≈ᵁ
+
+  B⟨limᴿ[_,_],_⟩ : ℭM → UpperCuts
+  B⟨limᴿ[_,_],_⟩ = CasesℭSym.go BallsAtlim[Cases]
+
+  isNonExpanding∼→≈ᵁB⟨limᴿ[_,_],⟩ : nonExpanding∼→≈ᵁ B⟨limᴿ[_,_],_⟩
+  isNonExpanding∼→≈ᵁB⟨limᴿ[_,_],⟩ = λ _ _ _ → CasesℭSym.go∼ BallsAtlim[Cases]
+
+  B⟨limᴿ[_,_],⟩ : Balls
+  B⟨limᴿ[_,_],⟩ = _ ,
+    isNonExpanding∼→≈ᵁ→isBall B⟨limᴿ[_,_],_⟩ isNonExpanding∼→≈ᵁB⟨limᴿ[_,_],⟩
+
+B[_]⟨limᴿ[_,_],_⟩ : ℚ₊ → ∀ Bx (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ] Bx δ) → ℭM → Type _
+B[_]⟨limᴿ[_,_],_⟩ ε Bx Bxc = fst (B⟨limᴿ[ Bx , Bxc ],⟩) ε
 
 {-
-BallsCenteredAt[Rec] : Recℭ Balls (flip ∘ _≈ᴮ[_]_)
-BallsCenteredAt[Rec] .ιA          = B⟨ι_,⟩
-BallsCenteredAt[Rec] .limA Bx Bxc .fst = λ ε y →
-  ∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ _ ] fst (Bx δ) [ ε -₊ δ ]⟨ δ<ε ⟩ y
-BallsCenteredAt[Rec] .limA Bx Bxc .snd = isB where
-  open IsBall
-  open Elimℭ-Prop
-  module Bx (η : ℚ₊) = IsBall (snd (Bx η))
 
-  isB : IsBall _
-  isB .isPropBall       = λ _ _ → squash₁
-  isB .isRoundedBall    = λ ε y → PT.map λ (δ , δ<ε , B[ε-δ]xδ,y) →
-    {!   !} , {!   !} , ∣ {!   !} , {!   !} , {!  !} ∣₁
-  isB .isTriangularBall = λ ε δ y z → flip λ y∼z → PT.map λ (η , η<ε , B[ε-η]xη,y) →
-    {!   !} , {!   !} , {!   !}
-BallsCenteredAt[Rec] .eqA         = isSeparated≈ᴮ
-BallsCenteredAt[Rec] .ι-ι-B       = {!    !}
-BallsCenteredAt[Rec] .ι-lim-B     = {!    !}
-BallsCenteredAt[Rec] .lim-ι-B     = {!   !}
-BallsCenteredAt[Rec] .lim-lim-B   = {!   !}
-BallsCenteredAt[Rec] .isPropB     = isProp≈ᴮ
+BallsAt[Rec] : RecℭSym Balls (flip ∘ _≈ᴮ[_]_)
+ιA        BallsAt[Rec] = B⟨ι_,⟩
+limA      BallsAt[Rec] = B⟨limᴿ[_,_],⟩
+eqA       BallsAt[Rec] = isSeparated≈ᴮ
+ι-ι-B     BallsAt[Rec] = {!   !}
+ι-lim-B   BallsAt[Rec] = {!   !}
+lim-lim-B BallsAt[Rec] = {!   !}
+isSymB    BallsAt[Rec] = isSym≈ᴮ
+isPropB   BallsAt[Rec] = isProp≈ᴮ
 
 -- Defintion 3.13 (second part)
 B⟨_,⟩ : ℭM → Balls
-B⟨_,⟩ = Recℭ.go BallsCenteredAt[Rec]
+B⟨_,⟩ = RecℭSym.go BallsAt[Rec]
 
 B[_]⟨_,_⟩ : ℚ₊ → ℭM → ℭM → Type (ℓ-max ℓ ℓ')
 B[_]⟨_,_⟩ = flip (fst ∘ B⟨_,⟩)
 
 isNonExpanding∼→≈ᴮB⟨,⟩ : nonExpanding∼→≈ᴮ B⟨_,⟩
-isNonExpanding∼→≈ᴮB⟨,⟩ = λ _ _ _ → Recℭ.go∼ BallsCenteredAt[Rec]
+isNonExpanding∼→≈ᴮB⟨,⟩ = λ _ _ _ → RecℭSym.go∼ BallsAt[Rec]
 
 -- Theorem 3.14
 module _ where
   _ : ∀ {ε x y} → B[ ε ]⟨ ι x , ι y ⟩ ≡ Lift {ℓ'} {ℓ} (x ≈[ ε ] y)
-  _ = refl
+  _ = {!   !} -- must be refl
 
-  _ : ∀ {ε x y yc} → B[ ε ]⟨ ι x , lim y yc ⟩
-                 ≡ (∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ (δ <₊ ε) ] B[ [ ε -₊ δ ]⟨ δ<ε ⟩ ]⟨ι x , y δ ⟩)
-  _ = refl
-  -- TO DO : other computations once BallsCenteredAt[Rec] is defined also for limit points
+  _ : ∀ {ε x y yc}
+      → B[ ε ]⟨ ι x , lim y yc ⟩
+      ≡ (∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ (δ <₊ ε) ] B[ [ ε -₊ δ ]⟨ δ<ε ⟩ ]⟨ ι x , y δ ⟩)
+  _ = {!   !} -- must be refl
+
+  _ : ∀ {ε x y xc}
+      → B[ ε ]⟨ lim x xc , ι y ⟩
+      ≡ (∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ (δ <₊ ε) ] B[ [ ε -₊ δ ]⟨ δ<ε ⟩ ]⟨ x δ , ι y ⟩)
+  _ = {!   !} -- must be refl
+
+  _ : ∀ {ε x y xc yc}
+      → B[ ε ]⟨ lim x xc , lim y yc ⟩
+      ≡ (∃[ δ ∈ ℚ₊ ] Σ[ η ∈ ℚ₊ ] Σ[ δ+η<ε ∈ ((δ +₊ η) <₊ ε) ]
+          B[ [ ε -₊ (δ +₊ η) ]⟨ δ+η<ε ⟩ ]⟨ x δ , y η ⟩)
+  _ = {!   !} -- must be refl
+
+  -- With the other approach (see the commented code at the end of the file),
+  -- we would get only this computation rule, instead of the two above:
+  -- _ : ∀ {ε x y xc yc}
+  --     → B[ ε ]⟨ lim x xc , lim y yc ⟩
+  --     ≡ (∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ (δ <₊ ε) ] B[ [ ε -₊ δ ]⟨ δ<ε ⟩ ]⟨ x δ , lim y yc ⟩)
+  -- _ = refl
 
 ∼→B : ∀ {x y ε} → x ∼[ ε ] y → B[ ε ]⟨ x , y ⟩
-∼→B = {!    !}
+∼→B = Recℭ∼.go∼ r where
+  r : Recℭ∼ λ x y → B[_]⟨ x , y ⟩
+  Recℭ∼.ι-ι-B     r x y ε = lift
+  Recℭ∼.ι-lim-B   r x y ε δ yc Δ _ q      =
+    ∣ δ , 0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ ι x , y δ ⟩ (ℚ₊≡ refl) q ∣₁
+  Recℭ∼.lim-ι-B   r x y ε δ xc Δ _ q      =
+    ∣ δ , 0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ x δ , ι y ⟩ (ℚ₊≡ refl) q ∣₁
+  Recℭ∼.lim-lim-B r x y ε δ η xc yc Δ _ q =
+    ∣ δ , η , 0<-→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ x δ , y η ⟩ (ℚ₊≡ refl) q ∣₁
+  Recℭ∼.isPropB   r x y ε                 = IsBall.isPropBall (snd B⟨ x ,⟩) ε y
 
 B→∼ : ∀ {x y ε} → B[ ε ]⟨ x , y ⟩ → x ∼[ ε ] y
 B→∼ = {!   !}
 
 -- Theorem 3.15
 ∼≃B : ∀ {x y ε} → (x ∼[ ε ] y) ≃ B[ ε ]⟨ x , y ⟩
-∼≃B = propBiimpl→Equiv (isProp∼ _ _ _) (IsBall.isPropBall (snd B⟨ _ ,⟩) _ _) ∼→B B→∼
+∼≃B {x} {y} {ε} =
+  propBiimpl→Equiv (isProp∼ x ε y) (IsBall.isPropBall (snd B⟨ x ,⟩) ε y) ∼→B B→∼
 
 -- -}
+
+-- This is the wrong approach (see the computations in Theorem 3.14)
+-- BallsAt[Rec] : Recℭ Balls (flip ∘ _≈ᴮ[_]_)
+-- BallsAt[Rec] .ιA          = B⟨ι_,⟩
+-- BallsAt[Rec] .limA Bx Bxc .fst = λ ε y →
+--   ∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ _ ] fst (Bx δ) [ ε -₊ δ ]⟨ δ<ε ⟩ y
+-- BallsAt[Rec] .limA Bx Bxc .snd = isB where
+--   open IsBall
+--   open Elimℭ-Prop
+--   module Bx (η : ℚ₊) = IsBall (snd (Bx η))
+--
+--   isB : IsBall _
+--   isB .isPropBall       = λ _ _ → squash₁
+--   isB .isRoundedBall    = λ ε y → PT.rec squash₁
+--     λ (δ , δ<ε , B[ε-δ]x,yδ) →
+--     flip PT.map (Bx.isRoundedBall δ [ ε -₊ δ ]⟨ δ<ε ⟩ y B[ε-δ]x,yδ)
+--       λ (ξ , ξ<ε-δ , B[ξ]x,yδ) →
+--       let
+--
+--         δ<ξ+δ : δ <₊ (ξ +₊ δ)
+--         δ<ξ+δ = <₊SumRight δ ξ
+--
+--         ξ+δ<ε : (ξ +₊ δ) <₊ ε
+--         ξ+δ<ε = begin<
+--           ⟨ ξ +₊ δ ⟩₊         <⟨ ℚ.<-+o ⟨ ξ ⟩₊ (ε -₊ δ) ⟨ δ ⟩₊ ξ<ε-δ ⟩
+--           ε -₊ δ ℚ.+ ⟨ δ ⟩₊ ≡→≤⟨ minusPlus₊ ε δ ⟩
+--           ⟨ ε ⟩₊              ◾
+--
+--         B[ξ+δ-δ]x,y : fst (Bx δ) [ (ξ +₊ δ) -₊ δ ]⟨ δ<ξ+δ ⟩ y
+--         B[ξ+δ-δ]x,y = subst (flip (fst (Bx δ)) y) (ℚ₊≡ (sym (plusMinus₊ ξ δ))) B[ξ]x,yδ
+--
+--       in
+--         ξ +₊ δ , ξ+δ<ε , ∣ δ , δ<ξ+δ , B[ξ+δ-δ]x,y ∣₁
+--   isB .isTriangularBall = λ ε δ y z → flip λ y∼z → PT.map λ (η , η<ε , B[ε-η]xη,y) →
+--     let
+--       η<ε+δ : η <₊ (ε +₊ δ)
+--       η<ε+δ = begin<
+--         ⟨ η ⟩₊      <⟨ η<ε ⟩
+--         ⟨ ε ⟩₊      <⟨ <₊SumLeft ε δ ⟩
+--         ⟨ ε +₊ δ ⟩₊ ◾
+--
+--       B[ε-η+δ]xη,z : fst (Bx η) ([ ε -₊ η ]⟨ η<ε ⟩ +₊ δ) z
+--       B[ε-η+δ]xη,z = Bx.isTriangularBall η [ ε -₊ η ]⟨ η<ε ⟩ δ y z B[ε-η]xη,y y∼z
+--
+--       B[ε+δ-η]xη,z : fst (Bx η) [ (ε +₊ δ) -₊ η ]⟨ η<ε+δ ⟩ z
+--       B[ε+δ-η]xη,z = flip (subst (flip (fst (Bx η)) z)) B[ε-η+δ]xη,z $ ℚ₊≡ $
+--         (ε -₊ η) ℚ.+ ⟨ δ ⟩₊               ≡⟨ sym $ ℚ.+Assoc ⟨ ε ⟩₊ (ℚ.- ⟨ η ⟩₊) _ ⟩
+--         ⟨ ε ⟩₊ ℚ.+ (ℚ.- ⟨ η ⟩₊ ℚ.+ ⟨ δ ⟩₊) ≡⟨ cong (⟨ ε ⟩₊ ℚ.+_) (ℚ.+Comm (ℚ.- ⟨ η ⟩₊) _)⟩
+--         ⟨ ε ⟩₊ ℚ.+ (δ -₊ η)               ≡⟨ ℚ.+Assoc ⟨ ε ⟩₊ ⟨ δ ⟩₊ _ ⟩
+--         (ε +₊ δ) -₊ η                     ∎
+--     in
+--       η , η<ε+δ , B[ε+δ-η]xη,z
+-- BallsAt[Rec] .eqA         = isSeparated≈ᴮ
+-- BallsAt[Rec] .ι-ι-B       = {!    !}
+-- BallsAt[Rec] .ι-lim-B     = {!    !}
+-- BallsAt[Rec] .lim-ι-B     = {!   !}
+-- BallsAt[Rec] .lim-lim-B   = {!   !}
+-- BallsAt[Rec] .isPropB     = isProp≈ᴮ
