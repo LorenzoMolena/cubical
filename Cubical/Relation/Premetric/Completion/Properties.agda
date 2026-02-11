@@ -999,14 +999,7 @@ module _ where
           B[ [ ε -₊ (δ +₊ η) ]⟨ δ+η<ε ⟩ ]⟨ x δ , y η ⟩)
   _ = refl
 
-  -- With the other approach (see the commented code at the end of the file),
-  -- we would get only this computation rule, instead of the two above:
-  -- _ : ∀ {ε x y xc yc}
-  --     → B[ ε ]⟨ lim x xc , lim y yc ⟩
-  --     ≡ (∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ (δ <₊ ε) ] B[ [ ε -₊ δ ]⟨ δ<ε ⟩ ]⟨ x δ , lim y yc ⟩)
-  -- _ = refl
 
-{-
 ∼→B : ∀ {x y ε} → x ∼[ ε ] y → B[ ε ]⟨ x , y ⟩
 ∼→B = Recℭ∼.go∼ r where
   r : Recℭ∼ λ x y → B[_]⟨ x , y ⟩
@@ -1020,69 +1013,79 @@ module _ where
   Recℭ∼.isPropB   r x y ε                 = IsBall.isPropBall (snd B⟨ x ,⟩) ε y
 
 B→∼ : ∀ {x y ε} → B[ ε ]⟨ x , y ⟩ → x ∼[ ε ] y
-B→∼ = {!   !}
+B→∼ {x} {y} {ε} = Elimℭ-Prop2.go e x y ε where
+  open Elimℭ-Prop2
+
+  e : Elimℭ-Prop2 λ x y → ∀ ε → B[ ε ]⟨ x , y ⟩ → x ∼[ ε ] y
+  ι-ιA     e x y ε (lift x≈y) = ι-ι x y ε x≈y
+  ι-limA   e x y yc IH ε = PT.rec (isProp∼ (ι x) ε (lim y yc))
+    λ (δ , δ<ε , B[ε-δ]x,yδ) →
+    let
+      Δ : 0 <ℚ ε -₊ δ
+      Δ = <→0<- ⟨ δ ⟩₊ ⟨ ε ⟩₊ δ<ε
+    in
+      ι-lim x y ε δ yc Δ (
+        IH δ (ε -₊ δ , Δ) B[ε-δ]x,yδ
+        :> (ι x ∼[ ε -₊ δ , Δ ] y δ))
+        :> (ι x ∼[ ε ] lim y yc)
+  lim-ιA   e x xc y IH ε = PT.rec (isProp∼ (lim x xc) ε (ι y))
+    λ (δ , δ<ε , B[ε-δ]xδ,y) →
+    let
+      Δ : 0 <ℚ ε -₊ δ
+      Δ = <→0<- ⟨ δ ⟩₊ ⟨ ε ⟩₊ δ<ε
+    in
+      lim-ι x y ε δ xc Δ (
+        IH δ (ε -₊ δ , Δ) B[ε-δ]xδ,y
+        :> (x δ ∼[ ε -₊ δ , Δ ] ι y))
+        :> (lim x xc ∼[ ε ] ι y)
+  lim-limA e x xc y yc IH ε = PT.rec (isProp∼ (lim x xc) ε (lim y yc))
+    λ (δ , η , δ+η<ε , B[ε-[δ+η]]xδ,yη) →
+    let
+      Δ : 0 <ℚ ε -₊ (δ +₊ η)
+      Δ = <→0<- ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ δ+η<ε
+    in
+      lim-lim x y ε δ η xc yc Δ (
+        IH δ η (ε -₊ (δ +₊ η) , Δ) B[ε-[δ+η]]xδ,yη
+        :> (x δ ∼[ ε -₊ (δ +₊ η) , Δ ] y η))
+        :> (lim x xc ∼[ ε ] lim y yc)
+  isPropA  e x y = isPropΠ λ ε → isProp→ (isProp∼ x ε y)
 
 -- Theorem 3.15
 ∼≃B : ∀ {x y ε} → (x ∼[ ε ] y) ≃ B[ ε ]⟨ x , y ⟩
 ∼≃B {x} {y} {ε} =
   propBiimpl→Equiv (isProp∼ x ε y) (IsBall.isPropBall (snd B⟨ x ,⟩) ε y) ∼→B B→∼
 
--- -}
+isTriangular∼ : ∀ x y z ε δ → x ∼[ ε ] y → y ∼[ δ ] z → x ∼[ ε +₊ δ ] z
+isTriangular∼ x y z ε δ x∼y y∼z =
+  B→∼ (isTriangularBall (snd B⟨ x ,⟩) ε δ y z
+  (∼→B (x∼y
+    :> (x ∼[ ε ] y))
+    :> B[ ε ]⟨ x , y ⟩)
+  (y∼z
+    :> y ∼[ δ ] z)
+    :> B[ ε +₊ δ ]⟨ x , z ⟩)
+    :> (x ∼[ ε +₊ δ ] z)
+  where open IsBall
 
--- This is the wrong approach (see the computations in Theorem 3.14)
--- BallsAt[Rec] : Recℭ Balls (flip ∘ _≈ᴮ[_]_)
--- BallsAt[Rec] .ιA          = B⟨ι_,⟩
--- BallsAt[Rec] .limA Bx Bxc .fst = λ ε y →
---   ∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ _ ] fst (Bx δ) [ ε -₊ δ ]⟨ δ<ε ⟩ y
--- BallsAt[Rec] .limA Bx Bxc .snd = isB where
---   open IsBall
---   open Elimℭ-Prop
---   module Bx (η : ℚ₊) = IsBall (snd (Bx η))
---
---   isB : IsBall _
---   isB .isPropBall       = λ _ _ → squash₁
---   isB .isRoundedBall    = λ ε y → PT.rec squash₁
---     λ (δ , δ<ε , B[ε-δ]x,yδ) →
---     flip PT.map (Bx.isRoundedBall δ [ ε -₊ δ ]⟨ δ<ε ⟩ y B[ε-δ]x,yδ)
---       λ (ξ , ξ<ε-δ , B[ξ]x,yδ) →
---       let
---
---         δ<ξ+δ : δ <₊ (ξ +₊ δ)
---         δ<ξ+δ = <₊SumRight δ ξ
---
---         ξ+δ<ε : (ξ +₊ δ) <₊ ε
---         ξ+δ<ε = begin<
---           ⟨ ξ +₊ δ ⟩₊         <⟨ ℚ.<-+o ⟨ ξ ⟩₊ (ε -₊ δ) ⟨ δ ⟩₊ ξ<ε-δ ⟩
---           ε -₊ δ ℚ.+ ⟨ δ ⟩₊ ≡→≤⟨ minusPlus₊ ε δ ⟩
---           ⟨ ε ⟩₊              ◾
---
---         B[ξ+δ-δ]x,y : fst (Bx δ) [ (ξ +₊ δ) -₊ δ ]⟨ δ<ξ+δ ⟩ y
---         B[ξ+δ-δ]x,y = subst (flip (fst (Bx δ)) y) (ℚ₊≡ (sym (plusMinus₊ ξ δ))) B[ξ]x,yδ
---
---       in
---         ξ +₊ δ , ξ+δ<ε , ∣ δ , δ<ξ+δ , B[ξ+δ-δ]x,y ∣₁
---   isB .isTriangularBall = λ ε δ y z → flip λ y∼z → PT.map λ (η , η<ε , B[ε-η]xη,y) →
---     let
---       η<ε+δ : η <₊ (ε +₊ δ)
---       η<ε+δ = begin<
---         ⟨ η ⟩₊      <⟨ η<ε ⟩
---         ⟨ ε ⟩₊      <⟨ <₊SumLeft ε δ ⟩
---         ⟨ ε +₊ δ ⟩₊ ◾
---
---       B[ε-η+δ]xη,z : fst (Bx η) ([ ε -₊ η ]⟨ η<ε ⟩ +₊ δ) z
---       B[ε-η+δ]xη,z = Bx.isTriangularBall η [ ε -₊ η ]⟨ η<ε ⟩ δ y z B[ε-η]xη,y y∼z
---
---       B[ε+δ-η]xη,z : fst (Bx η) [ (ε +₊ δ) -₊ η ]⟨ η<ε+δ ⟩ z
---       B[ε+δ-η]xη,z = flip (subst (flip (fst (Bx η)) z)) B[ε-η+δ]xη,z $ ℚ₊≡ $
---         (ε -₊ η) ℚ.+ ⟨ δ ⟩₊               ≡⟨ sym $ ℚ.+Assoc ⟨ ε ⟩₊ (ℚ.- ⟨ η ⟩₊) _ ⟩
---         ⟨ ε ⟩₊ ℚ.+ (ℚ.- ⟨ η ⟩₊ ℚ.+ ⟨ δ ⟩₊) ≡⟨ cong (⟨ ε ⟩₊ ℚ.+_) (ℚ.+Comm (ℚ.- ⟨ η ⟩₊) _)⟩
---         ⟨ ε ⟩₊ ℚ.+ (δ -₊ η)               ≡⟨ ℚ.+Assoc ⟨ ε ⟩₊ ⟨ δ ⟩₊ _ ⟩
---         (ε +₊ δ) -₊ η                     ∎
---     in
---       η , η<ε+δ , B[ε+δ-η]xη,z
--- BallsAt[Rec] .eqA         = isSeparated≈ᴮ
--- BallsAt[Rec] .ι-ι-B       = {!    !}
--- BallsAt[Rec] .ι-lim-B     = {!    !}
--- BallsAt[Rec] .lim-ι-B     = {!   !}
--- BallsAt[Rec] .lim-lim-B   = {!   !}
--- BallsAt[Rec] .isPropB     = isProp≈ᴮ
+isRounded∼ : ∀ x y ε → x ∼[ ε ] y → ∃[ δ ∈ ℚ₊ ] (δ <₊ ε) × x ∼[ δ ] y
+isRounded∼ x y ε x∼y = PT.map (
+  λ (δ , δ<ε , B[δ]x,y) → (δ , δ<ε , B→∼ B[δ]x,y))
+  (isRoundedBall (snd B⟨ x ,⟩) ε y (∼→B x∼y))
+  where open IsBall
+
+-- Theorem 3.16
+ℭPremetricSpace : PremetricSpace (ℓ-max ℓ ℓ') (ℓ-max ℓ ℓ')
+fst ℭPremetricSpace = ℭM
+snd ℭPremetricSpace .PremetricStr._≈[_]_ = _∼[_]_
+snd ℭPremetricSpace .PremetricStr.isPremetric = isPMℭ
+  where
+    open IsPremetric
+
+    isPMℭ : IsPremetric _
+    isSetM        isPMℭ = isSetℭ
+    isProp≈       isPMℭ = flip ∘ isProp∼
+    isRefl≈       isPMℭ = isRefl∼
+    isSym≈        isPMℭ = isSym∼
+    isSeparated≈  isPMℭ = eqℭ
+    isTriangular≈ isPMℭ = isTriangular∼
+    isRounded≈    isPMℭ = isRounded∼
