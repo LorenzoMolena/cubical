@@ -59,38 +59,46 @@ private
   -- TO DO : replace the proofs below with Marcin's solver for ℚ
   module _ (R : CommRing ℓ-zero) where
     open CommRingStr (snd R) using () renaming (_+_ to _+r_ ; _-_ to _-r_)
-    lemma1 : ∀ x y z w → x +r y +r (z -r (y +r w)) ≡ (x +r z) -r w
-    lemma1 x y z w = solve! R
+    opaque
+      lemma1 : ∀ x y z w → x +r y +r (z -r (y +r w)) ≡ (x +r z) -r w
+      lemma1 x y z w = solve! R
 
-    lemma2 : ∀ x y z w → x +r y +r (z -r (w +r y)) ≡ (x +r z) -r w
-    lemma2 x y z w = solve! R
+      lemma2 : ∀ x y z w → x +r y +r (z -r (w +r y)) ≡ (x +r z) -r w
+      lemma2 x y z w = solve! R
 
-    lemma3 : ∀ x y z w → (x -r y) +r (z -r w) ≡ (x +r z) -r (y +r w)
-    lemma3 x y z w = solve! R
+      lemma3 : ∀ x y z w → (x -r y) +r (z -r w) ≡ (x +r z) -r (y +r w)
+      lemma3 x y z w = solve! R
 
-    lemma4 : ∀ x y z u v → (x -r (y +r z)) +r (z +r u) +r (v -r u) ≡ (x +r v) -r y
-    lemma4 x y z u v = solve! R
+      lemma4 : ∀ x y z u v → (x -r (y +r z)) +r (z +r u) +r (v -r u) ≡ (x +r v) -r y
+      lemma4 x y z u v = solve! R
 
-    lemma5 : ∀ x y z u v w →
-      (x -r (y +r z)) +r (z +r u) +r (v -r (u +r w)) ≡ (x +r v) -r (y +r w)
-    lemma5 x y z u v w = solve! R
+      lemma5 : ∀ x y z u v w →
+        (x -r (y +r z)) +r (z +r u) +r (v -r (u +r w)) ≡ (x +r v) -r (y +r w)
+      lemma5 x y z u v w = solve! R
 
-    lemma6 : ∀ x y z u v w →
-      (x -r (y +r z)) +r (z +r u) +r (v -r (w +r u)) ≡ (x +r v) -r (y +r w)
-    lemma6 x y z u v w = solve! R
+      lemma6 : ∀ x y z u v w →
+        (x -r (y +r z)) +r (z +r u) +r (v -r (w +r u)) ≡ (x +r v) -r (y +r w)
+      lemma6 x y z u v w = solve! R
 
-    lemma7 : ∀ x y z w → ((x -r y) +r (y +r z)) +r (w -r z) ≡ x +r w
-    lemma7 x y z w = solve! R
+      lemma7 : ∀ x y z w → ((x -r y) +r (y +r z)) +r (w -r z) ≡ x +r w
+      lemma7 x y z w = solve! R
 
-    lemma8 : ∀ x y z u v → ((x -r (y +r z)) +r (y +r u)) +r (v -r u) ≡ (x +r v) -r z
-    lemma8 x y z u v = solve! R
+      lemma8 : ∀ x y z u v → ((x -r (y +r z)) +r (y +r u)) +r (v -r u) ≡ (x +r v) -r z
+      lemma8 x y z u v = solve! R
 
-    lemma9 : ∀ x y z u v → ((x -r y) +r (y +r z)) +r (u -r (z +r v)) ≡ (x +r u) -r v
-    lemma9 x y z u v = solve! R
+      lemma9 : ∀ x y z u v → ((x -r y) +r (y +r z)) +r (u -r (z +r v)) ≡ (x +r u) -r v
+      lemma9 x y z u v = solve! R
 
-    lemma10 : ∀ x y z u v w →
-      ((x -r (y +r z)) +r (y +r u)) +r (v -r (u +r w)) ≡ (x +r v) -r (w +r z)
-    lemma10 x y z u v w = solve! R
+      lemma10 : ∀ x y z u v w →
+        ((x -r (y +r z)) +r (y +r u)) +r (v -r (u +r w)) ≡ (x +r v) -r (w +r z)
+      lemma10 x y z u v w = solve! R
+
+substℚ₊ : ∀ {ℓP} {P : ℚ₊ → Type ℓP} {ε ε'} → ⟨ ε ⟩₊ ≡ ⟨ ε' ⟩₊ → P ε → P ε'
+substℚ₊ {P = P} p = subst P (ℚ₊≡ p)
+
+substBall : ∀ {B : ℚ₊ → ℭM → Type (ℓ-max ℓ ℓ')} {ε ε' y}
+          → ⟨ ε ⟩₊ ≡ ⟨ ε' ⟩₊ → B ε y → B ε' y
+substBall {B = B} {y = y} = substℚ₊ {P = flip B y}
 
     lemma11 : ∀ x y → (x +r (x +r x)) +r y ≡ ((x +r x) +r (x +r x)) +r (y -r x)
     lemma11 x y = solve! R
@@ -99,7 +107,7 @@ private
     lemma12 x y z w = solve! R
 
 subst∼ : ∀ x y {ε ε'} → ⟨ ε ⟩₊ ≡ ⟨ ε' ⟩₊ → x ∼[ ε ] y → x ∼[ ε' ] y
-subst∼ x y p = subst (x ∼[_] y) (ℚ₊≡ p)
+subst∼ x y = substℚ₊ {P = x ∼[_] y}
 
 ι-lim+₊ : ∀ x y ε δ yc → ι x ∼[ ε ] y δ → ι x ∼[ ε +₊ δ ] lim y yc
 ι-lim+₊ x y ε δ yc p = ι-lim x y (ε +₊ δ) δ yc
@@ -344,7 +352,7 @@ snd (UpperCut≈ x y) = isUC where
 
 UpperCut∃< : (U : ℚ₊ → UpperCuts) → UpperCuts
 fst (UpperCut∃< U) ε = ∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ (δ <₊ ε) ] fst (U δ) [ ε -₊ δ ]⟨ δ<ε ⟩
-snd (UpperCut∃< U) = isUC∃< where
+snd (UpperCut∃< U) = makeOpaque isUC∃< where
   module UC (η : ℚ₊) = IsUpperCut (snd (U η))
   open IsUpperCut
 
@@ -372,7 +380,7 @@ snd (UpperCut∃< U) = isUC∃< where
 UpperCut∃₂< : (U : ℚ₊ → ℚ₊ → UpperCuts) → UpperCuts
 fst (UpperCut∃₂< U) = λ ε →
   ∃[ δ ∈ ℚ₊ ] Σ[ η ∈ ℚ₊ ] Σ[ δ+η<ε ∈ _ ] fst (U δ η) [ ε -₊ (δ +₊ η) ]⟨ δ+η<ε ⟩
-snd (UpperCut∃₂< U) = isUC∃₂< where
+snd (UpperCut∃₂< U) = makeOpaque isUC∃₂< where
   module UC (δ η : ℚ₊) = IsUpperCut (snd (U δ η))
   open IsUpperCut
 
@@ -562,7 +570,7 @@ isNonExpanding∼→≈ᵁB⟨ι_,⟩ x y z ε = RecℭSym.go∼ (BallsAtι[Rec]
 
 B⟨ι_,⟩ : M → Balls
 fst B⟨ι x ,⟩ = B[_]⟨ι x ,_⟩
-snd B⟨ι x ,⟩ = isNonExpanding∼→≈ᵁ→isBall B⟨ι x ,_⟩ isNonExpanding∼→≈ᵁB⟨ι x ,⟩
+snd B⟨ι x ,⟩ = makeOpaque (isNonExpanding∼→≈ᵁ→isBall B⟨ι x ,_⟩ isNonExpanding∼→≈ᵁB⟨ι x ,⟩)
 
 module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ] Bx δ) where
 
@@ -742,7 +750,7 @@ module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ]
 
   B⟨limᴿ[_,_],⟩ : Balls
   B⟨limᴿ[_,_],⟩ = _ ,
-    isNonExpanding∼→≈ᵁ→isBall B⟨limᴿ[_,_],_⟩ isNonExpanding∼→≈ᵁB⟨limᴿ[_,_],⟩
+    makeOpaque (isNonExpanding∼→≈ᵁ→isBall B⟨limᴿ[_,_],_⟩ isNonExpanding∼→≈ᵁB⟨limᴿ[_,_],⟩)
 
 B[_]⟨limᴿ[_,_],_⟩ : ℚ₊ → ∀ Bx (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ] Bx δ) → ℭM → Type _
 B[_]⟨limᴿ[_,_],_⟩ ε Bx Bxc = fst (B⟨limᴿ[ Bx , Bxc ],⟩) ε
@@ -809,11 +817,13 @@ module _
           ⟨ ε ⟩₊      <⟨ <₊SumRight ε η ⟩
           ⟨ η +₊ ε ⟩₊ ◾
 
+        B[η+[ε-δ]]yδ,ιz : fst (By δ) (η +₊ (ε -₊ δ , Δ)) (ι z)
+        B[η+[ε-δ]]yδ,ιz = fst (Bιx≈ᴮ[ε-δ]Byδ η (ι z)) (lift x≈z)
+
         B[η+ε-δ]yδ,ιz : fst (By δ) [ (η +₊ ε) -₊ δ ]⟨ δ<η+ε ⟩ (ι z)
-        B[η+ε-δ]yδ,ιz = subst (flip (fst (By δ)) (ι z))
-          (ℚ₊≡ $ ℚ.+Assoc ⟨ η ⟩₊ ⟨ ε ⟩₊ _)
-          (fst (Bιx≈ᴮ[ε-δ]Byδ η (ι z)) (lift x≈z)
-            :> fst (By δ) (η +₊ (ε -₊ δ , Δ)) (ι z))
+        B[η+ε-δ]yδ,ιz = substBall {B = fst (By δ)} {y = ι z}
+          (ℚ.+Assoc ⟨ η ⟩₊ ⟨ ε ⟩₊ _)
+          B[η+[ε-δ]]yδ,ιz
       in
         ∣ δ , δ<η+ε , B[η+ε-δ]yδ,ιz ∣₁
     limA    e z zc Bx,z→Blimy,z η = PT.map λ (θ , θ<η , B[η-θ]x,zθ) →
@@ -827,15 +837,19 @@ module _
         B[η-θ+ε-δ]yδ,zθ : fst (By δ) ([ η -₊ θ ]⟨ θ<η ⟩ +₊ (ε -₊ δ , Δ)) (z θ)
         B[η-θ+ε-δ]yδ,zθ = fst (Bιx≈ᴮ[ε-δ]Byδ [ η -₊ θ ]⟨ θ<η ⟩ (z θ)) B[η-θ]x,zθ
 
-        B[η+ε-[δ+θ]]yδ,zθ : fst (By δ) [ (η +₊ ε) -₊ (δ +₊ θ) ]⟨ δ+θ<η+ε ⟩ (z θ)
-        B[η+ε-[δ+θ]]yδ,zθ = flip (subst (flip (fst (By δ)) (z θ))) B[η-θ+ε-δ]yδ,zθ $
-          ℚ₊≡ $
+        η+ε-[δ+θ]-path : (η -₊ θ) ℚ.+ (ε -₊ δ) ≡ (η +₊ ε) -₊ (δ +₊ θ)
+        η+ε-[δ+θ]-path =
           (η -₊ θ) ℚ.+ (ε -₊ δ)                    ≡⟨ +ShufflePairs ⟨ η ⟩₊ _ ⟨ ε ⟩₊ _ ⟩
           ⟨ η +₊ ε ⟩₊ ℚ.+ ((ℚ.- ⟨ θ ⟩₊) ℚ.- ⟨ δ ⟩₊) ≡⟨ cong (⟨ η +₊ ε ⟩₊ ℚ.+_)
                                                            (-Dist ⟨ θ ⟩₊ _) ⟩
           ⟨ η +₊ ε ⟩₊ ℚ.- ⟨ θ +₊ δ ⟩₊               ≡⟨ cong (ℚ._-_ ⟨ η +₊ ε ⟩₊)
                                                            (ℚ.+Comm ⟨ θ ⟩₊ ⟨ δ ⟩₊) ⟩
           (η +₊ ε) -₊ (δ +₊ θ)                     ∎
+
+        B[η+ε-[δ+θ]]yδ,zθ : fst (By δ) [ (η +₊ ε) -₊ (δ +₊ θ) ]⟨ δ+θ<η+ε ⟩ (z θ)
+        B[η+ε-[δ+θ]]yδ,zθ = substBall {B = fst (By δ)} {y = z θ}
+          η+ε-[δ+θ]-path
+          B[η-θ+ε-δ]yδ,zθ
 
       in
         δ , θ , δ+θ<η+ε , B[η+ε-[δ+θ]]yδ,zθ
@@ -848,15 +862,24 @@ module _
     e : Elimℭ-Prop λ z → ∀ η → B[ η ]⟨limᴿ[ By , Byc ], z ⟩ → B[ η +₊ ε ]⟨ι x , z ⟩
     ιA      e z η = PT.rec (isPropBall (snd B⟨ι x ,⟩) (η +₊ ε) (ι z))
       λ (θ , θ<η , B[η-θ]yθ,z) →
-      subst (B[_]⟨ι x , ι z ⟩)
-      (ℚ₊≡ (lemma7 ℚCR ⟨ η ⟩₊ ⟨ θ ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊))
-      (snd (Bιx≈ᴮ[ε-δ]Byδ ([ η -₊ θ ]⟨ θ<η ⟩ +₊ (θ +₊ δ)) (ι z))
-      (fst (Byc θ δ [ η -₊ θ ]⟨ θ<η ⟩ (ι z)) (
-      B[η-θ]yθ,z
-        :> fst (By θ) [ η -₊ θ ]⟨ θ<η ⟩ (ι z))
-        :> fst (By δ) ([ η -₊ θ ]⟨ θ<η ⟩ +₊ (θ +₊ δ)) (ι z))
-        :> B[ [ η -₊ θ ]⟨ θ<η ⟩ +₊ (θ +₊ δ) +₊ (ε -₊ δ , Δ) ]⟨ι x , ι z ⟩)
-        :> B[ η +₊ ε ]⟨ι x , ι z ⟩
+      let
+        η-θ : ℚ₊
+        η-θ = [ η -₊ θ ]⟨ θ<η ⟩
+
+        B[η-θ]yθ,z' : fst (By θ) η-θ (ι z)
+        B[η-θ]yθ,z' = B[η-θ]yθ,z
+
+        B[η-θ+θ+δ]yδ,z : fst (By δ) (η-θ +₊ (θ +₊ δ)) (ι z)
+        B[η-θ+θ+δ]yδ,z = fst (Byc θ δ η-θ (ι z)) B[η-θ]yθ,z'
+
+        B[η-θ+θ+δ+ε-δ]x,z : B[ η-θ +₊ (θ +₊ δ) +₊ (ε -₊ δ , Δ) ]⟨ι x , ι z ⟩
+        B[η-θ+θ+δ+ε-δ]x,z =
+          snd (Bιx≈ᴮ[ε-δ]Byδ (η-θ +₊ (θ +₊ δ)) (ι z)) B[η-θ+θ+δ]yδ,z
+      in
+      substℚ₊ {P = λ ρ → B[ ρ ]⟨ι x , ι z ⟩}
+        (lemma7 ℚCR ⟨ η ⟩₊ ⟨ θ ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊)
+        B[η-θ+θ+δ+ε-δ]x,z
+      :> B[ η +₊ ε ]⟨ι x , ι z ⟩
     limA    e z zc Blimy,z→Bx,z η = PT.map λ (ζ , ξ , ζ+ξ<η , B[η-[ζ+ξ]]yζ,zξ) →
       let
         ε-δ = (ε -₊ δ , Δ) ; η-[ζ+ξ] = [ η -₊ (ζ +₊ ξ) ]⟨ ζ+ξ<η ⟩
@@ -868,14 +891,20 @@ module _
           ⟨ (ζ +₊ ξ) +₊ δ ⟩₊ <⟨ +Mono< ⟨ ζ +₊ ξ ⟩₊ _ ⟨ δ ⟩₊ _ ζ+ξ<η (0<-→< ⟨ δ ⟩₊ _ Δ) ⟩
           ⟨ η +₊ ε ⟩₊        ◾
 
+        B[η-[ζ+ξ]+ζ+δ]yδ,zξ : fst (By δ) (η-[ζ+ξ] +₊ (ζ +₊ δ)) (z ξ)
+        B[η-[ζ+ξ]+ζ+δ]yδ,zξ =
+          fst (Byc ζ δ η-[ζ+ξ] (z ξ))
+            (B[η-[ζ+ξ]]yζ,zξ :> fst (By ζ) η-[ζ+ξ] (z ξ))
+
+        B[η-[ζ+ξ]+ζ+δ+ε-δ]x,zξ : B[ η-[ζ+ξ] +₊ (ζ +₊ δ) +₊ ε-δ ]⟨ι x , z ξ ⟩
+        B[η-[ζ+ξ]+ζ+δ+ε-δ]x,zξ =
+          snd (Bιx≈ᴮ[ε-δ]Byδ (η-[ζ+ξ] +₊ (ζ +₊ δ)) (z ξ))
+            B[η-[ζ+ξ]+ζ+δ]yδ,zξ
+
         B[η+ε-ξ]x,zξ : B[ [ (η +₊ ε) -₊ ξ ]⟨ ξ<η+ε ⟩ ]⟨ι x , z ξ ⟩
-        B[η+ε-ξ]x,zξ = subst B[_]⟨ι x , z ξ ⟩
-          (ℚ₊≡ (lemma8 ℚCR ⟨ η ⟩₊ ⟨ ζ ⟩₊ ⟨ ξ ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊))
-          (snd (Bιx≈ᴮ[ε-δ]Byδ (η-[ζ+ξ] +₊ (ζ +₊ δ)) (z ξ))
-            (fst (Byc ζ δ η-[ζ+ξ] (z ξ)) (B[η-[ζ+ξ]]yζ,zξ
-            :> fst (By ζ) η-[ζ+ξ] (z ξ))
-            :> fst (By δ) (η-[ζ+ξ] +₊ (ζ +₊ δ)) (z ξ))
-            :> B[ η-[ζ+ξ] +₊ (ζ +₊ δ) +₊ ε-δ ]⟨ι x , z ξ ⟩)
+        B[η+ε-ξ]x,zξ = substℚ₊ {P = λ ρ → B[ ρ ]⟨ι x , z ξ ⟩}
+          (lemma8 ℚCR ⟨ η ⟩₊ ⟨ ζ ⟩₊ ⟨ ξ ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊)
+          B[η-[ζ+ξ]+ζ+δ+ε-δ]x,zξ
 
       in
         ξ , ξ<η+ε , B[η+ε-ξ]x,zξ
@@ -911,14 +940,19 @@ module _
           ⟨ ε ⟩₊      <⟨ <₊SumRight ε θ ⟩
           ⟨ θ +₊ ε ⟩₊ ◾
 
+        B[θ-ζ+ζ+δ]xδ,z : fst (Bx δ) (θ-ζ +₊ (ζ +₊ δ)) (ι z)
+        B[θ-ζ+ζ+δ]xδ,z = fst (Bxc ζ δ θ-ζ (ι z))
+          (B[θ-ζ]xζ,z :> fst (Bx ζ) θ-ζ (ι z))
+
+        B[θ-ζ+ζ+δ+ε-[δ+η]]yη,z : fst (By η) (θ-ζ +₊ (ζ +₊ δ) +₊ ε-[δ+η]) (ι z)
+        B[θ-ζ+ζ+δ+ε-[δ+η]]yη,z =
+          fst (Bxδ≈[ε-[δ+η]]Byη (θ-ζ +₊ (ζ +₊ δ)) (ι z))
+            B[θ-ζ+ζ+δ]xδ,z
+
         B[θ+ε-η]yη,z : fst (By η) [ (θ +₊ ε) -₊ η ]⟨ η<θ+ε ⟩ (ι z)
-        B[θ+ε-η]yη,z = subst (flip (fst (By η)) (ι z))
-          (ℚ₊≡ (lemma9 ℚCR ⟨ θ ⟩₊ ⟨ ζ ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊ ⟨ η ⟩₊))
-          (fst (Bxδ≈[ε-[δ+η]]Byη (θ-ζ +₊ (ζ +₊ δ)) (ι z))
-          (fst (Bxc ζ δ θ-ζ (ι z)) (B[θ-ζ]xζ,z
-            :> fst (Bx ζ) θ-ζ (ι z))
-            :> fst (Bx δ) (θ-ζ +₊ (ζ +₊ δ)) (ι z))
-            :> fst (By η) (θ-ζ +₊ (ζ +₊ δ) +₊ ε-[δ+η]) (ι z))
+        B[θ+ε-η]yη,z = substBall {B = fst (By η)} {y = ι z}
+          (lemma9 ℚCR ⟨ θ ⟩₊ ⟨ ζ ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊ ⟨ η ⟩₊)
+          B[θ-ζ+ζ+δ+ε-[δ+η]]yη,z
 
       in
         η , η<θ+ε , B[θ+ε-η]yη,z
@@ -935,14 +969,19 @@ module _
           ⟨ ε +₊ θ ⟩₊               ≡→≤⟨ ℚ.+Comm ⟨ ε ⟩₊ ⟨ θ ⟩₊ ⟩
           ⟨ θ +₊ ε ⟩₊                 ◾
 
+        B[θ-[ζ+ξ]+ζ+δ]xδ,zξ : fst (Bx δ) (θ-[ζ+ξ] +₊ (ζ +₊ δ)) (z ξ)
+        B[θ-[ζ+ξ]+ζ+δ]xδ,zξ = fst (Bxc ζ δ θ-[ζ+ξ] (z ξ))
+          (B[θ-[ζ+ξ]]xζ,zξ :> fst (Bx ζ) θ-[ζ+ξ] (z ξ))
+
+        B[θ-[ζ+ξ]+ζ+δ+ε-[δ+η]]yη,zξ : fst (By η) (θ-[ζ+ξ] +₊ (ζ +₊ δ) +₊ ε-[δ+η]) (z ξ)
+        B[θ-[ζ+ξ]+ζ+δ+ε-[δ+η]]yη,zξ =
+          fst (Bxδ≈[ε-[δ+η]]Byη (θ-[ζ+ξ] +₊ (ζ +₊ δ)) (z ξ))
+            B[θ-[ζ+ξ]+ζ+δ]xδ,zξ
+
         B[θ+ε-[η+ξ]]yη,zξ : fst (By η) [ (θ +₊ ε) -₊ (η +₊ ξ) ]⟨ η+ξ<θ+ε ⟩ (z ξ)
-        B[θ+ε-[η+ξ]]yη,zξ = subst (flip (fst (By η)) (z ξ))
-          (ℚ₊≡ (lemma10 ℚCR ⟨ θ ⟩₊ ⟨ ζ ⟩₊ ⟨ ξ ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊ ⟨ η ⟩₊))
-          (fst (Bxδ≈[ε-[δ+η]]Byη (θ-[ζ+ξ] +₊ (ζ +₊ δ)) (z ξ))
-            (fst (Bxc ζ δ θ-[ζ+ξ] (z ξ)) (B[θ-[ζ+ξ]]xζ,zξ
-            :> fst (Bx ζ) θ-[ζ+ξ] (z ξ))
-            :> fst (Bx δ) (θ-[ζ+ξ] +₊ (ζ +₊ δ)) (z ξ))
-            :> fst (By η) (θ-[ζ+ξ] +₊ (ζ +₊ δ) +₊ ε-[δ+η]) (z ξ))
+        B[θ+ε-[η+ξ]]yη,zξ = substBall {B = fst (By η)} {y = z ξ}
+          (lemma10 ℚCR ⟨ θ ⟩₊ ⟨ ζ ⟩₊ ⟨ ξ ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊ ⟨ η ⟩₊)
+          B[θ-[ζ+ξ]+ζ+δ+ε-[δ+η]]yη,zξ
 
       in
         η , ξ , η+ξ<θ+ε , B[θ+ε-[η+ξ]]yη,zξ
@@ -972,15 +1011,19 @@ BallsAt[Rec] : RecℭSym Balls (flip ∘ _≈ᴮ[_]_)
 ιA        BallsAt[Rec] = B⟨ι_,⟩
 limA      BallsAt[Rec] = B⟨limᴿ[_,_],⟩
 eqA       BallsAt[Rec] = isSeparated≈ᴮ
-ι-ι-B     BallsAt[Rec] = B⟨ι,⟩≈ᴮB⟨ι,⟩
-ι-lim-B   BallsAt[Rec] = B⟨ι,⟩≈ᴮB⟨lim,⟩
-lim-lim-B BallsAt[Rec] = B⟨lim,⟩≈B⟨lim,⟩
+ι-ι-B     BallsAt[Rec] = makeOpaque B⟨ι,⟩≈ᴮB⟨ι,⟩
+ι-lim-B   BallsAt[Rec] = makeOpaque B⟨ι,⟩≈ᴮB⟨lim,⟩
+lim-lim-B BallsAt[Rec] = makeOpaque B⟨lim,⟩≈B⟨lim,⟩
 isSymB    BallsAt[Rec] = isSym≈ᴮ
 isPropB   BallsAt[Rec] = isProp≈ᴮ
 
 -- Defintion 3.13 (second part)
+private
+  Braw : ℭM → Balls
+  Braw = RecℭSym.go BallsAt[Rec]
+
 B⟨_,⟩ : ℭM → Balls
-B⟨_,⟩ = RecℭSym.go BallsAt[Rec]
+B⟨_,⟩ x = fst (Braw x) , makeOpaque (snd (Braw x))
 
 B[_]⟨_,_⟩ : ℚ₊ → ℭM → ℭM → Type (ℓ-max ℓ ℓ')
 B[_]⟨_,_⟩ = flip (fst ∘ B⟨_,⟩)
