@@ -11,6 +11,9 @@ open import Cubical.Data.Sigma
 
 open import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Nat.Order as ℕ renaming (_≤_ to _≤ℕ_ ; _<_ to _<ℕ_)
+open import Cubical.Data.NatPlusOne as ℕ₊₁ using ()
+open import Cubical.Data.Int.Fast as ℤ using ()
+open import Cubical.Data.Rationals.Fast as ℚ using ([_/_] ; eq/)
 
 open import Cubical.Relation.Binary.Order.Poset.Instances.Nat
 open import Cubical.Relation.Binary.Order.Quoset.Instances.Nat
@@ -24,6 +27,11 @@ open <-≤-Reasoning ℕ (str ℕ≤Poset) (str ℕ<Quoset)
 open <-syntax
 open ≤-syntax
 open ≡-syntax
+
+open import Cubical.Algebra.OrderedCommRing.Properties
+open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
+open OrderedCommRingTheory (ℚOrderedCommRing)
+open Charactersitic≠2 ℚOrderedCommRing [ 1 / 2 ] (eq/ _ _ refl)
 
 open import Cubical.Relation.Premetric.Base
 
@@ -68,3 +76,35 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
 
   isCauchySeq<→isCauchy : ∀ x → isCauchySeq< x → Σ[ y ∈ (ℚ₊ → M) ] isCauchy y
   isCauchySeq<→isCauchy x = isCauchySeq→isCauchy x ∘ isCauchySeq<→isCauchySeq x
+
+  isLimit : (ℚ₊ → M) → M → Type ℓ'
+  isLimit x l = ∀ ε θ → x ε ≈[ ε +₊ θ ] l
+
+  isPropIsLimit : ∀ x l → isProp (isLimit x l)
+  isPropIsLimit x l = isPropΠ2 λ ε δ → isProp≈ (x ε) l (ε +₊ δ)
+
+  limit : (ℚ₊ → M) → Type (ℓ-max ℓ ℓ')
+  limit x = Σ[ l ∈ M ] isLimit x l
+
+  isPropLimit : ∀ x → isProp (limit x)
+  isPropLimit x (l , l-lim) (l' , l'-lim) = Σ≡Prop (isPropIsLimit x) $
+    isSeparated≈ l l' λ ε →
+      subst≈ l l' (
+        ⟨ ε /4₊ +₊ ε /4₊ +₊ (ε /4₊ +₊ ε /4₊) ⟩₊ ≡⟨ cong (∘diag ℚ._+_) (/4+/4≡/2 ⟨ ε ⟩₊) ⟩
+        ⟨ ε /2₊ +₊ ε /2₊ ⟩₊                     ≡⟨ /2+/2≡id ⟨ ε ⟩₊ ⟩
+        ⟨ ε ⟩₊                                  ∎)
+      (isTriangular≈ l (x (ε /4₊)) l' (ε /4₊ +₊ ε /4₊) (ε /4₊ +₊ ε /4₊)
+        (isSym≈ (x (ε /4₊)) l (ε /4₊ +₊ ε /4₊) (
+        l-lim (ε /4₊) (ε /4₊)
+          :> (x (ε /4₊) ≈[ (ε /4₊) +₊ (ε /4₊) ] l))
+        :> (l ≈[ ε /4₊ +₊ ε /4₊ ] x (ε /4₊)))
+        (l'-lim (ε /4₊) (ε /4₊)
+        :> (x (ε /4₊) ≈[ ε /4₊ +₊ ε /4₊ ] l'))
+      :> (l ≈[ (ε /4₊ +₊ ε /4₊) +₊ (ε /4₊ +₊ ε /4₊) ] l'))
+      :> (l ≈[ ε ] l')
+
+  isComplete : Type (ℓ-max ℓ ℓ')
+  isComplete = ∀ x → isCauchy x → limit x
+
+  isPropIsComplete : isProp isComplete
+  isPropIsComplete = isPropΠ λ _ → isProp→ (isPropLimit _)

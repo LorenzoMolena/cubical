@@ -33,7 +33,10 @@ open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.OrderedCommRing
 open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
 
-open module 1/2∈ℚ = Charactersitic≠2 ℚOrderedCommRing [ 1 / 2 ] (eq/ _ _ refl)
+open Charactersitic≠2 ℚOrderedCommRing [ 1 / 2 ] (eq/ _ _ refl)
+
+open import Cubical.Relation.Premetric.Properties
+open PremetricTheory using (isLimit ; limit ; isComplete)
 
 open import Cubical.Reflection.RecordEquiv
 
@@ -53,6 +56,7 @@ private
   open import Cubical.Relation.Premetric.Completion.Base M' renaming (ℭ to ℭM)
   open import Cubical.Relation.Premetric.Completion.Elim M'
 
+  -- TO DO : replace the proofs below with Marcin's solver for ℚ
   module _ (R : CommRing ℓ-zero) where
     open CommRingStr (snd R) using () renaming (_+_ to _+r_ ; _-_ to _-r_)
     lemma1 : ∀ x y z w → x +r y +r (z -r (y +r w)) ≡ (x +r z) -r w
@@ -87,6 +91,12 @@ private
     lemma10 : ∀ x y z u v w →
       ((x -r (y +r z)) +r (y +r u)) +r (v -r (u +r w)) ≡ (x +r v) -r (w +r z)
     lemma10 x y z u v w = solve! R
+
+    lemma11 : ∀ x y → (x +r (x +r x)) +r y ≡ ((x +r x) +r (x +r x)) +r (y -r x)
+    lemma11 x y = solve! R
+
+    lemma12 : ∀ x y z w → (x -r y) +r (y -r z) ≡ (w +r x) -r (z +r w)
+    lemma12 x y z w = solve! R
 
 subst∼ : ∀ x y {ε ε'} → ⟨ ε ⟩₊ ≡ ⟨ ε' ⟩₊ → x ∼[ ε ] y → x ∼[ ε' ] y
 subst∼ x y p = subst (x ∼[_] y) (ℚ₊≡ p)
@@ -1076,8 +1086,8 @@ isRounded∼ x y ε x∼y = PT.map (
 -- Theorem 3.16
 ℭPremetricSpace : PremetricSpace (ℓ-max ℓ ℓ') (ℓ-max ℓ ℓ')
 fst ℭPremetricSpace = ℭM
-snd ℭPremetricSpace .PremetricStr._≈[_]_ = _∼[_]_
-snd ℭPremetricSpace .PremetricStr.isPremetric = isPMℭ
+PremetricStr._≈[_]_      (snd ℭPremetricSpace) = _∼[_]_
+PremetricStr.isPremetric (snd ℭPremetricSpace) = isPMℭ
   where
     open IsPremetric
 
@@ -1089,3 +1099,56 @@ snd ℭPremetricSpace .PremetricStr.isPremetric = isPMℭ
     isSeparated≈  isPMℭ = eqℭ
     isTriangular≈ isPMℭ = isTriangular∼
     isRounded≈    isPMℭ = isRounded∼
+
+-- Theorem 3.17
+isInjectiveι : ∀ x y → ι x ≡ ι y → x ≡ y
+isInjectiveι x y ιx≡ιy = isSeparated≈ x y λ ε →
+  case ∼→B (subst (ι x ∼[ ε ]_) ιx≡ιy (isRefl∼ (ι x) ε)) of
+  λ (lift x≈y) → x≈y
+
+isLimitLim : ∀ x xc → isLimit ℭPremetricSpace x (lim x xc)
+isLimitLim = λ x xc ε θ → Elimℭ-Prop.go e (x ε) x xc ε θ (isRefl∼ (x ε) θ) where
+  open Elimℭ-Prop
+
+  e : Elimℭ-Prop λ u → ∀ x xc ε θ → u ∼[ θ ] (x ε) → u ∼[ ε +₊ θ ] lim x xc
+  ιA      e u x xc ε θ =
+    subst∼ (ι u) (lim x xc) (ℚ.+Comm ⟨ θ ⟩₊ ⟨ ε ⟩₊) ∘ ι-lim+₊ u x θ ε xc
+  limA    e u uc IH x xc ε θ limu∼[θ]xε = PT.rec (isProp∼ (lim u uc) (ε +₊ θ) (lim x xc))
+    (λ (δ , δ<θ , limu∼[δ]xε) →
+    let
+      η = [ θ -₊ δ ]⟨ δ<θ ⟩ ; 3η/4 = η /4₊ +₊ (η /4₊ +₊ η /4₊)
+      4η/4 = (η /4₊ +₊ η /4₊) +₊ (η /4₊ +₊ η /4₊)
+
+      Δ : 0 <ℚ (ε +₊ θ) -₊ (η /4₊ +₊ ε)
+      Δ = <→0<- ⟨ η /4₊ +₊ ε ⟩₊ ⟨ ε +₊ θ ⟩₊ (begin<
+        ⟨ η /4₊ +₊ ε ⟩₊   <⟨ ℚ.<-+o ⟨ η /4₊ ⟩₊ ⟨ η ⟩₊ ⟨ ε ⟩₊ (/4₊<id η) ⟩
+        ⟨ η +₊ ε ⟩₊       <⟨ ℚ.<-+o ⟨ η ⟩₊ ⟨ θ ⟩₊ ⟨ ε ⟩₊ (Δ<₊ θ δ) ⟩
+        ⟨ θ +₊ ε ⟩₊     ≡→≤⟨ ℚ.+Comm ⟨ θ ⟩₊ ⟨ ε ⟩₊ ⟩
+        ⟨ ε +₊ θ ⟩₊       ◾)
+
+      uη/4∼[3η/4]limu : u (η /4₊) ∼[ 3η/4 ] lim u uc
+      uη/4∼[3η/4]limu = IH (η /4₊) u uc (η /4₊) (η /4₊ +₊ η /4₊) (uc (η /4₊) (η /4₊))
+
+      uη/4∼[3η/4+δ]xε : u (η /4₊) ∼[ 3η/4 +₊ δ ] x ε
+      uη/4∼[3η/4+δ]xε = isTriangular∼
+        (u (η /4₊)) (lim u uc) (x ε) 3η/4 δ uη/4∼[3η/4]limu limu∼[δ]xε
+
+      p : ⟨ 3η/4 +₊ δ ⟩₊ ≡ (ε +₊ θ) -₊ (η /4₊ +₊ ε)
+      p =
+        ⟨ 3η/4 +₊ δ ⟩₊               ≡⟨ lemma11 ℚCR ⟨ η /4₊ ⟩₊ ⟨ δ ⟩₊ ⟩
+        ⟨ 4η/4 ⟩₊ ℚ.+ (δ -₊ (η /4₊)) ≡⟨ cong (ℚ._+ δ -₊ (η /4₊)) (/4+/4+/4+/4≡id ⟨ η ⟩₊)⟩
+        ⟨ η ⟩₊ ℚ.+ (δ -₊ (η /4₊))    ≡⟨⟩
+        (θ -₊ δ) ℚ.+ (δ -₊ (η /4₊)) ≡⟨ lemma12 ℚCR ⟨ θ ⟩₊ ⟨ δ ⟩₊ ⟨ η /4₊ ⟩₊ ⟨ ε ⟩₊ ⟩
+        (ε +₊ θ) -₊ (η /4₊ +₊ ε)    ∎
+
+    in
+      lim-lim u x (ε +₊ θ) (η /4₊) ε uc xc Δ (
+        subst∼ (u (η /4₊)) (x ε) p uη/4∼[3η/4+δ]xε
+          :> (u (η /4₊) ∼[ (ε +₊ θ) -₊ (η /4₊ +₊ ε) , Δ ] x ε))
+        :> (lim u uc ∼[ ε +₊ θ ] lim x xc))
+    (isRounded∼ (lim u uc) (x ε) θ limu∼[θ]xε)
+  isPropA e u = isPropΠ4 λ x xc ε θ → isProp→ (isProp∼ u (ε +₊ θ) (lim x xc))
+
+-- Theorem 3.18
+isCompleteℭ : isComplete ℭPremetricSpace
+isCompleteℭ x xc = (lim x xc) , (isLimitLim x xc)
