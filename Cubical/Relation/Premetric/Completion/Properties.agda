@@ -93,18 +93,18 @@ private
         ((x -r (y +r z)) +r (y +r u)) +r (v -r (u +r w)) ≡ (x +r v) -r (w +r z)
       lemma10 x y z u v w = solve! R
 
+      lemma11 : ∀ x y → (x +r (x +r x)) +r y ≡ ((x +r x) +r (x +r x)) +r (y -r x)
+      lemma11 x y = solve! R
+
+      lemma12 : ∀ x y z w → (x -r y) +r (y -r z) ≡ (w +r x) -r (z +r w)
+      lemma12 x y z w = solve! R
+
 substℚ₊ : ∀ {ℓP} {P : ℚ₊ → Type ℓP} {ε ε'} → ⟨ ε ⟩₊ ≡ ⟨ ε' ⟩₊ → P ε → P ε'
 substℚ₊ {P = P} p = subst P (ℚ₊≡ p)
 
 substBall : ∀ {B : ℚ₊ → ℭM → Type (ℓ-max ℓ ℓ')} {ε ε' y}
           → ⟨ ε ⟩₊ ≡ ⟨ ε' ⟩₊ → B ε y → B ε' y
 substBall {B = B} {y = y} = substℚ₊ {P = flip B y}
-
-    lemma11 : ∀ x y → (x +r (x +r x)) +r y ≡ ((x +r x) +r (x +r x)) +r (y -r x)
-    lemma11 x y = solve! R
-
-    lemma12 : ∀ x y z w → (x -r y) +r (y -r z) ≡ (w +r x) -r (z +r w)
-    lemma12 x y z w = solve! R
 
 subst∼ : ∀ x y {ε ε'} → ⟨ ε ⟩₊ ≡ ⟨ ε' ⟩₊ → x ∼[ ε ] y → x ∼[ ε' ] y
 subst∼ x y = substℚ₊ {P = x ∼[_] y}
@@ -333,7 +333,7 @@ isSeparated≈ᵁ (U , isUpperCutU) (U' , isUpperCutU') U≈U' = Σ≡Prop isPro
     module U' = IsUpperCut isUpperCutU'
 
 isBall→isUpperCut : (B : Balls) → ∀ y → IsUpperCut (flip (fst B) y)
-isBall→isUpperCut B y = isUC where
+isBall→isUpperCut B y = makeOpaque isUC where
   open IsBall
   open IsUpperCut
 
@@ -343,7 +343,7 @@ isBall→isUpperCut B y = isUC where
 
 UpperCut≈ : (x y : M) → UpperCuts
 fst (UpperCut≈ x y) = Lift {ℓ'} {ℓ} ∘ (x ≈[_] y)
-snd (UpperCut≈ x y) = isUC where
+snd (UpperCut≈ x y) = makeOpaque isUC where
   open IsUpperCut
   isUC : IsUpperCut _
   isPropUpperCut    isUC ε (lift p) (lift q) = cong lift (isProp≈ x y ε p q)
@@ -1054,7 +1054,7 @@ module _ where
 
 
 ∼→B : ∀ {x y ε} → x ∼[ ε ] y → B[ ε ]⟨ x , y ⟩
-∼→B = Recℭ∼.go∼ r where
+∼→B = makeOpaque (Recℭ∼.go∼ r) where
   r : Recℭ∼ λ x y → B[_]⟨ x , y ⟩
   Recℭ∼.ι-ι-B     r x y ε = lift
   Recℭ∼.ι-lim-B   r x y ε δ yc Δ _ q      =
@@ -1066,7 +1066,7 @@ module _ where
   Recℭ∼.isPropB   r x y ε                 = IsBall.isPropBall (snd B⟨ x ,⟩) ε y
 
 B→∼ : ∀ {x y ε} → B[ ε ]⟨ x , y ⟩ → x ∼[ ε ] y
-B→∼ {x} {y} {ε} = Elimℭ-Prop2.go e x y ε where
+B→∼ {x} {y} {ε} = makeOpaque (Elimℭ-Prop2.go e x y ε) where
   open Elimℭ-Prop2
 
   e : Elimℭ-Prop2 λ x y → ∀ ε → B[ ε ]⟨ x , y ⟩ → x ∼[ ε ] y
@@ -1110,20 +1110,20 @@ B→∼ {x} {y} {ε} = Elimℭ-Prop2.go e x y ε where
 
 isTriangular∼ : ∀ x y z ε δ → x ∼[ ε ] y → y ∼[ δ ] z → x ∼[ ε +₊ δ ] z
 isTriangular∼ x y z ε δ x∼y y∼z =
-  B→∼ (isTriangularBall (snd B⟨ x ,⟩) ε δ y z
+  makeOpaque (B→∼ (isTriangularBall (snd B⟨ x ,⟩) ε δ y z
   (∼→B (x∼y
     :> (x ∼[ ε ] y))
     :> B[ ε ]⟨ x , y ⟩)
   (y∼z
     :> y ∼[ δ ] z)
     :> B[ ε +₊ δ ]⟨ x , z ⟩)
-    :> (x ∼[ ε +₊ δ ] z)
+    :> (x ∼[ ε +₊ δ ] z))
   where open IsBall
 
 isRounded∼ : ∀ x y ε → x ∼[ ε ] y → ∃[ δ ∈ ℚ₊ ] (δ <₊ ε) × x ∼[ δ ] y
-isRounded∼ x y ε x∼y = PT.map (
+isRounded∼ x y ε x∼y = makeOpaque (PT.map (
   λ (δ , δ<ε , B[δ]x,y) → (δ , δ<ε , B→∼ B[δ]x,y))
-  (isRoundedBall (snd B⟨ x ,⟩) ε y (∼→B x∼y))
+  (isRoundedBall (snd B⟨ x ,⟩) ε y (∼→B x∼y)))
   where open IsBall
 
 -- Theorem 3.16
