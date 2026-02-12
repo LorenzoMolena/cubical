@@ -33,7 +33,7 @@ open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.OrderedCommRing
 open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
 
-open Charactersitic≠2 ℚOrderedCommRing [ 1 / 2 ] (eq/ _ _ refl)
+open Characteristic≠2 ℚOrderedCommRing [ 1 / 2 ] (eq/ _ _ refl)
 
 open import Cubical.Relation.Premetric.Properties
 open PremetricTheory using (isLimit ; limit ; isComplete)
@@ -434,28 +434,35 @@ nonExpanding∼→≈ᴮ B = ∀ x y ε → x ∼[ ε ] y → B x ≈ᴮ[ ε ] B
 
 -- Lemma 3.12
 isNonExpanding∼→≈ᵁ→isBall : ∀ B → nonExpanding∼→≈ᵁ B → IsBall (λ ε y → fst (B y) ε)
-isNonExpanding∼→≈ᵁ→isBall B isNE = isBall where
+isNonExpanding∼→≈ᵁ→isBall B isNE = isBall where opaque
   open IsBall
   open IsUpperCut
 
-  isBall : IsBall _
+  isBall : IsBall λ ε y → fst (B y) ε
   isPropBall       isBall ε y                = isPropUpperCut (snd (B y)) ε
   isRoundedBall    isBall ε y                = isRoundedUpperCut (snd (B y)) ε
   isTriangularBall isBall ε δ y z ⟨By⟩ε y∼δz = fst (isNE y z δ y∼δz ε) ⟨By⟩ε
 
-open RecℭSym
+module _ (x y z : M) (ε : ℚ₊) (y≈z : y ≈[ ε ] z) (δ : ℚ₊) where
 
-BallsAtι[Rec] : M → RecℭSym UpperCuts (flip ∘ _≈ᵁ[_]_)
-ιA   (BallsAtι[Rec] x) y       = UpperCut≈ x y
-limA (BallsAtι[Rec] x) Bx,y_ _ = UpperCut∃< Bx,y_
-eqA  (BallsAtι[Rec] x)         = isSeparated≈ᵁ
-fst  (ι-ι-B (BallsAtι[Rec] x) y z ε y≈z δ) (lift x≈y) =
-  lift (isTriangular≈ x y z δ ε x≈y y≈z)
-snd  (ι-ι-B (BallsAtι[Rec] x) y z ε y≈z δ) (lift x≈z) =
-  lift (isTriangular≈ x z y δ ε x≈z (isSym≈ y z ε y≈z))
-fst  (ι-lim-B (BallsAtι[Rec] x) y Bx,z_ ε δ Bx,zc Δ Bx,y≈ᵁBx,zδ η) (lift x≈y) =
-  ∣ δ , δ<η+ε , B[η+ε-δ]x,zδ ∣₁
+  B⟨ι,ι⟩→B⟨ι,ι⟩ : Lift {ℓ'} {ℓ} (x ≈[ δ ] y) → Lift {ℓ'} {ℓ} (x ≈[ δ +₊ ε ] z)
+  B⟨ι,ι⟩→B⟨ι,ι⟩ (lift x≈y) = lift (isTriangular≈ x y z δ ε x≈y y≈z)
+
+private
+  B⟨ι,ι⟩≈ᵁB⟨ι,ι⟩ : ∀ x y z ε → (y ≈[ ε ] z) → UpperCut≈ x y ≈ᵁ[ ε ] UpperCut≈ x z
+  fst (B⟨ι,ι⟩≈ᵁB⟨ι,ι⟩ x y z ε y≈z δ) = B⟨ι,ι⟩→B⟨ι,ι⟩ x y z ε y≈z δ
+  snd (B⟨ι,ι⟩≈ᵁB⟨ι,ι⟩ x y z ε y≈z δ) = B⟨ι,ι⟩→B⟨ι,ι⟩ x z y ε (isSym≈ y z ε y≈z) δ
+
+module _
+  (x y : M) (Bx,z_ : ℚ₊ → UpperCuts) (ε δ : ℚ₊)
+  (Bx,zc : ∀ α β → (Bx,z α) ≈ᵁ[ α +₊ β ] (Bx,z β))
+  (Δ : 0 <ℚ ε -₊ δ)
+  (Bx,y≈ᵁBx,zδ : (UpperCut≈ x y) ≈ᵁ[ ε -₊ δ , Δ ] (Bx,z δ))
+  (η : ℚ₊)
   where
+
+  B⟨ι,ι⟩→B⟨ι,lim⟩ : fst (UpperCut≈ x y) η → fst (UpperCut∃< Bx,z_) (η +₊ ε)
+  B⟨ι,ι⟩→B⟨ι,lim⟩ x≈y = ∣ δ , δ<η+ε , B[η+ε-δ]x,zδ ∣₁ where opaque
     δ<η+ε : δ <₊ (η +₊ ε)
     δ<η+ε = begin<
       ⟨ δ ⟩₊      <⟨ 0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ ⟩
@@ -464,10 +471,12 @@ fst  (ι-lim-B (BallsAtι[Rec] x) y Bx,z_ ε δ Bx,zc Δ Bx,y≈ᵁBx,zδ η) (l
 
     B[η+ε-δ]x,zδ : fst (Bx,z δ) [ (η +₊ ε) -₊ δ ]⟨ δ<η+ε ⟩
     B[η+ε-δ]x,zδ = subst (fst (Bx,z δ)) (ℚ₊≡ (ℚ.+Assoc ⟨ η ⟩₊ ⟨ ε ⟩₊ _))
-                                        (fst (Bx,y≈ᵁBx,zδ η) (lift x≈y))
-snd  (ι-lim-B (BallsAtι[Rec] x) y Bx,z_ ε δ Bx,zc Δ Bx,y≈ᵁBx,zδ η) B[η]x,limz =
-  subst (Lift {ℓ'} {ℓ} ∘ (x ≈[_] y)) η+δ+ε-δ≡η+ε x≈[η+δ+ε-δ]y
-  where
+                                        (fst (Bx,y≈ᵁBx,zδ η) x≈y)
+
+  B⟨ι,lim⟩→B⟨ι,ι⟩ : fst (UpperCut∃< Bx,z_) η → fst (UpperCut≈ x y) (η +₊ ε)
+  B⟨ι,lim⟩→B⟨ι,ι⟩ B[η]x,limz =
+    subst (Lift {ℓ'} {ℓ} ∘ (x ≈[_] y)) η+δ+ε-δ≡η+ε x≈[η+δ+ε-δ]y where opaque
+
     module Bz (η : ℚ₊) = IsUpperCut (snd (Bx,z η))
 
     Bx,zc→ : ∀ ε' δ' η' → fst (Bx,z ε') η' → fst (Bx,z δ') (η' +₊ (ε' +₊ δ'))
@@ -496,8 +505,28 @@ snd  (ι-lim-B (BallsAtι[Rec] x) y Bx,z_ ε δ Bx,zc Δ Bx,y≈ᵁBx,zδ η) B[
       ⟨ η ⟩₊ ℚ.+ (⟨ δ ⟩₊ ℚ.+ (ε -₊ δ)) ≡⟨ cong (⟨ η ⟩₊ ℚ.+_) (ℚ.+Comm ⟨ δ ⟩₊ (ε -₊ δ)) ⟩
       ⟨ η ⟩₊ ℚ.+ ((ε -₊ δ) ℚ.+ ⟨ δ ⟩₊) ≡⟨ cong (⟨ η ⟩₊ ℚ.+_) (minusPlus₊ ε δ) ⟩
       ⟨ η +₊ ε ⟩₊                      ∎
-fst  (lim-lim-B (BallsAtι[Rec] x) Bx,y_ Bx,z_ ε δ η Bx,yc Bx,zc Δ Bx,yδ≈ᵁBx,zη θ) =
-  PT.map λ (δ' , δ'<θ , B[θ-δ']x,yδ') →
+
+private
+  B⟨ι,ι⟩≈ᵁB⟨ι,lim⟩ : ∀ x y Bx,z_ ε δ → (Bx,zc : ∀ α β → (Bx,z α) ≈ᵁ[ α +₊ β ] (Bx,z β))
+                  → (Δ : 0 <ℚ ε -₊ δ)
+                  → (Bx,y≈ᵁBx,zδ : (UpperCut≈ x y) ≈ᵁ[ ε -₊ δ , Δ ] (Bx,z δ))
+                  → (UpperCut≈ x y) ≈ᵁ[ ε ] (UpperCut∃< Bx,z_)
+  fst (B⟨ι,ι⟩≈ᵁB⟨ι,lim⟩ x y Bx,z_ ε δ Bx,zc Δ Bx,y≈ᵁBx,zδ η) =
+    B⟨ι,ι⟩→B⟨ι,lim⟩ x y Bx,z_ ε δ Bx,zc Δ Bx,y≈ᵁBx,zδ η
+  snd (B⟨ι,ι⟩≈ᵁB⟨ι,lim⟩ x y Bx,z_ ε δ Bx,zc Δ Bx,y≈ᵁBx,zδ η) =
+    B⟨ι,lim⟩→B⟨ι,ι⟩ x y Bx,z_ ε δ Bx,zc Δ Bx,y≈ᵁBx,zδ η
+
+module _
+  (x : M) (Bx,y_ Bx,z_ : ℚ₊ → UpperCuts) (ε δ η : ℚ₊)
+  (Bx,yc : ∀ α β → (Bx,y α) ≈ᵁ[ α +₊ β ] (Bx,y β))
+  (Bx,zc : ∀ α β → (Bx,z α) ≈ᵁ[ α +₊ β ] (Bx,z β))
+  (Δ : 0 <ℚ ε -₊ (δ +₊ η))
+  (Bx,yδ≈ᵁBx,zη : (Bx,y δ) ≈ᵁ[ ε -₊ (δ +₊ η) , Δ ] (Bx,z η))
+  (θ : ℚ₊)
+  where
+
+  B⟨ι,lim⟩→B⟨ι,lim⟩ : fst (UpperCut∃< Bx,y_) θ → fst (UpperCut∃< Bx,z_) (θ +₊ ε)
+  B⟨ι,lim⟩→B⟨ι,lim⟩ = makeOpaque (PT.map λ (δ' , δ'<θ , B[θ-δ']x,yδ') →
     let
 
       B[θ-δ'+δ'+δ]x,yδ : fst (Bx,y δ) ([ θ -₊ δ' ]⟨ δ'<θ ⟩ +₊ (δ' +₊ δ))
@@ -524,37 +553,39 @@ fst  (lim-lim-B (BallsAtι[Rec] x) Bx,y_ Bx,z_ ε δ η Bx,yc Bx,zc Δ Bx,yδ≈
         ⟨ θ +₊ δ ⟩₊ ℚ.+ (ε -₊ (δ +₊ η)) ≡⟨ lemma1 ℚCR ⟨ θ ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊ ⟨ η ⟩₊ ⟩
         (θ +₊ ε) -₊ η                   ∎
     in
-      η , η<θ+ε , B[θ+ε-η]x,zη
-snd  (lim-lim-B (BallsAtι[Rec] x) Bx,y_ Bx,z_ ε δ η Bx,yc Bx,zc Δ Bx,yδ≈ᵁBx,zη θ) =
-  PT.map λ (δ' , δ'<θ , B[θ-δ']x,zδ') →
-    let
+      η , η<θ+ε , B[θ+ε-η]x,zη)
 
-      B[θ-δ'+δ'+η]x,zη : fst (Bx,z η) ([ θ -₊ δ' ]⟨ δ'<θ ⟩ +₊ (δ' +₊ η))
-      B[θ-δ'+δ'+η]x,zη = fst (Bx,zc δ' η [ θ -₊ δ' ]⟨ δ'<θ ⟩) B[θ-δ']x,zδ'
+private
+  B⟨ι,lim⟩≈ᵁB⟨ι,lim⟩ : (x : M) → ∀ Bx,y_ Bx,z_ ε δ η
+                    → (Bx,yc : ∀ α β → (Bx,y α) ≈ᵁ[ α +₊ β ] (Bx,y β))
+                    → (Bx,zc : ∀ α β → (Bx,z α) ≈ᵁ[ α +₊ β ] (Bx,z β))
+                    → (Δ : 0 <ℚ ε -₊ (δ +₊ η))
+                    → (Bx,yδ≈ᵁBx,zη : (Bx,y δ) ≈ᵁ[ ε -₊ (δ +₊ η) , Δ ] (Bx,z η))
+                    → (UpperCut∃< Bx,y_) ≈ᵁ[ ε ] (UpperCut∃< Bx,z_)
+  fst (B⟨ι,lim⟩≈ᵁB⟨ι,lim⟩ x Bx,y_ Bx,z_ ε δ η Bx,yc Bx,zc Δ Bx,yδ≈ᵁBx,zη θ) =
+    B⟨ι,lim⟩→B⟨ι,lim⟩ x Bx,y_ Bx,z_ ε δ η Bx,yc Bx,zc Δ Bx,yδ≈ᵁBx,zη θ
+  snd (B⟨ι,lim⟩≈ᵁB⟨ι,lim⟩ x Bx,y_ Bx,z_ ε δ η Bx,yc Bx,zc Δ Bx,yδ≈ᵁBx,zη θ) =
+    B⟨ι,lim⟩→B⟨ι,lim⟩ x Bx,z_ Bx,y_ ε η δ Bx,zc Bx,yc Δ' Bx,zη≈ᵁBx,yδ θ
+    where opaque
+      p : ε -₊ (η +₊ δ) ≡ ε -₊ (δ +₊ η)
+      p = cong (ℚ._-_ ⟨ ε ⟩₊) (ℚ.+Comm ⟨ η ⟩₊ ⟨ δ ⟩₊)
 
-      B[θ+η]x,zη : fst (Bx,z η) (θ +₊ η)
-      B[θ+η]x,zη = flip (subst (fst (Bx,z η))) B[θ-δ'+δ'+η]x,zη $ ℚ₊≡ $
-        (θ -₊ δ') ℚ.+ ⟨ δ' +₊ η ⟩₊       ≡⟨ ℚ.+Assoc (θ -₊ δ') ⟨ δ' ⟩₊ ⟨ η ⟩₊ ⟩
-        (θ -₊ δ') ℚ.+ ⟨ δ' ⟩₊ ℚ.+ ⟨ η ⟩₊ ≡⟨ cong (ℚ._+ ⟨ η ⟩₊) (minusPlus₊ θ δ') ⟩
-        ⟨ θ +₊ η ⟩₊                      ∎
+      Δ' : 0 <ℚ ε -₊ (η +₊ δ)
+      Δ' = ≡₊→0< (ε -₊ (δ +₊ η) , Δ) p
 
-      B[θ+η+ε-[δ+η]]x,yδ : fst (Bx,y δ) (θ +₊ η +₊ (ε -₊ (δ +₊ η) , Δ))
-      B[θ+η+ε-[δ+η]]x,yδ = snd (Bx,yδ≈ᵁBx,zη (θ +₊ η)) B[θ+η]x,zη
+      Bx,zη≈ᵁBx,yδ : (Bx,z η) ≈ᵁ[ ε -₊ (η +₊ δ) , Δ' ] (Bx,y δ)
+      Bx,zη≈ᵁBx,yδ = subst ((Bx,z η) ≈ᵁ[_] (Bx,y δ)) (ℚ₊≡ (sym p))
+        (isSym≈ᵁ (Bx,y δ) (Bx,z η) (ε -₊ (δ +₊ η) , Δ) Bx,yδ≈ᵁBx,zη)
 
-      δ<θ+ε : δ <₊ (θ +₊ ε)
-      δ<θ+ε = begin<
-        ⟨ δ ⟩₊      <⟨ <₊SumLeft δ η ⟩
-        ⟨ δ +₊ η ⟩₊ <⟨ 0<-→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ ⟩
-        ⟨ ε ⟩₊      <⟨ <₊SumRight ε θ ⟩
-        ⟨ θ +₊ ε ⟩₊ ◾
+open RecℭSym
 
-      B[θ+ε-δ]x,yδ : fst (Bx,y δ) [ (θ +₊ ε) -₊ δ ]⟨ δ<θ+ε ⟩
-      B[θ+ε-δ]x,yδ = flip (subst (fst (Bx,y δ))) B[θ+η+ε-[δ+η]]x,yδ $ ℚ₊≡ $
-        ⟨ θ +₊ η ⟩₊ ℚ.+ (ε -₊ (δ +₊ η)) ≡⟨ lemma2 ℚCR ⟨ θ ⟩₊ ⟨ η ⟩₊ ⟨ ε ⟩₊ ⟨ δ ⟩₊ ⟩
-        (θ +₊ ε) -₊ δ                   ∎
-
-    in
-      δ , δ<θ+ε , B[θ+ε-δ]x,yδ
+BallsAtι[Rec] : M → RecℭSym UpperCuts (flip ∘ _≈ᵁ[_]_)
+ιA        (BallsAtι[Rec] x) = UpperCut≈ x
+limA      (BallsAtι[Rec] x) = const ∘ UpperCut∃<
+eqA       (BallsAtι[Rec] x) = isSeparated≈ᵁ
+ι-ι-B     (BallsAtι[Rec] x) = B⟨ι,ι⟩≈ᵁB⟨ι,ι⟩ x
+ι-lim-B   (BallsAtι[Rec] x) = B⟨ι,ι⟩≈ᵁB⟨ι,lim⟩ x
+lim-lim-B (BallsAtι[Rec] x) = B⟨ι,lim⟩≈ᵁB⟨ι,lim⟩ x
 isSymB    (BallsAtι[Rec] x) = isSym≈ᵁ
 isPropB   (BallsAtι[Rec] x) = isProp≈ᵁ
 
@@ -575,16 +606,20 @@ snd B⟨ι x ,⟩ = makeOpaque (isNonExpanding∼→≈ᵁ→isBall B⟨ι x ,_�
 module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ] Bx δ) where
 
   module isBx (η : ℚ₊) = IsBall (snd (Bx η))
-  open CasesℭSym
 
-  BallsAtlim[Cases] : CasesℭSym UpperCuts (flip ∘ _≈ᵁ[_]_)
-  ιA   BallsAtlim[Cases] y    = UpperCut∃< λ δ →
+  B⟨limᴿ[_,_],ι_⟩ : M → UpperCuts
+  B⟨limᴿ[_,_],ι_⟩ y = UpperCut∃< λ δ →
     flip (fst (Bx δ)) (ι y) , isBall→isUpperCut (Bx δ) (ι y)
-  limA BallsAtlim[Cases] y yc = UpperCut∃₂< λ δ η →
+
+  B⟨limᴿ[_,_],lim[_,_]⟩ : (y : ℚ₊ → ℭM) (yc : ∀ α β → y α ∼[ α +₊ β ] y β) → UpperCuts
+  B⟨limᴿ[_,_],lim[_,_]⟩ y yc = UpperCut∃₂< λ δ η →
     flip (fst (Bx δ)) (y η) , isBall→isUpperCut (Bx δ) (y η)
-  eqA  BallsAtlim[Cases]      = isSeparated≈ᵁ
-  fst (ι-ι-B BallsAtlim[Cases] y z ε y≈z δ) =
-    PT.map λ (η , η<δ , B[δ-η]xη,y) →
+
+
+  module _ (y z : M) (ε : ℚ₊) (y≈z : y ≈[ ε ] z) (δ : ℚ₊) where
+
+    B⟨lim,ι⟩→B⟨lim,ι⟩ : fst (B⟨limᴿ[_,_],ι_⟩ y) δ → fst (B⟨limᴿ[_,_],ι_⟩ z) (δ +₊ ε)
+    B⟨lim,ι⟩→B⟨lim,ι⟩ = makeOpaque (PT.map λ (η , η<δ , B[δ-η]xη,y) →
       let
 
         η<δ+ε : η <₊ (δ +₊ ε)
@@ -604,32 +639,25 @@ module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ]
           ⟨ δ ⟩₊ ℚ.+ (ε -₊ η)                 ≡⟨ ℚ.+Assoc ⟨ δ ⟩₊ ⟨ ε ⟩₊ _ ⟩
           (δ +₊ ε) -₊ η                       ∎
       in
-        η , η<δ+ε , B[δ+ε-η]xη,z
-  snd (ι-ι-B BallsAtlim[Cases] y z ε y≈z δ) =
-    PT.map λ (η , η<δ , B[δ-η]xη,z) →
-      let
+        η , η<δ+ε , B[δ+ε-η]xη,z)
+  private
+    B⟨lim,ι⟩≈ᵁB⟨lim,ι⟩ : ∀ y z ε
+                        → (y ≈[ ε ] z)
+                        → (B⟨limᴿ[_,_],ι_⟩ y) ≈ᵁ[ ε ] (B⟨limᴿ[_,_],ι_⟩ z)
+    fst (B⟨lim,ι⟩≈ᵁB⟨lim,ι⟩ y z ε y≈z δ) =
+      B⟨lim,ι⟩→B⟨lim,ι⟩ y z ε y≈z δ
+    snd (B⟨lim,ι⟩≈ᵁB⟨lim,ι⟩ y z ε y≈z δ) =
+      B⟨lim,ι⟩→B⟨lim,ι⟩ z y ε (isSym≈ y z ε y≈z) δ
 
-        η<δ+ε : η <₊ (δ +₊ ε)
-        η<δ+ε = begin<
-          ⟨ η ⟩₊      <⟨ η<δ ⟩
-          ⟨ δ ⟩₊      <⟨ <₊SumLeft δ ε ⟩
-          ⟨ δ +₊ ε ⟩₊ ◾
+  module _
+    (y : M) (z : ℚ₊ → ℭM) (ε δ : ℚ₊)
+    (zc : ∀ α β → z α ∼[ α +₊ β ] z β)
+    (Δ : 0 <ℚ ε -₊ δ) (y∼zδ : ι y ∼[ ε -₊ δ , Δ ] z δ) (η : ℚ₊)
+    where
 
-        B[δ-η+ε]xη,y : fst (Bx η) ([ δ -₊ η ]⟨ η<δ ⟩ +₊ ε) (ι y)
-        B[δ-η+ε]xη,y = isBx.isTriangularBall η
-          [ δ -₊ η ]⟨ η<δ ⟩ ε (ι z) (ι y) B[δ-η]xη,z (ι-ι z y ε (isSym≈ _ _ _ y≈z))
-
-        B[δ+ε-η]xη,y : fst (Bx η) [ δ +₊ ε -₊ η ]⟨ η<δ+ε ⟩ (ι y)
-        B[δ+ε-η]xη,y = flip (subst (flip (fst (Bx η)) (ι y))) B[δ-η+ε]xη,y $ ℚ₊≡ $
-          (δ -₊ η) ℚ.+ ⟨ ε ⟩₊                 ≡⟨ sym $ ℚ.+Assoc ⟨ δ ⟩₊ (ℚ.- ⟨ η ⟩₊) _ ⟩
-          ⟨ δ ⟩₊ ℚ.+ ((ℚ.- ⟨ η ⟩₊) ℚ.+ ⟨ ε ⟩₊) ≡⟨ cong (ℚ._+_ ⟨ δ ⟩₊) (ℚ.+Comm _ ⟨ ε ⟩₊) ⟩
-          ⟨ δ ⟩₊ ℚ.+ (ε -₊ η)                 ≡⟨ ℚ.+Assoc ⟨ δ ⟩₊ ⟨ ε ⟩₊ _ ⟩
-          (δ +₊ ε) -₊ η                       ∎
-
-      in
-        η , η<δ+ε , B[δ+ε-η]xη,y
-  fst (ι-lim-B BallsAtlim[Cases] y z ε δ zc Δ y∼zδ _ _ _ η) =
-    PT.map λ (θ , θ<η , B[η-θ]xθ,y) →
+    B⟨lim,ι⟩→B⟨lim,lim⟩ : fst (B⟨limᴿ[_,_],ι_⟩ y) η
+                       → fst (B⟨limᴿ[_,_],lim[_,_]⟩ z zc) (η +₊ ε)
+    B⟨lim,ι⟩→B⟨lim,lim⟩ = makeOpaque (PT.map λ (θ , θ<η , B[η-θ]xθ,y) →
       let
         θ+δ<η+ε : (θ +₊ δ) <₊ (η +₊ ε)
         θ+δ<η+ε = begin<
@@ -648,9 +676,11 @@ module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ]
             :> Bx θ .fst ([ η -₊ θ ]⟨ θ<η ⟩ +₊ ((ε -₊ δ) , Δ)) (z δ))
 
       in
-        θ , δ , θ+δ<η+ε , B[η+ε-[θ+δ]]xθ,zδ
-  snd (ι-lim-B BallsAtlim[Cases] y z ε δ zc Δ y∼zδ _ _ _ η) =
-    PT.map λ (ξ , ζ , ξ+ζ<η , B[η-[ξ+ζ]]xξ,zζ) →
+        θ , δ , θ+δ<η+ε , B[η+ε-[θ+δ]]xθ,zδ)
+
+    B⟨lim,lim⟩→B⟨lim,ι⟩ : fst (B⟨limᴿ[_,_],lim[_,_]⟩ z zc) η
+                       → fst (B⟨limᴿ[_,_],ι_⟩ y) (η +₊ ε)
+    B⟨lim,lim⟩→B⟨lim,ι⟩ = makeOpaque (PT.map λ (ξ , ζ , ξ+ζ<η , B[η-[ξ+ζ]]xξ,zζ) →
       let
         ξ<η+ε : ξ <₊ (η +₊ ε)
         ξ<η+ε = begin<
@@ -676,9 +706,30 @@ module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ]
             :> fst (Bx ξ) ([ η -₊ ξ +₊ ζ ]⟨ ξ+ζ<η ⟩ +₊ (ζ +₊ δ) +₊ ((ε -₊ δ) , Δ)) (ι y))
 
       in
-        ξ , ξ<η+ε , B[η+ε-ξ]xξ,y
-  fst (lim-lim-B BallsAtlim[Cases] y z ε δ η yc zc Δ yδ∼zη _ _ _ _ _ θ) =
-    PT.map λ (ξ , ζ , ξ+ζ<θ , B[θ-[ξ+ζ]]xξ,yζ) →
+        ξ , ξ<η+ε , B[η+ε-ξ]xξ,y)
+
+  private
+    B⟨lim,ι⟩≈ᵁB⟨lim,lim⟩ : ∀ y z ε δ zc Δ
+                         → (y∼zδ : ι y ∼[ ε -₊ δ , Δ ] z δ)
+                         → (Bx,z_ : ℚ₊ → UpperCuts)
+                         → ((α β : ℚ₊) → (Bx,z α) ≈ᵁ[ α +₊ β ] (Bx,z β))
+                         → (B⟨limᴿ[_,_],ι_⟩ y) ≈ᵁ[ ε -₊ δ , Δ ] (Bx,z δ)
+                         → (B⟨limᴿ[_,_],ι_⟩ y) ≈ᵁ[ ε ] (B⟨limᴿ[_,_],lim[_,_]⟩ z zc)
+    fst (B⟨lim,ι⟩≈ᵁB⟨lim,lim⟩ y z ε δ zc Δ y∼zδ _ _ _ η) =
+      B⟨lim,ι⟩→B⟨lim,lim⟩ y z ε δ zc Δ y∼zδ η
+    snd (B⟨lim,ι⟩≈ᵁB⟨lim,lim⟩ y z ε δ zc Δ y∼zδ _ _ _ η) =
+      B⟨lim,lim⟩→B⟨lim,ι⟩ y z ε δ zc Δ y∼zδ η
+
+  module _
+    (y z : ℚ₊ → ℭM) (ε δ η : ℚ₊)
+    (yc : ∀ α β → y α ∼[ α +₊ β ] y β)
+    (zc : ∀ α β → z α ∼[ α +₊ β ] z β)
+    (Δ : 0 <ℚ ε -₊ (δ +₊ η)) (yδ∼zη : y δ ∼[ ε -₊ (δ +₊ η) , Δ ] z η) (θ : ℚ₊)
+    where
+
+    B⟨lim,lim⟩→B⟨lim,lim⟩ : fst (B⟨limᴿ[_,_],lim[_,_]⟩ y yc) θ
+                        → fst (B⟨limᴿ[_,_],lim[_,_]⟩ z zc) (θ +₊ ε)
+    B⟨lim,lim⟩→B⟨lim,lim⟩ = makeOpaque (PT.map λ (ξ , ζ , ξ+ζ<θ , B[θ-[ξ+ζ]]xξ,yζ) →
       let
         ξ+η<θ+ε : (ξ +₊ η) <₊ (θ +₊ ε)
         ξ+η<θ+ε = begin<
@@ -707,38 +758,39 @@ module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ]
                     (z η))
 
       in
-        ξ , η , ξ+η<θ+ε , B[θ+ε-[ξ+η]]xξ,zη
-  snd (lim-lim-B BallsAtlim[Cases] y z ε δ η yc zc Δ yδ∼zη By Byc Bz Bzc Byδ≈Bzη θ) =
-    PT.map λ (ξ , ζ , ξ+ζ<θ , B[θ-[ξ+ζ]]xξ,zζ) →
-      let
-        ξ+δ<θ+ε : (ξ +₊ δ) <₊ (θ +₊ ε)
-        ξ+δ<θ+ε = begin<
-          ⟨ ξ +₊ δ ⟩₊               <⟨ +Mono< ⟨ ξ ⟩₊ _ ⟨ δ ⟩₊ _
-                                      (<₊SumLeft ξ ζ) (<₊SumLeft δ η) ⟩
-          ⟨ (ξ +₊ ζ) +₊ (δ +₊ η) ⟩₊ <⟨ +Mono< ⟨ ξ +₊ ζ ⟩₊ ⟨ θ ⟩₊ ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊
-                                      ξ+ζ<θ (0<-→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ) ⟩
-          ⟨ θ +₊ ε ⟩₊               ◾
+        ξ , η , ξ+η<θ+ε , B[θ+ε-[ξ+η]]xξ,zη)
 
-        B[θ+ε-[ξ+δ]]xξ,zδ : fst (Bx ξ) [ (θ +₊ ε) -₊ (ξ +₊ δ) ]⟨ ξ+δ<θ+ε ⟩ (y δ)
-        B[θ+ε-[ξ+δ]]xξ,zδ = subst (flip (fst (Bx ξ)) (y δ))
-          (ℚ₊≡ (lemma6 ℚCR ⟨ θ ⟩₊ ⟨ ξ ⟩₊ ⟨ ζ ⟩₊ ⟨ η ⟩₊ ⟨ ε ⟩₊ ⟨ δ ⟩₊))
-          (isBx.isTriangularBall ξ
-            ([ θ -₊ ξ +₊ ζ ]⟨ ξ+ζ<θ ⟩ +₊ (ζ +₊ η)) (ε -₊ (δ +₊ η) , Δ)
-            (z η) (y δ)
-          (isBx.isTriangularBall ξ [ θ -₊ ξ +₊ ζ ]⟨ ξ+ζ<θ ⟩ (ζ +₊ η)
-            (z ζ) (z η)
-          (B[θ-[ξ+ζ]]xξ,zζ
-            :> fst (Bx ξ) [ θ -₊ ξ +₊ ζ ]⟨ ξ+ζ<θ ⟩ (z ζ))
-          (zc ζ η
-            :> z ζ ∼[ ζ +₊ η ] z η)
-            :> fst (Bx ξ) ([ θ -₊ (ξ +₊ ζ) ]⟨ ξ+ζ<θ ⟩ +₊ (ζ +₊ η)) (z η))
-          (isSym∼ (y δ) (z η) (ε -₊ (δ +₊ η) , Δ) yδ∼zη
-            :> (z η ∼[ (ε -₊ (δ +₊ η)) , Δ ] y δ))
-            :> fst (Bx ξ) ([ θ -₊ (ξ +₊ ζ) ]⟨ ξ+ζ<θ ⟩ +₊ (ζ +₊ η) +₊ (ε -₊ (δ +₊ η) , Δ))
-                    (y δ))
+  private
+    B⟨lim,lim⟩≈ᵁB⟨lim,lim⟩ : ∀ y z ε δ η yc zc Δ
+                          → (yδ∼zη : y δ ∼[ ε -₊ (δ +₊ η) , Δ ] z η)
+                          → (Bx,y_ : ℚ₊ → UpperCuts)
+                          → ((α β : ℚ₊) → (Bx,y α) ≈ᵁ[ α +₊ β ] (Bx,y β))
+                          → (Bx,z_ : ℚ₊ → UpperCuts)
+                          → ((α β : ℚ₊) → (Bx,z α) ≈ᵁ[ α +₊ β ] (Bx,z β))
+                          → (Bx,y δ) ≈ᵁ[ ε -₊ (δ +₊ η) , Δ ] (Bx,z η)
+                          → (B⟨limᴿ[_,_],lim[_,_]⟩ y yc) ≈ᵁ[ ε ] (B⟨limᴿ[_,_],lim[_,_]⟩ z zc)
+    fst (B⟨lim,lim⟩≈ᵁB⟨lim,lim⟩ y z ε δ η yc zc Δ yδ∼zη _ _ _ _ _ θ) =
+      B⟨lim,lim⟩→B⟨lim,lim⟩ y z ε δ η yc zc Δ yδ∼zη θ
+    snd (B⟨lim,lim⟩≈ᵁB⟨lim,lim⟩ y z ε δ η yc zc Δ yδ∼zη _ _ _ _ _ θ) =
+      B⟨lim,lim⟩→B⟨lim,lim⟩ z y ε η δ zc yc Δ' zη∼yδ θ where opaque
+        p : ε -₊ (η +₊ δ) ≡ ε -₊ (δ +₊ η)
+        p = cong (ℚ._-_ ⟨ ε ⟩₊) (ℚ.+Comm ⟨ η ⟩₊ ⟨ δ ⟩₊)
 
-      in
-        ξ , δ , ξ+δ<θ+ε , B[θ+ε-[ξ+δ]]xξ,zδ
+        Δ' : 0 <ℚ ε -₊ (η +₊ δ)
+        Δ' = ≡₊→0< (ε -₊ (δ +₊ η) , Δ) p
+
+        zη∼yδ : z η ∼[ ε -₊ (η +₊ δ) , Δ' ] y δ
+        zη∼yδ = subst∼ (z η) (y δ) (sym p) (isSym∼ (y δ) (z η) (ε -₊ (δ +₊ η) , Δ) yδ∼zη)
+
+  open CasesℭSym
+
+  BallsAtlim[Cases] : CasesℭSym UpperCuts (flip ∘ _≈ᵁ[_]_)
+  ιA        BallsAtlim[Cases] = B⟨limᴿ[_,_],ι_⟩
+  limA      BallsAtlim[Cases] = B⟨limᴿ[_,_],lim[_,_]⟩
+  eqA       BallsAtlim[Cases] = isSeparated≈ᵁ
+  ι-ι-B     BallsAtlim[Cases] = B⟨lim,ι⟩≈ᵁB⟨lim,ι⟩
+  ι-lim-B   BallsAtlim[Cases] = B⟨lim,ι⟩≈ᵁB⟨lim,lim⟩
+  lim-lim-B BallsAtlim[Cases] = B⟨lim,lim⟩≈ᵁB⟨lim,lim⟩
   isSymB    BallsAtlim[Cases] = isSym≈ᵁ
   isPropB   BallsAtlim[Cases] = isProp≈ᵁ
 
@@ -1000,7 +1052,7 @@ private
       p = cong (ℚ._-_ ⟨ ε ⟩₊) (ℚ.+Comm ⟨ η ⟩₊ ⟨ δ ⟩₊)
 
       Δ' : 0 <ℚ ε -₊ (η +₊ δ)
-      Δ' = ≡₊→0< (ε -₊ (δ +₊ η) , Δ) (cong (ℚ._-_ ⟨ ε ⟩₊) (ℚ.+Comm ⟨ η ⟩₊ ⟨ δ ⟩₊))
+      Δ' = ≡₊→0< (ε -₊ (δ +₊ η) , Δ) p
 
       Byη≈[ε-[η+δ]]Bxδ : (By η) ≈ᴮ[ ε -₊ (η +₊ δ) , Δ' ] (Bx δ)
       Byη≈[ε-[η+δ]]Bxδ = subst ((By η) ≈ᴮ[_] (Bx δ)) (ℚ₊≡ (sym p))
@@ -1131,10 +1183,10 @@ isRounded∼ x y ε x∼y = makeOpaque (PT.map (
 fst ℭPremetricSpace = ℭM
 PremetricStr._≈[_]_      (snd ℭPremetricSpace) = _∼[_]_
 PremetricStr.isPremetric (snd ℭPremetricSpace) = isPMℭ
-  where
+  where opaque
     open IsPremetric
 
-    isPMℭ : IsPremetric _
+    isPMℭ : IsPremetric _∼[_]_
     isSetM        isPMℭ = isSetℭ
     isProp≈       isPMℭ = flip ∘ isProp∼
     isRefl≈       isPMℭ = isRefl∼
@@ -1150,7 +1202,7 @@ isInjectiveι x y ιx≡ιy = isSeparated≈ x y λ ε →
   λ (lift x≈y) → x≈y
 
 isLimitLim : ∀ x xc → isLimit ℭPremetricSpace x (lim x xc)
-isLimitLim = λ x xc ε θ → Elimℭ-Prop.go e (x ε) x xc ε θ (isRefl∼ (x ε) θ) where
+isLimitLim = λ x xc ε θ → Elimℭ-Prop.go e (x ε) x xc ε θ (isRefl∼ (x ε) θ) where opaque
   open Elimℭ-Prop
 
   e : Elimℭ-Prop λ u → ∀ x xc ε θ → u ∼[ θ ] (x ε) → u ∼[ ε +₊ θ ] lim x xc

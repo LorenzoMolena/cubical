@@ -723,7 +723,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
   private
     2r = 1r + 1r
 
-  module Charactersitic≠2 (1/2 : R) (1/2≡2⁻¹ : 1/2 · 2r ≡ 1r) where
+  module Characteristic≠2 (1/2 : R) (1/2≡2⁻¹ : 1/2 · 2r ≡ 1r) where
     open OrderedCommRingTheory
 
     1/2+1/2≡1 : 1/2 + 1/2 ≡ 1r
