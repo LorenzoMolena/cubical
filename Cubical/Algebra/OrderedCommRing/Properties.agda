@@ -162,6 +162,18 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       y + (- x - y) ≡→≤⟨ solve! RCR ⟩
       - x             ◾
 
+    0<→-<0 : ∀ x → 0r < x → - x < 0r
+    0<→-<0 x = subst (- x <_) (solve! RCR) ∘ -Flip< 0r x
+
+    <0→0<- : ∀ x → x < 0r → 0r < - x
+    <0→0<- x = subst (_< - x) (solve! RCR) ∘ -Flip< x 0r
+
+    0≤→-≤0 : ∀ x → 0r ≤ x → - x ≤ 0r
+    0≤→-≤0 x = subst (- x ≤_) (solve! RCR) ∘ -Flip≤ 0r x
+
+    ≤0→0≤- : ∀ x → x ≤ 0r → 0r ≤ - x
+    ≤0→0≤- x = subst (_≤ - x) (solve! RCR) ∘ -Flip≤ x 0r
+
     <→0<- : ∀ x y → x < y → 0r < y - x
     <→0<- x y x<y = begin< 0r ≡→≤⟨ solve! RCR ⟩ x - x <⟨ +MonoR< _ _ _ x<y ⟩ y - x ◾
 
@@ -173,6 +185,28 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     0≤-→≤ : ∀ x y → 0r ≤ y - x → x ≤ y
     0≤-→≤ x y 0≤y-x = subst2 _≤_ (solve! RCR) (solve! RCR) (+MonoR≤ _ _ x 0≤y-x)
+
+    0≤² : ∀ x → 0r ≤ x · x
+    0≤² x = ¬<→≥ (x · x) 0r λ x²<0 →
+      let
+        0≤x : 0r ≤ x
+        0≤x = ¬<→≥ x 0r λ x<0 → is-irrefl 0r $ begin<
+          0r             ≡→≤⟨ sym $ 0LeftAnnihilates (- x) ⟩
+          0r · (- x)       <⟨ ·MonoR< _ _ _ (<0→0<- x x<0) (<0→0<- x x<0) ⟩
+          (- x) · (- x)  ≡→≤⟨ solve! RCR ⟩
+          x · x            <⟨ x²<0 ⟩
+          0r               ◾
+
+        0≤x² : 0r ≤ x · x
+        0≤x² = subst (_≤ x · x) (solve! RCR) (·MonoR≤ _ _ _ 0≤x 0≤x)
+      in
+        is-irrefl 0r $ begin< 0r ≤⟨ 0≤x² ⟩ x · x <⟨ x²<0 ⟩ 0r ◾
+
+    #→0<² : ∀ x → x # 0r → 0r < x · x
+    #→0<² x (inl x<0) =
+      subst2 _<_ (solve! RCR) (solve! RCR) (∘diag (·MonoR< _ _ _) (<0→0<- x x<0))
+    #→0<² x (inr 0<x) =
+      subst (_< x · x) (solve! RCR) (∘diag (·MonoR< _ _ _) 0<x)
 
     ≤abs : ∀ z → z ≤ abs z
     ≤abs z = L≤⊔
