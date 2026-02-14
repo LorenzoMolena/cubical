@@ -113,6 +113,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     ¬<→≥ : ∀ x y → ¬ (x < y) → y ≤ x
     ¬<→≥ x y = invEq (≤≃¬> y x)
 
+    ≥Using< : ∀ x y → (x < y → y ≤ x) → y ≤ x
+    ≥Using< _ _ <→≥ = ¬<→≥ _ _ (∘diag (≤→¬> _ _ ∘ <→≥))
+
     abs ∣_∣ : R → R
     abs z = z ⊔ (- z)
     ∣_∣ = abs
@@ -187,20 +190,17 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     0≤-→≤ x y 0≤y-x = subst2 _≤_ (solve! RCR) (solve! RCR) (+MonoR≤ _ _ x 0≤y-x)
 
     0≤² : ∀ x → 0r ≤ x · x
-    0≤² x = ¬<→≥ (x · x) 0r λ x²<0 →
+    0≤² x = ≥Using< (x · x) 0r λ x²<0 →
       let
         0≤x : 0r ≤ x
         0≤x = ¬<→≥ x 0r λ x<0 → is-irrefl 0r $ begin<
           0r             ≡→≤⟨ sym $ 0LeftAnnihilates (- x) ⟩
-          0r · (- x)       <⟨ ·MonoR< _ _ _ (<0→0<- x x<0) (<0→0<- x x<0) ⟩
+          0r · (- x)       <⟨ ∘diag (·MonoR< _ _ _) (<0→0<- x x<0) ⟩
           (- x) · (- x)  ≡→≤⟨ solve! RCR ⟩
           x · x            <⟨ x²<0 ⟩
           0r               ◾
-
-        0≤x² : 0r ≤ x · x
-        0≤x² = subst (_≤ x · x) (solve! RCR) (·MonoR≤ _ _ _ 0≤x 0≤x)
       in
-        is-irrefl 0r $ begin< 0r ≤⟨ 0≤x² ⟩ x · x <⟨ x²<0 ⟩ 0r ◾
+        subst (_≤ x · x) (solve! RCR) (∘diag (·MonoR≤ _ _ _) 0≤x)
 
     #→0<² : ∀ x → x # 0r → 0r < x · x
     #→0<² x (inl x<0) =
@@ -246,6 +246,49 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       0r    <⟨ 0<z ⟩
       z     ≤⟨ ≤abs _ ⟩
       abs z ◾
+
+    abs- : ∀ x → abs (- x) ≡ abs x
+    abs- x =
+      abs (- x)       ≡⟨⟩
+      (- x) ⊔ (- - x) ≡⟨ cong ((- x) ⊔_) (solve! RCR) ⟩
+      (- x) ⊔ x       ≡⟨ ⊔Comm ⟩
+      x ⊔ (- x)       ≡⟨⟩
+      abs x           ∎
+
+    0≤→abs≡id : ∀ x → 0r ≤ x → abs x ≡ x
+    0≤→abs≡id x 0≤x = is-antisym (abs x) x
+      (⊔LUB (is-refl x) (begin≤ - x ≤⟨ 0≤→-≤0 x 0≤x ⟩ 0r ≤⟨ 0≤x ⟩ x ◾))
+      (≤abs x)
+
+    ≤0→abs≡- : ∀ x → x ≤ 0r → abs x ≡ - x
+    ≤0→abs≡- x x≤0 = sym (abs- x) ∙ 0≤→abs≡id (- x) (≤0→0≤- x x≤0)
+
+    0<→abs≡id : ∀ x → 0r < x → abs x ≡ x
+    0<→abs≡id x = 0≤→abs≡id x ∘ <-≤-weaken 0r x
+
+    <0→abs≡- : ∀ x → x < 0r → abs x ≡ - x
+    <0→abs≡- x = ≤0→abs≡- x ∘ <-≤-weaken x 0r
+
+    abs²≡² : ∀ x → abs x · abs x ≡ x · x
+    abs²≡² x = is-antisym (abs x · abs x) (x · x)
+      (¬<→≥ (x · x) (abs x · abs x) λ x²<∣x∣² →
+        let
+          0≤x : 0r ≤ x
+          0≤x = ¬<→≥ x 0r λ x<0 → is-irrefl (x · x) (begin<
+            x · x           <⟨ x²<∣x∣² ⟩
+            abs x · abs x ≡→≤⟨ cong (∘diag _·_) (<0→abs≡- x x<0) ∙ solve! RCR ⟩
+            x · x           ◾)
+        in
+          is-irrefl (x · x) (begin<
+            x · x           <⟨ x²<∣x∣² ⟩
+            abs x · abs x ≡→≤⟨ cong (∘diag _·_) (0≤→abs≡id x 0≤x) ⟩
+            x · x           ◾))
+      (0≤-→≤ (x · x) (abs x · abs x) (begin≤
+        0r                          ≡→≤⟨ solve! RCR ⟩
+        0r · (abs x - - x)            ≤⟨ ·MonoR≤ 0r _ _ (≤→0≤- _ _ (-≤abs x))
+                                                        (≤→0≤- _ _ (≤abs x)) ⟩
+        (abs x - x) · (abs x - - x) ≡→≤⟨ solve! RCR ⟩
+        abs x · abs x - x · x         ◾))
 
     triangularInequality : ∀ x y → abs (x + y) ≤ abs x + abs y
     triangularInequality x y = ⊔LUB
