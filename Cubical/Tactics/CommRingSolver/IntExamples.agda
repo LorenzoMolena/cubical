@@ -5,7 +5,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Data.Int.Base hiding (_+_ ; _·_ ; _-_; -_)
 
 open import Cubical.Data.Nat using (ℕ; suc; zero)
-
+import Cubical.Data.Nat as ℕ
 open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.CommRing.Instances.Fast.Int
 open import Cubical.Algebra.CommAlgebra
@@ -19,7 +19,7 @@ private
 
 open FastℤRingSolver
 
-module TestWithℤ (v : ℕ → ℤ) where
+module TestWithℤ (v : ℕ → ℤ) (v' : ℕ → ℕ) where
  open CommRingStr (ℤCommRing .snd)
 
  _ : 5 · v 0 + 190 · v 1 +  6 · v 0 ≡ (v 1 · 100 + 11 · v 0 +  v 1 · 90)
@@ -34,3 +34,7 @@ module TestWithℤ (v : ℕ → ℤ) where
 
  ex0 : (a b : fst ℤCommRing) → a + b ≡ b + a
  ex0 a b = ℤ!
+
+
+ ex1 : (a b : fst ℤCommRing) → 2 + a + b + pos (v' 0 ℕ.+ v' 1) ≡ pos (suc (suc (v' 0))) + b + a + pos (v' 1)
+ ex1 a b = ℤ!

@@ -17,7 +17,6 @@ open import Cubical.Data.Int using (fromNegℤ; fromNatℤ)
 open import Cubical.Data.Nat using (ℕ; discreteℕ) renaming (_+_ to _+ℕ_)
 import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Bool
-open import Cubical.Data.Bool.SwitchStatement
 open import Cubical.Data.Vec using (Vec) renaming ([] to emptyVec; _∷_ to _∷vec_)
 
 open import Cubical.Relation.Nullary.Base
@@ -44,9 +43,6 @@ import Cubical.HITs.SetQuotients as SetQuotient
 private
  variable
   ℓ' ℓ : Level
-
-
-
 
 module CommRingSolver
          (ring : CommRing ℓ)
@@ -95,7 +91,7 @@ module CommRingSolver
 
  solverCallWithVars : ℕ → Vars → Term → Term → Term → Term
  solverCallWithVars n vars R lhs rhs =
-     def solverName --(quote ?)
+     def solverName 
          (R v∷ (harg {quantity-ω} (ℕAsTerm n)) ∷ lhs v∷ rhs
            v∷ (variableList vars)
            ∷ (def solverPrfName  (R v∷ (harg {quantity-ω} (ℕAsTerm (length vars))) ∷ v[ lhs ]))
@@ -124,7 +120,7 @@ module CommRingSolver
                               ∷ termErr goal ∷ [])
 
      (lhs' , rhs' , vars) ← CommRingReflection.toAlgebraExpression commRing (lhs , rhs)
-     -- typeError (map,ₑ vars ++ₑ map,ₑ (lhs ∷ rhs ∷ []))
+     
 
      let solution = solverCallWithVars (length vars) vars commRing lhs' rhs'
      unify hole solution <|> do
@@ -167,28 +163,22 @@ module FastℤRingSolver where
    buildExpressionFromNat (lit (nat x)) = scalarℕ x
    buildExpressionFromNat (con (quote ℕ.zero) []) = `0` []
    buildExpressionFromNat (con (quote ℕ.suc) (con (quote ℕ.zero) [] v∷ [] )) = `1` []
-   buildExpressionFromNat (con (quote ℕ.suc) (x v∷ [] )) =
-     do
-     -- debugPrint "intSolver" 20  (strErr "fromNat suc:" ∷ termErr x ∷ [])
+   buildExpressionFromNat (con (quote ℕ.suc) (x v∷ [] )) = do
      r1 ← `1` []
      r2 ← buildExpressionFromNat x
      returnTC ((λ ass → con (quote _+'_) (fst r1 ass v∷ fst r2 ass v∷ [])) ,
               appendWithoutRepetition (snd r1) (snd r2))
-   buildExpressionFromNat (def (quote ℕ._+_) (x v∷ y v∷ [])) =
-     do
-     -- debugPrint "intSolver" 20  (strErr "buildNateExpr ℕ._+_ :" ∷ termErr x ∷ [])
+   buildExpressionFromNat (def (quote ℕ._+_) (x v∷ y v∷ [])) = do
      r1 ← buildExpressionFromNat x
      r2 ← buildExpressionFromNat y
      returnTC ((λ ass → con (quote _+'_) (fst r1 ass v∷ fst r2 ass v∷ [])) ,
               appendWithoutRepetition (snd r1) (snd r2))
-   buildExpressionFromNat (def (quote ℕ._·_) (x v∷ y v∷ [])) =
-     do
+   buildExpressionFromNat (def (quote ℕ._·_) (x v∷ y v∷ [])) = do
      r1 ← buildExpressionFromNat x
      r2 ← buildExpressionFromNat y
      returnTC ((λ ass → con (quote _·'_) (fst r1 ass v∷ fst r2 ass v∷ [])) ,
               appendWithoutRepetition (snd r1) (snd r2))
-   buildExpressionFromNat (def (quote _ℕ-_) (x v∷ (con (quote ℕ.suc) (y v∷ [] )) v∷ [])) =
-     do
+   buildExpressionFromNat (def (quote _ℕ-_) (x v∷ (con (quote ℕ.suc) (y v∷ [] )) v∷ [])) = do
      r1 ← buildExpressionFromNat x
      r2 ← do y' ← do u1 ← `1` []
                      u2 ← buildExpressionFromNat y
@@ -206,11 +196,9 @@ module FastℤRingSolver where
    matchTerm : Term → TC (Maybe (Template × Vars))
 
    matchTerm t@(con (quote ℤ.pos) (x v∷ [])) = do
-    -- debugPrint "intSolver" 20  (strErr "buildExpr pos:" ∷ termErr x ∷ [])
     just <$> buildExpressionFromNat x
    matchTerm t@(con (quote ℤ.negsuc) (x v∷ [])) =
-    do --debugPrint "intSolver" 20  (strErr "buildExpr negsuc:" ∷ termErr x ∷ [])
-       y ← do r1 ← `1` []
+    do y ← do r1 ← `1` []
               r2 ← buildExpressionFromNat x
               returnTC {A = Template × Vars} ((λ ass → con (quote _+'_) (fst r1 ass v∷ fst r2 ass v∷ [])) ,
                    appendWithoutRepetition (snd r1) (snd r2))

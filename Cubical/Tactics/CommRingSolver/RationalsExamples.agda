@@ -23,14 +23,14 @@ private
 
 open ℚRingSolver
 
-module TestWithℤ (v : ℕ → ℚ) where
+module TestWithℚ (v : ℕ → ℚ) where
  open CommRingStr (ℚCommRing .snd)
 
  _ : 5 · v 0 + 190 · v 1 +  6 · v 0 ≡ (v 1 · 100 + 11 · v 0 +  v 1 · 90)
  _ = ℚ!
 
 
- e0 : ∀ (x y z : ℚ)  → 4 · (([ 1 / 6 ] · x) + (x · [ 1 / 3 ])) + y ≡ x + y + x
+ e0 : ∀ (x y z : ℚ)  → 4 · (([ 1 / 6 ] · x) + (x · [ 1 / 3 ])) + (z · (2 - [ 8 / 4 ]))  + y ≡ x + y + x + z - z
  e0 _ _ _ = ℚ!
 
 
