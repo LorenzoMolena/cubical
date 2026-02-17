@@ -2,7 +2,7 @@
 -- TO DO : correctly cite the paper
 open import Cubical.Relation.Premetric.Base
 
-module Cubical.Relation.Premetric.Completion.Properties {ℓ} {ℓ'}
+module Cubical.Relation.Premetric.Completion.Properties.Closeness {ℓ} {ℓ'}
   (M' : PremetricSpace ℓ ℓ') where
 
 open import Cubical.Foundations.Prelude
