@@ -1246,4 +1246,4 @@ isLimitLim = λ x xc ε θ → Elimℭ-Prop.go e (x ε) x xc ε θ (isRefl∼ (x
 
 -- Theorem 3.18
 isCompleteℭ : isComplete ℭPremetricSpace
-isCompleteℭ x xc = (lim x xc) , (isLimitLim x xc)
+isCompleteℭ x xc = lim x xc , isLimitLim x xc
