@@ -19,7 +19,7 @@ open import Cubical.Relation.Binary.Order.Poset.Instances.Nat
 open import Cubical.Relation.Binary.Order.Quoset.Instances.Nat
 open import Cubical.Relation.Binary.Order.Pseudolattice
 open import Cubical.Relation.Binary.Order.Pseudolattice.Instances.Nat
-open module N = JoinProperties ℕ≤Pseudolattice
+private open module N = JoinProperties ℕ≤Pseudolattice
 
 open import Cubical.Relation.Binary.Order.QuosetReasoning
 open <-≤-Reasoning ℕ (str ℕ≤Poset) (str ℕ<Quoset)
@@ -108,3 +108,11 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
 
   isPropIsComplete : isProp isComplete
   isPropIsComplete = isPropΠ λ _ → isProp→ (isPropLimit _)
+
+  isLimit≈< : ∀ x l → isLimit x l → ∀ ε δ → (ε <₊ δ) → x ε ≈[ δ ] l
+  isLimit≈< x l l-lim ε δ ε<δ = subst≈ (x ε) l (
+    ⟨ ε ⟩₊ ℚ.+ (δ -₊ ε) ≡⟨ ℚ.+Comm ⟨ ε ⟩₊ (δ -₊ ε) ⟩
+    (δ -₊ ε) ℚ.+ ⟨ ε ⟩₊ ≡⟨ minusPlus₊ δ ε ⟩
+    ⟨ δ ⟩₊              ∎)
+    (l-lim ε [ δ -₊ ε ]⟨ ε<δ ⟩
+    :> x ε ≈[ ε +₊ [ δ -₊ ε ]⟨ ε<δ ⟩ ] l)
