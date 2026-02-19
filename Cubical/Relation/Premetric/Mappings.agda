@@ -9,16 +9,20 @@ open import Cubical.Foundations.SIP
 open import Cubical.Data.Sigma
 open import Cubical.Data.Empty as ⊥
 
-open import Cubical.Data.Nat.Base as ℕ
-open import Cubical.Data.NatPlusOne.Base as ℕ₊₁
-open import Cubical.Data.Int.Fast.Base as ℤ
-open import Cubical.Data.Int.Fast.Properties as ℤ
+open import Cubical.Data.Nat as ℕ
+open import Cubical.Data.NatPlusOne as ℕ₊₁
+open import Cubical.Data.Int.Fast as ℤ
 open import Cubical.Data.Int.Fast.Order as ℤ
-open import Cubical.Data.Rationals.Fast.Base as ℚ
+open import Cubical.Data.Rationals.Fast as ℚ
 open import Cubical.Data.Rationals.Fast.Order as ℚ
 
 open import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
+
+
+open import Cubical.Algebra.CommRing
+open import Cubical.Algebra.OrderedCommRing
+open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
 
 open import Cubical.Reflection.RecordEquiv
 open import Cubical.Reflection.StrictEquiv
@@ -29,12 +33,62 @@ private
   variable
     ℓM ℓM' ℓN ℓN' : Level
 
+module ℚ₊Inverse where
+
+  private
+    ℚOCR = ℚOrderedCommRing
+    ℚCR  = OrderedCommRing→CommRing ℚOCR
+  open Units ℚCR
+  open CommRingTheory ℚCR
+
+  Σinverseℚ₊ : ((ε , 0<ε) : ℚ₊) → Σ[ δ ∈ ℚ ] (ε ℚ.· δ ≡ 1)
+  Σinverseℚ₊ = uncurry $ SQ.elimProp (λ ε → isPropΠ λ _ → inverseUniqueness ε) λ
+    { (pos zero    , 1+ d) p → ⊥.rec (ℤ.isIrrefl< p)
+    ; (pos (suc n) , (1+ d)) p .fst → [ pos (suc d) / 1+ n ]
+    ; (pos (suc n) , (1+ d)) p .snd →
+      let 1+n = pos (suc n) ; 1+d = pos (suc d) ; 1+n·1+d = 1+ d ·₊₁ 1+ n
+      in
+      [ 1+n ℤ.· 1+d / 1+n·1+d ]  ≡⟨ cong [_/ 1+n·1+d ] (ℤ.·Comm 1+n 1+d) ⟩
+      [ 1+d ℤ.· 1+n / 1+n·1+d ]  ≡⟨ ℚ.·CancelR (1+ n) ⟩
+      [ 1+d / 1+ d ]             ≡⟨ sym $ cong₂ [_/_] (ℤ.·IdL 1+d) (·₊₁-identityˡ (1+ d))⟩
+      [ 1 ℤ.· 1+d / 1 ·₊₁ 1+ d ] ≡⟨ ℚ.·CancelR (1+ d) ⟩
+      [ 1 / 1 ]                         ∎
+    ; (negsuc n    , 1+ d) p → ⊥.rec (ℤ.¬pos≤negsuc p) }
+
+  infixl 7 _⁻¹₊
+
+  _⁻¹₊ : ℚ₊ → ℚ₊
+  fst (ε ⁻¹₊) = fst (Σinverseℚ₊ ε)
+  snd (ε ⁻¹₊) = uncurry
+    (SQ.elimProp
+      (λ ε → isPropΠ λ p → ℚ.isProp< 0 (fst (Σinverseℚ₊ (ε , p))) )
+      λ { (pos zero    , 1+ d) p → ⊥.rec (ℤ.isIrrefl< p)
+        ; (pos (suc n) , 1+ d) p → ℤ.zero-<possuc
+        ; (negsuc n    , 1+ d) p → ⊥.rec (ℤ.¬pos≤negsuc p) })
+    ε
+
+  _/_ : ℚ₊ → ℚ₊ → ℚ₊
+  ε / L = ε ·₊ (L ⁻¹₊)
+
+  ⁻¹inverse : ∀ ε → ⟨ ε / ε ⟩₊ ≡ 1
+  ⁻¹inverse = snd ∘ Σinverseℚ₊
+
+  ·/ : ∀ L ε → ⟨ L ·₊ (ε / L) ⟩₊ ≡ ⟨ ε ⟩₊
+  ·/ L ε =
+    ⟨ L ·₊ (ε ·₊ (L ⁻¹₊)) ⟩₊ ≡⟨ ·CommAssocl ⟨ L ⟩₊ ⟨ ε ⟩₊ ⟨ L ⁻¹₊ ⟩₊ ⟩
+    ⟨ ε ·₊ (L ·₊ (L ⁻¹₊)) ⟩₊ ≡⟨ cong (⟨ ε ⟩₊ ℚ.·_) (⁻¹inverse L) ⟩
+    ⟨ ε ⟩₊ ℚ.· 1             ≡⟨ ℚ.·IdR ⟨ ε ⟩₊ ⟩
+    ⟨ ε ⟩₊                   ∎
+
+
 module _
   {A : Type ℓM} {B : Type ℓN}
   (M : PremetricStr ℓM' A)
   (N : PremetricStr ℓN' B)
   (f : A → B)
   where
+
+  open ℚ₊Inverse
 
   private
     module M = PremetricStr M
@@ -82,36 +136,34 @@ module _
   isPropIsUniformlyContinuous : isProp isUniformlyContinuous
   isPropIsUniformlyContinuous = squash₁
 
-  isSetℚ₊ : isSet ℚ₊
-  isSetℚ₊ = isSetΣSndProp ℚ.isSetℚ (ℚ.isProp< 0)
+  isLipschitz→isUniformlyContinuous : isLipschitz → isUniformlyContinuous
+  isLipschitz→isUniformlyContinuous = PT.map
+    λ { (L , is-lip) .fst → _/ L
+      ; (L , is-lip) .snd → λ x y ε x≈y →
+      N.subst≈ (f x) (f y) (·/ L ε)
+      (is-lip x y (ε / L)
+        (x≈y
+          :> x M.≈[ ε / L ] y)
+        :> f x N.≈[ L ·₊ (ε / L) ] f y)
+      :> f x N.≈[ ε ] f y }
 
-  -- 1/_ : ℚ₊ → ℚ₊
-  -- 1/_ = uncurry (SQ.elim
-  --   (λ _ → isSetΠ λ _ → isSetℚ₊)
-  --   (λ { (pos zero    , 1+ d) p → ⊥.rec (ℤ.isIrrefl< p)
-  --      ; (negsuc n    , 1+ d) p → ⊥.rec (ℤ.¬pos≤negsuc p)
-  --      ; (pos (suc n) , 1+ d) p → [ pos (suc d) / 1+ n ] , ℤ.zero-<possuc })
-  --   λ { (pos zero    , 1+ b) (pos zero    , 1+ d) r → {!   !}
-  --     ; (pos zero    , 1+ b) (pos (suc c) , 1+ d) r → {!   !}
-  --     ; (pos (suc a) , 1+ b) (pos zero    , 1+ d) r → {!   !}
-  --     ; (pos (suc a) , 1+ b) (pos (suc c) , 1+ d) r → {!   !}
-  --     ; (pos a    , 1+ b)    (negsuc c , 1+ d)    r → {!   !}
-  --     ; (negsuc a , 1+ b)    (pos    c , 1+ d)    r → {!   !}
-  --     ; (negsuc a , 1+ b)    (negsuc c , 1+ d)    r → {!   !} } )
+  isUniformlyContinuous→isContinuous : isUniformlyContinuous → isContinuous
+  isUniformlyContinuous→isContinuous = PT.rec isPropIsContinuous
+    λ (μ , is-uc) → λ x ε → ∣ μ ε , flip (is-uc x) ε ∣₁
 
-  -- isLipschitz→isUniformlyContinuous : isLipschitz → isUniformlyContinuous
-  -- isLipschitz→isUniformlyContinuous = {!   !}
+  isLipschitz→isContinuous : isLipschitz → isContinuous
+  isLipschitz→isContinuous =
+    isUniformlyContinuous→isContinuous ∘ isLipschitz→isUniformlyContinuous
+
 
 C[_,_] : PremetricSpace ℓM ℓM' → PremetricSpace ℓN ℓN' → Type _
 C[ (M , MPr) , (N , NPr) ] = Σ[ f ∈ (M → N) ] isContinuous MPr NPr f
 
--- infixr 6 _$≈_
--- _$≈_ : {M : PremetricSpace ℓM ℓM'} {N : PremetricSpace ℓN ℓN'}
---     → C[ M , N ] → ⟨ M ⟩ → ⟨ N ⟩
--- _$≈_ = fst
-
 UC[_,_] : PremetricSpace ℓM ℓM' → PremetricSpace ℓN ℓN' → Type _
 UC[ (M , MPr) , (N , NPr) ] = Σ[ f ∈ (M → N) ] isUniformlyContinuous MPr NPr f
+
+L[_,_] : PremetricSpace ℓM ℓM' → PremetricSpace ℓN ℓN' → Type _
+L[ (M , MPr) , (N , NPr) ] = Σ[ f ∈ (M → N) ] isLipschitz MPr NPr f
 
 record IsPremetricEquiv {A : Type ℓM} {B : Type ℓN}
   (M : PremetricStr ℓM' A) (e : A ≃ B) (N : PremetricStr ℓN' B)

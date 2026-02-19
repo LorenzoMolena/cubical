@@ -21,6 +21,8 @@ open import Cubical.Relation.Binary.Order.Pseudolattice
 open import Cubical.Relation.Binary.Order.Pseudolattice.Instances.Nat
 private open module N = JoinProperties ℕ≤Pseudolattice
 
+open import Cubical.HITs.PropositionalTruncation as PT
+
 open import Cubical.Relation.Binary.Order.QuosetReasoning
 open <-≤-Reasoning ℕ (str ℕ≤Poset) (str ℕ<Quoset)
   (λ _ → ℕ.<≤-trans) (λ _ → ℕ.≤<-trans) ℕ.<-weaken
@@ -116,3 +118,25 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
     ⟨ δ ⟩₊              ∎)
     (l-lim ε [ δ -₊ ε ]⟨ ε<δ ⟩
     :> x ε ≈[ ε +₊ [ δ -₊ ε ]⟨ ε<δ ⟩ ] l)
+
+  -- Lemma 2.8
+  isLim≈+ : ∀ u x l ε δ → isLimit x l → u ≈[ δ ] x ε → u ≈[ ε +₊ δ ] l
+  isLim≈+ u x l ε δ l-lim = PT.rec (isProp≈ u l _)
+    (λ { (η , η<δ , u≈xε) →
+    subst≈ u l (
+      ⟨ η +₊ (ε +₊ [ δ -₊ η ]⟨ η<δ ⟩) ⟩₊ ≡⟨ ℚ.+Comm ⟨ η ⟩₊ _ ⟩
+      ⟨ (ε +₊ [ δ -₊ η ]⟨ η<δ ⟩) +₊ η ⟩₊ ≡⟨ sym $ ℚ.+Assoc ⟨ ε ⟩₊ (δ -₊ η) ⟨ η ⟩₊ ⟩
+      ⟨ ε +₊ ([ δ -₊ η ]⟨ η<δ ⟩ +₊ η) ⟩₊ ≡⟨ cong (⟨ ε ⟩₊ ℚ.+_) (minusPlus₊ δ η) ⟩
+      ⟨ ε +₊ δ ⟩₊                       ∎)
+    (isTriangular≈ u (x ε) l η (ε +₊ [ δ -₊ η ]⟨ η<δ ⟩)
+      (u≈xε
+        :> u ≈[ η ] x ε)
+      (l-lim ε [ δ -₊ η ]⟨ η<δ ⟩
+        :> x ε ≈[ ε +₊ [ δ -₊ η ]⟨ η<δ ⟩ ] l)
+      :> u ≈[ η +₊ (ε +₊ [ δ -₊ η ]⟨ η<δ ⟩) ] l)
+    :> u ≈[ ε +₊ δ ] l })
+    ∘ isRounded≈ u (x ε) δ
+
+  isLim≈- : ∀ u x l ε δ Δ → isLimit x l → u ≈[ ε -₊ δ , Δ ] x δ → u ≈[ ε ] l
+  isLim≈- u x l ε δ Δ l-lim =
+    subst≈ u l (ℚ.+Comm ⟨ δ ⟩₊ _ ∙ minusPlus₊ ε δ) ∘ isLim≈+ u x l δ (ε -₊ δ , Δ) l-lim

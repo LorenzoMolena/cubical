@@ -13,14 +13,16 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Empty as ⊥
 
 open import Cubical.Data.Nat.Base as ℕ
-open import Cubical.Data.NatPlusOne.Base as ℕ₊₁
-open import Cubical.Data.Int.Fast.Base as ℤ hiding (_-_)
+open import Cubical.Data.NatPlusOne as ℕ₊₁
+open import Cubical.Data.Int.Fast as ℤ hiding (_-_ ; -DistR·)
+open import Cubical.Data.Int.Fast.Order as ℤ
 
 open import Cubical.Data.Rationals.Fast.Base as ℚ
 import Cubical.Data.Rationals.Fast.Properties as ℚ
 open import Cubical.Data.Rationals.Fast.Order as ℚ using () renaming (_<_ to _<ℚ_)
 
 open import Cubical.HITs.PropositionalTruncation as PT
+open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
 
 open import Cubical.Relation.Binary.Properties
 
@@ -34,7 +36,7 @@ open Characteristic≠2 ℚOrderedCommRing [ 1 / 2 ] (eq/ _ _ refl)
 
 open import Cubical.Relation.Premetric.Properties
 open import Cubical.Relation.Premetric.Mappings
-open PremetricTheory using (isLimit ; limit ; isComplete ; isLimit≈<)
+open PremetricTheory using (isLimit ; limit ; isComplete ; isLimit≈< ; isLim≈-)
 
 open import Cubical.Reflection.RecordEquiv
 
@@ -47,6 +49,8 @@ private
 module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
 
   private
+    M = ⟨ M' ⟩
+    N = ⟨ N' ⟩
     open module M = PremetricStr (M' .snd)
     open module N = PremetricStr (N' .snd)
     ℚOCR = ℚOrderedCommRing
@@ -55,6 +59,7 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
     open OrderedCommRingReasoning ℚOCR
     open OrderedCommRingTheory ℚOCR
     open RingTheory ℚR
+    open Units ℚCR
     open IsSemigroup (SemigroupStr.isSemigroup (snd +ℚ₊Semigroup)) using () renaming (
       ·Assoc to +₊Assoc)
     open import Cubical.Relation.Premetric.Completion.Base M' renaming (ℭ to ℭM)
@@ -123,3 +128,57 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
         (fc (lim x xc) (ε /2₊))
         (gc (lim x xc) (ε /2₊))
       isPropA e x       = N.isSetM (f x) (g x)
+
+{-
+  -- Theorem 3.20
+  LiftLipschitz : isComplete N'
+                → ∀ L → (f : M → N) → isLipschitzWith (snd M') (snd N') f L
+                → Σ[ f' ∈ (ℭM → N) ] isLipschitzWith (snd ℭMPrSpace) (snd N') f' L
+  LiftLipschitz N-com L f f-lip = RecℭSym.go r , λ _ _ _ → RecℭSym.go∼ r where
+    open RecℭSym
+    open ℚ₊Inverse
+
+    flim' : ∀ fx → (∀ ε δ → fx ε N.≈[ L ·₊ (ε +₊ δ) ] fx δ) → limit N' (fx ∘ (_/ L))
+    flim' fx fxcL = N-com (fx ∘ (_/ L)) fxc where
+      fxc : ∀ ε δ → fx (ε / L) N.≈[ ε +₊ δ ] fx (δ / L)
+      fxc ε δ = flip (N.subst≈ (fx (ε / L)) (fx (δ / L))) (fxcL (ε / L) (δ / L)) $
+        ⟨ L ·₊ (ε / L +₊ δ / L) ⟩₊          ≡⟨ ℚ.·DistL+ ⟨ L ⟩₊ ⟨ ε / L ⟩₊ ⟨ δ / L ⟩₊ ⟩
+        ⟨ L ·₊ ε / L ⟩₊ ℚ.+ ⟨ L ·₊ δ / L ⟩₊  ≡⟨ cong₂ ℚ._+_ (·/ L ε) (·/ L δ) ⟩
+        ⟨ ε +₊ δ ⟩₊                         ∎
+
+    flim : ∀ fx → (∀ ε δ → fx ε N.≈[ L ·₊ (ε +₊ δ) ] fx δ) → N
+    flim fx fxcL = fst (flim' fx fxcL)
+
+    islim-flim : ∀ fx fxcL → isLimit N' (fx ∘ (_/ L)) (flim fx fxcL)
+    islim-flim fx fxcL = snd (flim' fx fxcL)
+
+    r : RecℭSym N λ u v ε → u N.≈[ L ·₊ ε ] v
+    ιA        r = f
+    limA      r = flim
+    eqA       r = λ u v u≈v →
+      N.isSeparated≈ u v (
+        λ ε → N.subst≈ u v (·/ L ε)
+          (u≈v (ε / L)
+          :> (u N.≈[ L ·₊ (ε / L) ] v))
+        :> u N.≈[ ε ] v)
+      :> u ≡ v
+    ι-ι-B     r = f-lip
+    ι-lim-B   r x fy ε δ fycL Δ fx≈fyδ        =
+      isLim≈- N' (f x) (fy ∘ (_/ L)) (flim fy fycL) (L ·₊ ε) (L ·₊ δ) Δ'
+        (islim-flim fy fycL) (
+        subst2 ((f x) N.≈[_]_)
+          (ℚ₊≡ $ ℚ.·DistL+ ⟨ L ⟩₊ ⟨ ε ⟩₊ _ ∙ cong (⟨ L ·₊ ε ⟩₊ ℚ.+_) (-DistR· ⟨ L ⟩₊ _))
+          (cong fy (ℚ₊≡ $ sym (·/ L δ) ∙ ℚ.·Assoc ⟨ L ⟩₊ ⟨ δ ⟩₊ ⟨ L ⁻¹₊ ⟩₊))
+          (fx≈fyδ
+            :> f x N.≈[ L ·₊ (ε -₊ δ , Δ) ] fy δ)
+          :> f x N.≈[ (L ·₊ ε) -₊ (L ·₊ δ) , Δ' ] fy ((L ·₊ δ) / L))
+        :> f x N.≈[ L ·₊ ε ] flim fy fycL
+      where
+        Δ' : 0 <ℚ (L ·₊ ε) -₊ (L ·₊ δ)
+        Δ' = <→0<- ⟨ L ·₊ δ ⟩₊ ⟨ L ·₊ ε ⟩₊
+              (·MonoL< ⟨ δ ⟩₊ ⟨ ε ⟩₊ ⟨ L ⟩₊ (snd L)
+                (0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ))
+    lim-lim-B r fx fy ε δ η fxcL fycL Δ fxδ≈fyη  = {!   !}
+    isSymB    r u v = N.isSym≈  u v ∘ (L ·₊_)
+    isPropB   r u v = N.isProp≈ u v ∘ (L ·₊_)
+-}
