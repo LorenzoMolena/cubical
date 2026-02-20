@@ -1,3 +1,4 @@
+{-# OPTIONS --quote-metas #-}
 module Cubical.Tactics.CommRingSolver.Examples where
 
 open import Cubical.Foundations.Prelude
@@ -51,7 +52,7 @@ module TestWithℤ where
   ex0 : (a b : fst ℤCommRing) → a + b ≡ b + a
   ex0 a b = solve! ℤCommRing
 
-module Test (R : CommRing ℓ) (x y z : fst R) where
+module Test (R : CommRing ℓ) (x y z w : fst R) where
   open CommRingStr (snd R)
   open RingTheory (CommRing→Ring R) using () renaming (fromℤ to scalar)
 
@@ -101,62 +102,66 @@ module Test (R : CommRing ℓ) (x y z : fst R) where
                   + (scalar 4) · x · y · y · y + y · y · y · y
   ex7 = solve! R
 
-  {-
-    Examples that used to fail (see #513):
-  -}
+  ex7' : z · x + y + w · x + w ≡ x + y + x + scalar 2
+  ex7' = ring! R (y ∷ x ∷ []) ({!!} ∷ {!!} ∷ P[ {!!} ])
 
-  ex8 : x · 0r ≡ 0r
-  ex8 = solve! R
 
-  ex9 : x · (y - z) ≡ x · y - x · z
-  ex9 = solve! R
+--   {-
+--     Examples that used to fail (see #513):
+--   -}
 
-  {-
-    The solver should also deal with non-trivial terms in equations.
-    In the following example, such a term is given by "f x".
-  -}
-  pow : ℕ → fst R → fst R
-  pow (suc n) x = x · (pow n x)
-  pow (zero) x = 1r
+--   ex8 : x · 0r ≡ 0r
+--   ex8 = solve! R
 
-  module _ (f : fst R → fst R) (n : ℕ) where
-    ex10 : (x : (fst R)) → (pow n x) + 0r ≡ (pow n x)
-    ex10 x = solve! R
+--   ex9 : x · (y - z) ≡ x · y - x · z
+--   ex9 = solve! R
 
-    ex11 : (x : (fst R)) → (f x) + 0r ≡ (f x)
-    ex11 x = solve! R
+--   {-
+--     The solver should also deal with non-trivial terms in equations.
+--     In the following example, such a term is given by "f x".
+--   -}
+--   pow : ℕ → fst R → fst R
+--   pow (suc n) x = x · (pow n x)
+--   pow (zero) x = 1r
 
-module _ (R : CommRing ℓ) (A : CommAlgebra R ℓ') where
-  open CommRingStr ⦃...⦄
-  private
-    instance
-      _ : CommRingStr ⟨ A ⟩ₐ
-      _ = (A .fst .snd)
-  {-
-    The ring solver should also be able to deal with more complicated arguments
-    and operations with that are not given as the exact names in CommRingStr.
-  -}
-  ex12 : (x y : ⟨ A ⟩ₐ) → x + y ≡ y + x
-  ex12 x y = solve! (CommAlgebra→CommRing A)
+--   module _ (f : fst R → fst R) (n : ℕ) where
+--     ex10 : (x : (fst R)) → (pow n x) + 0r ≡ (pow n x)
+--     ex10 x = solve! R
 
-module TestInPlaceSolving (R : CommRing ℓ) where
-   open CommRingStr (snd R)
+--     ex11 : (x : (fst R)) → (f x) + 0r ≡ (f x)
+--     ex11 x = solve! R
 
-   testWithOneVariabl : (x : fst R) → x + 0r ≡ 0r + x
-   testWithOneVariabl x = solve! R
+-- module _ (R : CommRing ℓ) (A : CommAlgebra R ℓ') where
+--   open CommRingStr ⦃...⦄
+--   private
+--     instance
+--       _ : CommRingStr ⟨ A ⟩ₐ
+--       _ = (A .fst .snd)
+--   {-
+--     The ring solver should also be able to deal with more complicated arguments
+--     and operations with that are not given as the exact names in CommRingStr.
+--   -}
+--   ex12 : (x y : ⟨ A ⟩ₐ) → x + y ≡ y + x
+--   ex12 x y = solve! (CommAlgebra→CommRing A)
 
-   testWithTwoVariables :  (x y : fst R) → x + y ≡ y + x
-   testWithTwoVariables x y =
-     x + y                      ≡⟨ solve! R ⟩
-     y + x ∎
+-- module TestInPlaceSolving (R : CommRing ℓ) where
+--    open CommRingStr (snd R)
 
-   testEquationalReasoning : (x : fst R) → x + 0r ≡ 0r + x
-   testEquationalReasoning x =
-     x + 0r                       ≡⟨ solve! R ⟩
-     0r + x ∎
+--    testWithOneVariabl : (x : fst R) → x + 0r ≡ 0r + x
+--    testWithOneVariabl x = solve! R
 
-   testEquationalReasoning' : (x : fst R) (p : 0r + x ≡ 1r) → x + 0r ≡ 1r
-   testEquationalReasoning' x p =
-     x + 0r              ≡⟨ solve! R ⟩
-     0r + x              ≡⟨ p ⟩
-     1r ∎
+--    testWithTwoVariables :  (x y : fst R) → x + y ≡ y + x
+--    testWithTwoVariables x y =
+--      x + y                      ≡⟨ solve! R ⟩
+--      y + x ∎
+
+--    testEquationalReasoning : (x : fst R) → x + 0r ≡ 0r + x
+--    testEquationalReasoning x =
+--      x + 0r                       ≡⟨ solve! R ⟩
+--      0r + x ∎
+
+--    testEquationalReasoning' : (x : fst R) (p : 0r + x ≡ 1r) → x + 0r ≡ 1r
+--    testEquationalReasoning' x p =
+--      x + 0r              ≡⟨ solve! R ⟩
+--      0r + x              ≡⟨ p ⟩
+--      1r ∎

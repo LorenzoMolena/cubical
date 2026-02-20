@@ -40,30 +40,35 @@ import Cubical.Data.Rationals as ℚ
 import Cubical.Algebra.CommRing.Instances.Rationals as ℚ'
 import Cubical.HITs.SetQuotients as SetQuotient
 
+open import Cubical.Data.List.Dependent as DL using (_∷_ ; P[_] ; []) public
+
 private
  variable
   ℓ' ℓ : Level
 
 module CommRingSolver
-         (ring : CommRing ℓ)
+         (basering : CommRing ℓ)
+         (ring : CommRing ℓ')
          (rrm : RingReflectionMatcher)
          (doNotUnfold : List Name)
          (solverName : Name)
          (solverPrfName : Name)
+         (polyVarGuard : Term → TC Bool)
                       where
+
+
+ Fuel = ℕ
+
+ fuelBudget : Fuel
+ fuelBudget = 10000000
+
 
  module CommRingReflection  where
 
   open RingReflectionMatcher rrm
 
-  Fuel = ℕ
-
-  fuelBudget : Fuel
-  fuelBudget = 10000000
-
-  module _ (cring : Term) where
+  module _ (basering cring : Term) where
    module _ (matchTerm : (Term → TC (Template × Vars)) → Term → TC (Maybe (Template × Vars))) where
-    open pr
 
     buildExpression : Fuel → Term → TC (Template × Vars)
     buildExpression (ℕ.zero) t =
@@ -71,13 +76,17 @@ module CommRingSolver
 
     buildExpression (ℕ.suc 𝓕) t = do
       (just x) ← matchTerm  (buildExpression 𝓕) t
-        where nothing → returnTC ((λ ass → polynomialVariable (ass t)) , t ∷ [])
+        where nothing → do
+           allowPolyVar ← polyVarGuard t 
+           returnTC (if allowPolyVar
+            then ((λ ass → polynomialVariable (ass t)) , t ∷ [])
+            else  ((λ _ → con (quote K) v[ t ]) , []))
       returnTC x
 
    toAlgebraExpression : Term × Term → TC (Term × Term × Vars)
    toAlgebraExpression (lhs , rhs) = do
 
-       matchTerm ← mkMatchTermTC cring
+       matchTerm ← mkMatchTermTC basering cring
        r1 ← buildExpression matchTerm fuelBudget lhs
        r2 ← buildExpression matchTerm fuelBudget rhs
        vars ← returnTC (appendWithoutRepetition (snd r1) (snd r2))
@@ -89,12 +98,14 @@ module CommRingSolver
 
 
 
- solverCallWithVars : ℕ → Vars → Term → Term → Term → Term
- solverCallWithVars n vars R lhs rhs =
+ solverCallWithVars : ℕ → Vars → Term → Term → Term → Maybe Term → Term
+ solverCallWithVars n vars R lhs rhs mbPrfTrm =
      def solverName 
          (R v∷ (harg {quantity-ω} (ℕAsTerm n)) ∷ lhs v∷ rhs
            v∷ (variableList vars)
-           ∷ (def solverPrfName  (R v∷ (harg {quantity-ω} (ℕAsTerm (length vars))) ∷ v[ lhs ]))
+           ∷ fromJust-def
+                (def solverPrfName  (R v∷ (harg {quantity-ω} (ℕAsTerm (length vars))) ∷ lhs v∷ v[ rhs ]))
+                mbPrfTrm             
             v∷ [])
 
      where
@@ -109,6 +120,7 @@ module CommRingSolver
      (false , doNotUnfold)
    do
      commRing ← quoteTC ring
+     baseCommRing ← quoteTC basering
      goal ← inferType hole >>= normalise
 
 
@@ -119,26 +131,89 @@ module CommRingSolver
            → typeError(strErr "The CommRingSolver failed to parse the goal "
                               ∷ termErr goal ∷ [])
 
-     (lhs' , rhs' , vars) ← CommRingReflection.toAlgebraExpression commRing (lhs , rhs)
+     (lhs' , rhs' , vars) ← CommRingReflection.toAlgebraExpression baseCommRing commRing (lhs , rhs)
      
 
      let solution = solverCallWithVars (length vars) vars commRing lhs' rhs'
-     unify hole solution <|> do
-       solutionType ←
-              (inferType solution >>= normalise)
-                 <|> typeError (map,ₑ vars ++ₑ map,ₑ (lhs ∷ rhs ∷ []))
-       typeError (("solution type: " ∷nl [ solutionType ]ₑ) ++nl (map,ₑ vars ++nl map,ₑ (lhs' ∷ rhs' ∷ [])))
+     unify hole (solution nothing) 
+       <|> do prfHole ← checkType unknown unknown
+              unify hole (solution (just prfHole))
+       --       solutionType ←
+       --        (inferType solution >>= normalise)
+       --           <|> typeError (map,ₑ vars ++ₑ map,ₑ (lhs ∷ rhs ∷ []))
+       -- typeError (("solution type: " ∷nl [ solutionType ]ₑ) ++nl (map,ₑ vars ++nl map,ₑ (lhs' ∷ rhs' ∷ [])))
+
+
+ refineListPHole' : Fuel → Term → TC Unit
+ refineListPHole' (ℕ.suc n) tm = unify (con (quote DL.[]) []) tm <|> do
+   (holeL , _) ← newHole
+   (holeR , _) ← newHole
+   (unify (con (quote DL._∷_) (holeL v∷ v[ holeR ])) tm >> refineListPHole' n holeR) <|> pure _
+ refineListPHole' ℕ.zero _ = returnTC _
+ 
+ refineListPHole : Term → TC Unit
+ refineListPHole = refineListPHole' fuelBudget
+
+ solve!-lemma-macro : List (fst ring) -> Term → Term → TC Unit
+ solve!-lemma-macro vars lemma hole = withReduceDefs
+     (false , doNotUnfold)
+   do
+     commRing ← quoteTC ring
+     baseCommRing ← quoteTC basering
+     goal ← inferType hole >>= normalise
+
+
+     wait-for-type goal
+     just (lhs , rhs) ← get-boundary goal
+       where
+         nothing
+           → typeError(strErr "The CommRingSolver failed to parse the goal "
+                              ∷ termErr goal ∷ [])
+
+     (lhs' , rhs' , vars) ← CommRingReflection.toAlgebraExpression baseCommRing commRing (lhs , rhs)
+     
+     let solution = solverCallWithVars (length vars) vars commRing lhs' rhs'
+                     (just (con (quote just) v[ lemma ]))
+     
+     unify hole solution
+     refineListPHole lemma
+
+
 
 module _ (ring : CommRing ℓ) where
 
  private
-  module ETNF =  EqualityToNormalform Fastℤ'.ℤCommRing Fastℤ.discreteℤ ring
+  module ETNF =  EqualityToNormalform Fastℤ'.ℤCommRing ring
                   (_ , Fastℤ'.CanonicalHomFromℤ.isHomFromℤ ring)
+  module ETNF≟ = ETNF.Decidable Fastℤ.discreteℤ
 
  macro
    solve! : Term → TC _
-   solve! = CommRingSolver.solve!-macro ring
-    (GenericCommRingReflection.genericCommRingMatchTerm) [] (quote ETNF.solve) (quote ETNF.HF-refl)
+   solve! = CommRingSolver.solve!-macro Fastℤ'.ℤCommRing ring
+    (GenericCommRingReflection.genericCommRingMatchTerm) []
+     (quote ETNF.solveByDec)
+     (quote ETNF≟.HF-Maybe-prf)
+     λ _ → pure true
+     
+module _ (ring : CommRing ℓ)
+
+       where
+
+ private
+  module ETNF =  EqualityToNormalform ring ring
+                  (idCommRingHom _)
+
+ module _ (vars : List (fst ring)) where
+  macro
+    ring! : Term → Term → TC _
+    ring! lemma hole =
+     do varsTms ← traverseList quoteTC vars
+        CommRingSolver.solve!-lemma-macro ring ring
+         (GenericCommRingReflection.genericCommRingMatchTerm) []
+          (quote ETNF.solveByDec)
+          (quote tt)
+           (λ tm → pure (elemVars tm varsTms))
+           vars lemma hole
 
 
 module FastℤRingSolver where
@@ -146,7 +221,7 @@ module FastℤRingSolver where
  open Fastℤ'
 
  fastℤMatcher : RingReflectionMatcher
- fastℤMatcher .RingReflectionMatcher.mkMatchTermTC _ = returnTC matchTerm
+ fastℤMatcher .RingReflectionMatcher.mkMatchTermTC _ _ = returnTC matchTerm
 
   where
 
@@ -155,7 +230,7 @@ module FastℤRingSolver where
     con (quote K) (con (quote pos) (lit (nat n) v∷ []) v∷ [])) , []))
 
   module _ (be : (Term → TC (Template × Vars))) where
-   open BE be
+   open BE q[ ℤCommRing ] be
 
 
 
@@ -212,26 +287,27 @@ module FastℤRingSolver where
 
  private
   module _ (zring : CommRing ℓ-zero) where
-   module ETNF = EqualityToNormalform ℤCommRing discreteℤ ℤCommRing
+   module ETNF = EqualityToNormalform ℤCommRing  ℤCommRing
                   (idCommRingHom _)
-
+   module ETNF≟ = ETNF.Decidable discreteℤ
  macro
    ℤ! : Term → TC _
-   ℤ! = CommRingSolver.solve!-macro ℤCommRing fastℤMatcher
+   ℤ! = CommRingSolver.solve!-macro ℤCommRing ℤCommRing fastℤMatcher
        ((quote ℕ._·_) ∷ (quote ℕ._+_) ∷ (quote _+_) ∷ (quote (-_)) ∷ (quote _·_) ∷ (quote _ℕ-_) ∷ [])
-       (quote ETNF.solve) (quote ETNF.HF-refl)
+       (quote ETNF.solveByDec) (quote ETNF≟.HF-Maybe-prf)
+       λ _ → pure true
 
 module ℚRingSolver where
  open ℚ
  open ℚ'
 
  ℚMatcher : RingReflectionMatcher
- ℚMatcher .RingReflectionMatcher.mkMatchTermTC _ = returnTC matchTerm
+ ℚMatcher .RingReflectionMatcher.mkMatchTermTC _ _ = returnTC matchTerm
 
   where
 
   module _ (be : (Term → TC (Template × Vars))) where
-   open BE be
+   open BE q[ ℚCommRing ] be
 
    matchTerm : Term → TC (Maybe (Template × Vars))
 
@@ -246,11 +322,12 @@ module ℚRingSolver where
 
  private
   module _ (zring : CommRing ℓ-zero) where
-   module ETNF = EqualityToNormalform ℚCommRing discreteℚ ℚCommRing
+   module ETNF = EqualityToNormalform ℚCommRing ℚCommRing
                   (idCommRingHom _)
-
+   module ETNF≟ = ETNF.Decidable discreteℚ
  macro
    ℚ! : Term → TC _
-   ℚ! = CommRingSolver.solve!-macro ℚCommRing ℚMatcher
+   ℚ! = CommRingSolver.solve!-macro ℚCommRing ℚCommRing ℚMatcher
        ((quote ℕ._·_) ∷ (quote ℕ._+_) ∷ (quote _+_) ∷ (quote (-_)) ∷ (quote _·_) ∷ [])
-       (quote ETNF.solveByDec) (quote ETNF.HF-unit)
+       (quote ETNF.solveByDec) (quote ETNF≟.HF-Maybe-prf)
+       λ _ → pure true

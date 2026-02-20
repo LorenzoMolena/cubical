@@ -17,6 +17,7 @@ open import Cubical.Functions.Fixpoint
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Sigma.Base using (_×_)
 open import Cubical.Data.Sum.Base
+open import Cubical.Data.Maybe.Base
 
 open import Cubical.Relation.Nullary.Base
 open import Cubical.HITs.PropositionalTruncation.Base
@@ -222,3 +223,6 @@ Dec× : ∀ {ℓ'} {A : Type ℓ} {B : Type ℓ'} → Dec A → Dec B → Dec (A
 Dec× (yes p) (yes p') = yes (p , p')
 Dec× _ (no ¬p) = no (¬p ∘ snd)
 Dec× (no ¬p) _ = no (¬p ∘ fst)
+
+decToMaybe : {A : Type ℓ} → Dec A → Maybe A
+decToMaybe = decRec just λ _ → nothing 

@@ -11,41 +11,73 @@ open import Cubical.Data.List
 open import Cubical.Data.FinData
 open import Cubical.Data.List.FinData
 open import Cubical.Data.Unit
+open import Cubical.Data.Maybe
 open import Cubical.Data.Prod hiding (map)
 open import Cubical.Data.Nat
+import Cubical.Data.Sigma as Σ
 
 module Cubical.Data.List.Dependent where
 
 open _≅_
 
-data ListP {ℓA ℓB} {A : Type ℓA} (B : A → Type ℓB) : (as : List A) → Type (ℓ-max ℓA ℓB) where
-  [] : ListP B []
-  _∷_ : {x : A} (y : B x) {xs : List A} (ys : ListP B xs) → ListP B (x ∷ xs)
+module ListDep {ℓA ℓB} {A : Type ℓA} (B : A → Type ℓB) where
+ data ListP  : (as : List A) → Type (ℓ-max ℓA ℓB) where
+   [] : ListP []
+   _∷_ : {x : A} (y : B x) {xs : List A} (ys : ListP xs) → ListP (x ∷ xs)
 
-infixr 5 _∷_
+ infixr 5 _∷_
 
---------------------------
+ pattern P[_] x = x ∷ []
 
--- Represent ListP via known operations in order to derive properties more easily.
-RepListP : ∀ {ℓA ℓB} {A : Type ℓA} (B : A → Type ℓB) (as : List A) → Type (ℓ-max ℓA ℓB)
-RepListP B [] = Lift Unit
-RepListP B (a ∷ as) = B a × RepListP B as
+ --------------------------
 
-isoRepListP : ∀ {ℓA ℓB} {A : Type ℓA} (B : A → Type ℓB) (as : List A) → ListP B as ≅ RepListP B as
-fun (isoRepListP B []) bs = lift tt
-inv (isoRepListP B []) u = []
-sec (isoRepListP B []) u = refl
-ret (isoRepListP B []) [] = refl
-fun (isoRepListP B (a ∷ as)) (b ∷ bs) = b , fun (isoRepListP B as) bs
-inv (isoRepListP B (a ∷ as)) (b , br) = b ∷ inv (isoRepListP B as) br
-sec (isoRepListP B (a ∷ as)) (b , br) i = b , sec (isoRepListP B as) br i
-ret (isoRepListP B (a ∷ as)) (b ∷ bs) i = b ∷ ret (isoRepListP B as) bs i
+ -- Represent ListP via known operations in order to derive properties more easily.
+ RepListP : (as : List A) → Type (ℓ-max ℓA ℓB)
+ RepListP [] = Lift Unit
+ RepListP (a ∷ as) = B a × RepListP as
 
-equivRepListP : ∀ {ℓA ℓB} {A : Type ℓA} (B : A → Type ℓB) (as : List A) → ListP B as ≃ RepListP B as
-equivRepListP B as = isoToEquiv (isoRepListP B as)
+ isoRepListP :(as : List A) → ListP as ≅ RepListP as
+ fun (isoRepListP []) bs = lift tt
+ inv (isoRepListP []) u = []
+ sec (isoRepListP []) u = refl
+ ret (isoRepListP []) [] = refl
+ fun (isoRepListP (a ∷ as)) (b ∷ bs) = b , fun (isoRepListP as) bs
+ inv (isoRepListP (a ∷ as)) (b , br) = b ∷ inv (isoRepListP as) br
+ sec (isoRepListP (a ∷ as)) (b , br) i = b , sec (isoRepListP as) br i
+ ret (isoRepListP (a ∷ as)) (b ∷ bs) i = b ∷ ret (isoRepListP as) bs i
 
-pathRepListP : ∀ {ℓA ℓB} {A : Type ℓA} (B : A → Type ℓB) (as : List A) → ListP B as ≡ RepListP B as
-pathRepListP B as = ua (equivRepListP B as)
+ equivRepListP : (as : List A) → ListP as ≃ RepListP as
+ equivRepListP as = isoToEquiv (isoRepListP as)
+
+ pathRepListP : (as : List A) → ListP as ≡ RepListP as
+ pathRepListP as = ua (equivRepListP as)
+
+
+module _ {ℓA ℓB} {A : Type ℓA} {B : A → Type ℓB} where
+ open ListDep B
+ _++P_ : ∀ {xs ys} → ListP xs → ListP ys → ListP (xs ++ ys) 
+ ListDep.[] ++P ys = ys
+ (y ListDep.∷ x) ++P ys = y ListDep.∷ (x ++P ys)
+
+ splitP : ∀ {xs ys} → ListP (xs ++ ys) → (ListP xs Σ.× ListP ys)
+ splitP {[]} = [] ,_
+ splitP {x ∷ xs} (y ∷ ys) = Σ.map-fst (y ∷_) (splitP {xs} ys)
+
+ split++-sec :  ∀ {xs ys} → section (splitP {xs} {ys}) (uncurry _++P_)
+ split++-sec (ListDep.[] , _) = refl
+ split++-sec (x ListDep.∷ xs , ys) = cong (Σ.map-fst (x ∷_)) (split++-sec (xs , ys))
+
+ split++-ret :  ∀ {xs ys} → retract (splitP {xs} {ys}) (uncurry _++P_)
+ split++-ret {[]} _ = refl
+ split++-ret {x ∷ xs} (y ListDep.∷ ys) = cong (y ∷_) (split++-ret {xs} ys)
+
+ split++Iso : ∀ {xs ys} → (ListP (xs ++ ys)) ≅ (ListP xs Σ.× ListP ys) 
+ split++Iso .fun = splitP
+ split++Iso .inv = uncurry _++P_
+ split++Iso .sec = split++-sec
+ split++Iso {xs} .ret = split++-ret {xs}
+ 
+open ListDep public
 
 private
   isOfHLevelSucSuc-RepListP : ∀ {ℓA ℓB} (n : HLevel)
@@ -144,3 +176,10 @@ mapOverSpan∘Idfun : ∀ {ℓI ℓA ℓA'' ℓB ℓB' ℓB''}
 mapOverSpan∘Idfun f' f'' g1 g2 [] j [] = []
 mapOverSpan∘Idfun f' f'' g1 g2 (i ∷ is) j (b ∷ bs) =
   g2 i (g1 (f' i) b) ∷ mapOverSpan∘Idfun f' f'' g1 g2 is j bs
+
+fromConst : ∀ {ℓA ℓB} {A : Type ℓA} {B : Type ℓB} {xs} → ListP {A = A} (λ _ → B) xs → List B 
+fromConst [] = []
+fromConst (x ∷ xs) = x ∷ fromConst xs
+
+lengthP : ∀ {ℓA ℓB} {A : Type ℓA} {B : Type ℓB} {xs} → ListP {A = A} (λ _ → B) xs → ℕ
+lengthP {xs = xs} _ = length xs

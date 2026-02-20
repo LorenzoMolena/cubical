@@ -81,6 +81,11 @@ indexOf t (t' ∷ l) =
   else map-Maybe (λ k → ℕ.suc k) (indexOf t l)
 indexOf t [] = nothing
 
+elemVars : Term → Vars → Bool
+elemVars t (t' ∷ l) =
+  (t =T t') or (elemVars t l)
+elemVars t [] = false
+
 infixr 40 _<>_
 
 _<>_ = primStringAppend

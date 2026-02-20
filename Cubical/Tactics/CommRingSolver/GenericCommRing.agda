@@ -24,9 +24,11 @@ open import Cubical.Tactics.Reflection.Variables
 open import Cubical.Tactics.Reflection.Utilities
 open import Cubical.Tactics.Reflection.Error
 
+import Cubical.Algebra.CommRing.Instances.Fast.Int as FastℤCR
+
 private
  variable
-  ℓ : Level
+  ℓ ℓ' : Level
 
 
 
@@ -34,29 +36,29 @@ polynomialVariable : Maybe ℕ → Term
 polynomialVariable n = con (quote ∣) (finiteNumberAsTerm n v∷ [])
 
 
-module pr {R : Type ℓ} {n : ℕ} where
+module pr (R : CommRing ℓ) {⟨R'⟩ : Type ℓ'} {n : ℕ} where
 
 
-  0' : Expr' ℤ R n
-  0' = K 0
+  0' : Expr' (fst R) ⟨R'⟩ n
+  0' = K (CommRingStr.0r (snd R))
 
-  1' : Expr' ℤ R n
-  1' = K 1
+  1' : Expr' (fst R) ⟨R'⟩ n
+  1' = K (CommRingStr.1r (snd R))
 
 
 
-module BE (buildExpression : Term → TC (Template × Vars)) where
+module BE (Rterm : Term) (buildExpression : Term → TC (Template × Vars)) where
 
  open pr
 
  `0` : List (Arg Term) → TC (Template × Vars)
- `0` [] = returnTC (((λ _ → def (quote 0') ([])) , []))
+ `0` [] = returnTC (((λ _ → def (quote 0') (v[ Rterm ])) , []))
  `0` (fstcring v∷ xs) = `0` xs
  `0` (_ h∷ xs) = `0` xs
  `0` something = errorOut something
 
  `1` : List (Arg Term) → TC (Template × Vars)
- `1` [] = returnTC ((λ _ → def (quote 1') ([])) , [])
+ `1` [] = returnTC ((λ _ → def (quote 1') (v[ Rterm ])) , [])
  `1` (fstcring v∷ xs) = `1` xs
  `1` (_ h∷ xs) = `1` xs
  `1` something = errorOut something
@@ -95,7 +97,7 @@ module BE (buildExpression : Term → TC (Template × Vars)) where
 
 record RingReflectionMatcher : Type where
  field
-  mkMatchTermTC : Term → TC
+  mkMatchTermTC : Term → Term → TC
     ((Term → TC (Template × Vars))
         → Term → TC (Maybe (Template × Vars)))
 
@@ -142,13 +144,13 @@ module GenericCommRingReflection where
 
 
   genericCommRingMatchTerm : RingReflectionMatcher
-  genericCommRingMatchTerm .RingReflectionMatcher.mkMatchTermTC cring = do
+  genericCommRingMatchTerm .RingReflectionMatcher.mkMatchTermTC baseRingTm cring = do
     matchTerm <$> findRingNames cring
 
    where
 
    module _ (ringNames : RingNames) (be : (Term → TC (Template × Vars))) where
-    open BE be
+    open BE baseRingTm be
     open RingNames ringNames
 
     matchTerm' : Name → List (Arg Term) → TC (Maybe (Template × Vars))

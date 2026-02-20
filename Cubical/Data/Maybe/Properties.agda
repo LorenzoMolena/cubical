@@ -178,3 +178,12 @@ congMaybeEquiv e = isoToEquiv isom
   isom .sec (just b) = cong just (secEq e b)
   isom .ret nothing = refl
   isom .ret (just a) = cong just (retEq e a)
+
+infixl 20 _⁇→_ 
+
+_⁇→_ : ∀ {ℓ'} → Type ℓ → Type ℓ' → Type (ℓ-max ℓ ℓ') 
+A ⁇→ B = (mbA : Maybe A) → caseMaybe Unit* B mbA
+
+⁇λ_ : ∀ {ℓ'} {A : Type ℓ} {B : Type ℓ'} → (A → B) → A ⁇→ B
+⁇λ_ f nothing = tt*
+⁇λ_ f (just a) = f a

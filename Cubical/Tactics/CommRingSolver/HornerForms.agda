@@ -44,7 +44,7 @@ private
 
 
 module HornerForms (R@(⟨R⟩ , _) : CommRing ℓ)
-                         (_≟_ : Discrete ⟨R⟩ )
+                         -- (_≟_ : Discrete ⟨R⟩ )
                          (R'@(⟨R'⟩ , _) : CommRing ℓ')
                          (hom@(scalar‵ , _) : CommRingHom R R')
                          where
@@ -83,28 +83,28 @@ module HornerForms (R@(⟨R⟩ , _) : CommRing ℓ)
    have a function that fully lives up to the name 'isZero'.
  -}
 
- isZero : {n : ℕ} → IteratedHornerForms n → Bool
- isZero (const x) = 𝟚.Dec→Bool (x ≟ 0r)
- isZero 0H = true
- isZero (P ·X+ Q) = (isZero P) 𝟚.and (isZero Q)
+ -- isZero : {n : ℕ} → IteratedHornerForms n → Bool
+ -- isZero (const x) = 𝟚.Dec→Bool (x ≟ 0r)
+ -- isZero 0H = true
+ -- isZero (P ·X+ Q) = (isZero P) 𝟚.and (isZero Q)
 
- leftIsZero : {n : ℕ}
-              (P : IteratedHornerForms (ℕ.suc n))
-              (Q : IteratedHornerForms n)
-              → isZero (P ·X+ Q) ≡ true
-              → isZero P ≡ true
- leftIsZero P Q isZeroSum with isZero P
- ... | true = refl
- ... | false = isZeroSum
+ -- leftIsZero : {n : ℕ}
+ --              (P : IteratedHornerForms (ℕ.suc n))
+ --              (Q : IteratedHornerForms n)
+ --              → isZero (P ·X+ Q) ≡ true
+ --              → isZero P ≡ true
+ -- leftIsZero P Q isZeroSum with isZero P
+ -- ... | true = refl
+ -- ... | false = isZeroSum
 
- rightIsZero : {n : ℕ}
-              (P : IteratedHornerForms (ℕ.suc n))
-              (Q : IteratedHornerForms n)
-              → isZero (P ·X+ Q) ≡ true
-              → isZero Q ≡ true
- rightIsZero P Q isZeroSum with isZero Q
- ... | true = refl
- ... | false = byBoolAbsurdity (snd (extractFromAnd _ _ isZeroSum))
+ -- rightIsZero : {n : ℕ}
+ --              (P : IteratedHornerForms (ℕ.suc n))
+ --              (Q : IteratedHornerForms n)
+ --              → isZero (P ·X+ Q) ≡ true
+ --              → isZero Q ≡ true
+ -- rightIsZero P Q isZeroSum with isZero Q
+ -- ... | true = refl
+ -- ... | false = byBoolAbsurdity (snd (extractFromAnd _ _ isZeroSum))
 
 
  module IteratedHornerOperations where
@@ -137,9 +137,7 @@ module HornerForms (R@(⟨R⟩ , _) : CommRing ℓ)
   (P ·X+ r) +ₕ (Q ·X+ s) =
     let left = (P +ₕ Q)
         right = (r +ₕ s)
-    in if ((isZero left) and (isZero right))
-       then 0ₕ
-       else left ·X+ right
+    in left ·X+ right
 
   -ₕ : {n : ℕ} → IteratedHornerForms n → IteratedHornerForms n
   -ₕ (const x) = const (- x)
@@ -151,48 +149,14 @@ module HornerForms (R@(⟨R⟩ , _) : CommRing ℓ)
   _·ₕ_ : {n : ℕ} → IteratedHornerForms n → IteratedHornerForms n
                 → IteratedHornerForms n
   r ⋆ 0H = 0H
-  r ⋆ (P ·X+ Q) =
-    if (isZero r)
-    then 0ₕ
-    else (r ⋆ P) ·X+ (r ·ₕ Q)
+  r ⋆ (P ·X+ Q) =  (r ⋆ P) ·X+ (r ·ₕ Q)
 
   const x ·ₕ const y = const (x · y)
   0H ·ₕ Q = 0H
   (P ·X+ Q) ·ₕ S =
      let
         z = (P ·ₕ S)
-     in if (isZero z)
-        then (Q ⋆ S)
-        else (z ·X+ 0ₕ) +ₕ (Q ⋆ S)
-
-  isZeroPresLeft⋆ :
-    {n : ℕ}
-    (r : IteratedHornerForms n)
-    (P : IteratedHornerForms (ℕ.suc n))
-    → isZero r ≡ true
-    → isZero (r ⋆ P) ≡ true
-  isZeroPresLeft⋆ r 0H isZero-r = refl
-  isZeroPresLeft⋆ r (P ·X+ Q) isZero-r with isZero r
-  ...  | true = refl
-  ...  | false = byBoolAbsurdity isZero-r
-
-  isZeroPresLeft·ₕ :
-    {n : ℕ} (P Q : IteratedHornerForms n)
-    → isZero P ≡ true
-    → isZero (P ·ₕ Q) ≡ true
-  isZeroPresLeft·ₕ (const y) (const x) isZeroP =
-    let zz = 𝟚.toWitness {Q = y ≟ 0r} (subst 𝟚.Bool→Type (sym isZeroP) _ )
-     in cong {y = yes (0LeftAnnihilates' _ _ zz)} 𝟚.Dec→Bool (isPropDec (is-set _ _) _ _)
-  isZeroPresLeft·ₕ 0H Q isZeroP = refl
-  isZeroPresLeft·ₕ (P ·X+ Q) S isZeroSum with isZero (P ·ₕ S) 𝟚.≟ true
-  ... | no p = byBoolAbsurdity (sym notZeroProd ∙ isZeroProd)
-               where notZeroProd = 𝟚.¬true→false _ p
-                     isZeroP = extractFromAndLeft isZeroSum
-                     isZeroProd = isZeroPresLeft·ₕ P S isZeroP
-  ... | yes p with isZero (P ·ₕ S)
-  ...        | true = isZeroPresLeft⋆ Q S isZeroQ
-                      where isZeroQ = extractFromAndRight isZeroSum
-  ...        | false = byBoolAbsurdity p
+     in (z ·X+ 0ₕ) +ₕ (Q ⋆ S)
 
   asRawRing : (n : ℕ) → RawRing ℓ
   RawRing.Carrier (asRawRing n) = IteratedHornerForms n
@@ -207,5 +171,4 @@ module HornerForms (R@(⟨R⟩ , _) : CommRing ℓ)
 
  Constant : (n : ℕ) (r : ⟨R⟩) → IteratedHornerForms n
  Constant ℕ.zero r = const r
- Constant (ℕ.suc n) r =
-   decRec (λ _ → IteratedHornerOperations.0ₕ) (λ _ → IteratedHornerOperations.0ₕ ·X+ Constant n r) (r ≟ 0r)
+ Constant (ℕ.suc n) r = IteratedHornerOperations.0ₕ ·X+ Constant n r

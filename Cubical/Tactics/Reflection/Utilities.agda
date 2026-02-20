@@ -64,7 +64,7 @@ module Cubical.Tactics.Reflection.Utilities where
 open import Cubical.Foundations.Prelude hiding (Type)
 open import Cubical.Foundations.Function
 
-open import Agda.Builtin.Reflection hiding (Type)
+open import Agda.Builtin.Reflection renaming (Type to TypeTm)
 open import Agda.Builtin.String
 open import Agda.Builtin.Nat using () renaming (_==_ to _=ℕ_ ; _<_ to _<ℕ_)
 
@@ -421,9 +421,15 @@ liftedTele (x ∷ xs) = L.map (map-snd (mapArg liftVars)) (x ∷ liftedTele xs)
 macro
  q[_] : Term → Term → TC Unit
  q[_] tm h =
-   quoteTC tm >>= quoteTC >=> unify h
+   quoteTC tm >>= unify h
 
 atTargetLam : Term → (Term → TC Term) → TC Term
 atTargetLam (pi a@(arg (arg-info v _) _) (abs s b)) m =
   lam v ∘ abs s <$> extendContext s a (atTargetLam b m)
 atTargetLam ty m = m ty
+
+newHole : TC (Term × TypeTm)
+newHole = do
+ newHole ← checkType unknown unknown
+ newHoleType ← inferType newHole
+ pure (newHole , newHoleType) 
