@@ -605,8 +605,10 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     R₊AdditiveSemigroup : Semigroup _
     fst R₊AdditiveSemigroup = R₊
-    SemigroupStr._·_ (snd R₊AdditiveSemigroup) (x , 0<x) (y , 0<y) =
-      (x + y , 0<+Closed x y 0<x 0<y)
+    SemigroupStr._·_ (snd R₊AdditiveSemigroup) = _+₊_ where
+      _+₊_ : R₊ → R₊ → R₊
+      (x +₊ y) .fst = fst x + fst y
+      (x +₊ y) .snd = 0<+Closed (fst x) (fst y) (snd x) (snd y)
     SemigroupStr.isSemigroup (snd R₊AdditiveSemigroup) = isSG
       where
         isSG : IsSemigroup _
@@ -618,8 +620,10 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     R₊MultiplicativeCommMonoid : CommMonoid _
     fst R₊MultiplicativeCommMonoid = R₊
     CommMonoidStr.ε (snd R₊MultiplicativeCommMonoid) = 1r , 0<1
-    CommMonoidStr._·_ (snd R₊MultiplicativeCommMonoid) (x , 0<x) (y , 0<y) =
-      (x · y , 0<·Closed x y 0<x 0<y)
+    CommMonoidStr._·_ (snd R₊MultiplicativeCommMonoid) = _·₊_ where
+      _·₊_ : R₊ → R₊ → R₊
+      (x ·₊ y) .fst = fst x · fst y
+      (x ·₊ y) .snd = 0<·Closed (fst x) (fst y) (snd x) (snd y)
     CommMonoidStr.isCommMonoid (snd R₊MultiplicativeCommMonoid) =
       makeIsCommMonoid
         (isSetΣSndProp is-set (is-prop-valued< 0r))
@@ -700,8 +704,10 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     R₊AdditiveSemigroup : Semigroup _
     fst R₊AdditiveSemigroup = R₊
-    SemigroupStr._·_ (snd R₊AdditiveSemigroup) (x , 0<x) (y , 0<y) =
-      (x + y , 0<ᵗ+Closed x y 0<x 0<y)
+    SemigroupStr._·_ (snd R₊AdditiveSemigroup) = _+₊_ where
+      _+₊_ : R₊ → R₊ → R₊
+      (x +₊ y) .fst = fst x + fst y
+      (x +₊ y) .snd = 0<ᵗ+Closed (fst x) (fst y) (snd x) (snd y)
     SemigroupStr.isSemigroup (snd R₊AdditiveSemigroup) = isSG
       where
         isSG : IsSemigroup _
@@ -712,9 +718,11 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     R₊MultiplicativeCommMonoid : CommMonoid _
     fst R₊MultiplicativeCommMonoid = R₊
-    CommMonoidStr.ε (snd R₊MultiplicativeCommMonoid) = 1r , 0<→0<ᵗ 0<1
-    CommMonoidStr._·_ (snd R₊MultiplicativeCommMonoid) (x , 0<x) (y , 0<y) =
-      (x · y , 0<ᵗ·Closed x y 0<x 0<y)
+    CommMonoidStr.ε   (snd R₊MultiplicativeCommMonoid) = 1r , 0<→0<ᵗ 0<1
+    CommMonoidStr._·_ (snd R₊MultiplicativeCommMonoid) = _·₊_ where
+      _·₊_ : R₊ → R₊ → R₊
+      (x ·₊ y) .fst = fst x · fst y
+      (x ·₊ y) .snd = 0<ᵗ·Closed (fst x) (fst y) (snd x) (snd y)
     CommMonoidStr.isCommMonoid (snd R₊MultiplicativeCommMonoid) =
       makeIsCommMonoid
         (isSetΣSndProp is-set is-prop-valued-0<ᵗ)
