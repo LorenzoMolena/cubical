@@ -43,12 +43,15 @@ module HornerEval (R@(⟨R⟩ , _) : CommRing ℓ)
  eval : {n : ℕ} (P : IteratedHornerForms n)
         → Vec ⟨R'⟩ n → ⟨R'⟩
  eval  (const r) [] = scalar‵ r
- eval 0H (_ ∷ _) = 0r‵
+ eval 0H _ = 0r‵
  eval (P ·X+ Q) (x ∷ xs) =
       let
           P' = (eval P (x ∷ xs))
           Q' = eval Q xs
       in ((P' ·‵ x) +‵ Q')
 
+ 
 
+ _≑_ : ∀ {n} → IteratedHornerForms n → IteratedHornerForms n → Type ℓ'
+ P ≑ Q = ∀ xs → eval P xs ≡ eval Q xs
 

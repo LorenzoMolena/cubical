@@ -4,7 +4,7 @@ module Cubical.Tactics.CommRingSolver.Examples where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Structure
 
-open import Cubical.Data.Int.Base hiding (_+_ ; _·_ ; _-_)
+open import Cubical.Data.Int.Base hiding (_+_ ; _·_ ; _-_ ; -_)
 open import Cubical.Data.List
 open import Cubical.Data.Nat using (ℕ; suc; zero)
 
@@ -52,7 +52,7 @@ module TestWithℤ where
   ex0 : (a b : fst ℤCommRing) → a + b ≡ b + a
   ex0 a b = solve! ℤCommRing
 
-module Test (R : CommRing ℓ) (x y z w : fst R) where
+module Test (R : CommRing ℓ) (x y z w v : fst R) where
   open CommRingStr (snd R)
   open RingTheory (CommRing→Ring R) using () renaming (fromℤ to scalar)
 
@@ -102,8 +102,10 @@ module Test (R : CommRing ℓ) (x y z w : fst R) where
                   + (scalar 4) · x · y · y · y + y · y · y · y
   ex7 = solve! R
 
-  ex7' : z · x + y + w · x + w ≡ x + y + x + scalar 2
-  ex7' = ring! R (y ∷ x ∷ []) ({!!} ∷ {!!} ∷ P[ {!!} ])
+  ex7' : v + z · x + y + w · x + (- w) + v ≡ (scalar 2 · v) + x + y + x + scalar 2
+  ex7' = ring[ R ][ {!((x · y) · z) · w!} ]!
+   -- ring! R (v ∷ y ∷ x ∷ []) {!!}
+   --({!!} ∷ {!!} ∷ P[ {!!} ])
 
 
 --   {-

@@ -76,36 +76,6 @@ module HornerForms (R@(⟨R⟩ , _) : CommRing ℓ)
                    → IteratedHornerForms (ℕ.suc n)
 
 
- {-
-   The following function returns true, if there is some
-   obvious reason that the Horner-Expression should be zero.
-   Since Equality is undecidable in a general RawAlgebra, we cannot
-   have a function that fully lives up to the name 'isZero'.
- -}
-
- -- isZero : {n : ℕ} → IteratedHornerForms n → Bool
- -- isZero (const x) = 𝟚.Dec→Bool (x ≟ 0r)
- -- isZero 0H = true
- -- isZero (P ·X+ Q) = (isZero P) 𝟚.and (isZero Q)
-
- -- leftIsZero : {n : ℕ}
- --              (P : IteratedHornerForms (ℕ.suc n))
- --              (Q : IteratedHornerForms n)
- --              → isZero (P ·X+ Q) ≡ true
- --              → isZero P ≡ true
- -- leftIsZero P Q isZeroSum with isZero P
- -- ... | true = refl
- -- ... | false = isZeroSum
-
- -- rightIsZero : {n : ℕ}
- --              (P : IteratedHornerForms (ℕ.suc n))
- --              (Q : IteratedHornerForms n)
- --              → isZero (P ·X+ Q) ≡ true
- --              → isZero Q ≡ true
- -- rightIsZero P Q isZeroSum with isZero Q
- -- ... | true = refl
- -- ... | false = byBoolAbsurdity (snd (extractFromAnd _ _ isZeroSum))
-
 
  module IteratedHornerOperations where
 

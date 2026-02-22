@@ -187,3 +187,8 @@ A ⁇→ B = (mbA : Maybe A) → caseMaybe Unit* B mbA
 ⁇λ_ : ∀ {ℓ'} {A : Type ℓ} {B : Type ℓ'} → (A → B) → A ⁇→ B
 ⁇λ_ f nothing = tt*
 ⁇λ_ f (just a) = f a
+
+∘rec : ∀ {ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''} (f : B → C) j n
+           (x : Maybe A) → f (Maybe.rec n j x) ≡ Maybe.rec (f n) (f ∘ j) x
+∘rec f j n nothing = refl
+∘rec f j n (just x) = refl

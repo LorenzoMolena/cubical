@@ -230,7 +230,12 @@ module Exponentiation (R' : CommRing ℓ) where
  f ^ zero = 1r
  f ^ suc n = f · (f ^ n)
 
- infix 9 _^_
+ _^'_ : R → ℕ → R
+ f ^' zero = 1r
+ f ^' suc zero = f
+ f ^' suc n@(suc _) = f · (f ^ n)
+
+ infix 9 _^_ _^'_
 
  -- and prove some laws
  1ⁿ≡1 : (n : ℕ) → 1r ^ n ≡ 1r

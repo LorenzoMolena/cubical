@@ -10,7 +10,7 @@ open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat
 open import Cubical.Data.Bool
 open import Cubical.Data.Sigma
-open import Cubical.Data.Maybe
+open import Cubical.Data.Maybe as Mb
 open import Cubical.Data.Sum as ⊎ hiding (map)
 open import Cubical.Data.Unit
 open import Cubical.Data.List.Base as List
@@ -386,3 +386,7 @@ dropBy : (A → Bool) → List A → List A
 dropBy _ [] = []
 dropBy f (x ∷ xs) =
   if f x then (dropBy f xs) else (x ∷ xs)
+
+catMaybes : List (Maybe A) → List A
+catMaybes [] = []
+catMaybes (x ∷ xs) = Mb.rec [] [_] x ++ catMaybes xs

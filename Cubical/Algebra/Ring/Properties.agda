@@ -122,6 +122,9 @@ module RingTheory (R' : Ring ℓ) where
   -IsMult-1 : (x : R) → - x ≡ (- 1r) · x
   -IsMult-1 _ = sym (·IdL _) ∙ sym (-Swap· _ _)
 
+  -Dist· : (x y : R) → (- x) · (- y) ≡ (x · y)
+  -Dist· _ _ = -Swap· _ _ ∙ cong (_ ·_) (-Idempotent _)
+  
   -Dist : (x y : R) → (- x) + (- y) ≡ - (x + y)
   -Dist x y =
     implicitInverse _ _

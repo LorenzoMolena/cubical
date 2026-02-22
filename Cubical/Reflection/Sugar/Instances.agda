@@ -176,3 +176,7 @@ traverseList : {M : Functorω} {{_ : RawApplicative M}} →
    ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → (A → M B) → List A -> M (List B)
 traverseList f [] = ⦇ [] ⦈
 traverseList f (x ∷ xs) = ⦇ (f x) ∷ (traverseList f xs) ⦈
+
+sucesfullM? :  {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} {{_ : RawMonadFail M E}} → 
+                M A → M Bool
+sucesfullM? m = (m >> pure true) <|> pure false
