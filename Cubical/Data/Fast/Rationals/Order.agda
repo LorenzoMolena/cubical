@@ -251,7 +251,7 @@ module _ where
                       (ℤ.<-·o cf<ed))))) }
 
   isAsym< : isAsym _<_
-  isAsym< = isIrrefl×isTrans→isAsym _<_ (isIrrefl< , isTrans<)
+  isAsym< = ((recompute¬< ∘_) ∘_) ∘ isIrrefl×isTrans→isAsym _<_ (isIrrefl< , isTrans<)
 
   isTotal≤ : isTotal _≤_
   isTotal≤ =
@@ -649,7 +649,8 @@ m ≟ n with discreteℚ m n
 ≡Weaken≤ m n m≡n = recompute≤ $ subst (m ≤_) m≡n (isRefl≤ m)
 
 ≤→≯ : ∀ m n →  m ≤ n → ¬ (m > n)
-≤→≯ m n m≤n n<m = isIrrefl< n (subst (n <_) (isAntisym≤ m n m≤n (<Weaken≤ n m n<m)) n<m)
+≤→≯ m n m≤n = recompute¬< $
+  λ n<m → isIrrefl< n (subst (n <_) (isAntisym≤ m n m≤n (<Weaken≤ n m n<m)) n<m)
 
 ≮→≥ : ∀ m n → ¬ (m < n) → m ≥ n
 ≮→≥ m n m≮n with discreteℚ m n
