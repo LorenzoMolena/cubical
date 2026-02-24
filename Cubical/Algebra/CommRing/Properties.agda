@@ -233,7 +233,7 @@ module Exponentiation (R' : CommRing ℓ) where
  _^'_ : R → ℕ → R
  f ^' zero = 1r
  f ^' suc zero = f
- f ^' suc n@(suc _) = f · (f ^ n)
+ f ^' suc n@(suc _) = f · (f ^' n)
 
  infix 9 _^_ _^'_
 

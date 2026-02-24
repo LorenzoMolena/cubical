@@ -188,7 +188,12 @@ A ⁇→ B = (mbA : Maybe A) → caseMaybe Unit* B mbA
 ⁇λ_ f nothing = tt*
 ⁇λ_ f (just a) = f a
 
-∘rec : ∀ {ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''} (f : B → C) j n
+∘rec : ∀ {ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''} (f : B → C) n j
            (x : Maybe A) → f (Maybe.rec n j x) ≡ Maybe.rec (f n) (f ∘ j) x
-∘rec f j n nothing = refl
-∘rec f j n (just x) = refl
+∘rec f n j nothing = refl
+∘rec f n j (just x) = refl
+
+∘fromJust-def : ∀ {ℓ'} {A : Type ℓ} {B : Type ℓ'} (f : A → B) n
+           (x : Maybe A) → f (fromJust-def n x) ≡ fromJust-def (f n) (map-Maybe f x)
+∘fromJust-def f n nothing = refl
+∘fromJust-def f n (just x) = refl

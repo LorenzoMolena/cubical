@@ -6,12 +6,15 @@ open import Cubical.Foundations.Structure
 
 open import Cubical.Data.Int.Base hiding (_+_ ; _·_ ; _-_ ; -_)
 open import Cubical.Data.List
+open import Cubical.Data.Sigma
 open import Cubical.Data.Nat using (ℕ; suc; zero)
 
 open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.Ring.Properties
 open import Cubical.Algebra.CommRing.Instances.Int
 open import Cubical.Algebra.CommAlgebra
+
+open import Cubical.Relation.Binary
 
 open import Cubical.Tactics.CommRingSolver
 import Cubical.Tactics.CommRingSolver.RawAlgebra as RA
@@ -52,10 +55,24 @@ module TestWithℤ where
   ex0 : (a b : fst ℤCommRing) → a + b ≡ b + a
   ex0 a b = solve! ℤCommRing
 
+
+
+-- module Test0 (R : CommRing ℓ) where
+--   open CommRingStr (snd R)
+--   open RingTheory (CommRing→Ring R) using () renaming (fromℤ to scalar)
+
+
+--   relTest :  (fst R) × (fst R) → (fst R) × (fst R) → Type ℓ 
+--   relTest (a , b) (c , d) = a · d ≡ c · b
+
+--   relTrans : BinaryRelation.isTrans relTest
+--   relTrans (a , b) (a' , b') (a'' , b'') p q = 
+--     let z = cong₂ _·_ p q
+--     in {!!}
+
 module Test (R : CommRing ℓ) (x y z w v : fst R) where
   open CommRingStr (snd R)
   open RingTheory (CommRing→Ring R) using () renaming (fromℤ to scalar)
-
 
 
   _ : 0r ≡ 0r
@@ -102,10 +119,16 @@ module Test (R : CommRing ℓ) (x y z w v : fst R) where
                   + (scalar 4) · x · y · y · y + y · y · y · y
   ex7 = solve! R
 
-  ex7' : v + z · x + y + w · x + (- w) + v ≡ (scalar 2 · v) + x + y + x + scalar 2
-  ex7' = ring[ R ][ {!((x · y) · z) · w!} ]!
-   -- ring! R (v ∷ y ∷ x ∷ []) {!!}
-   --({!!} ∷ {!!} ∷ P[ {!!} ])
+
+  -- ex7' : v + z · x + y + w · x + (- w) + v ≡ (scalar 2 · v) + x + y + x + scalar 2
+  -- ex7' = -- ring[ R ][ {!!} ]!
+  --  ring! R (v ∷ y ∷ x ∷ []) 
+  --    ({!!} ∷ P[ {!!} ])  
+
+
+
+  exNorm : (x + y) · (x - y) ≡ (0r + 0r · x + x · x + - (y · y))
+  exNorm = normalize! R
 
 
 --   {-

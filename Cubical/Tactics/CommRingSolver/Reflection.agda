@@ -96,6 +96,17 @@ module CommRingSolver
              ass n = indexOf n vars
          in (fst r1 ass , fst r2 ass , vars ))
 
+   toAlgebraExpressionLHS : Term → TC (Term × Vars)
+   toAlgebraExpressionLHS lhs = do
+
+       matchTerm ← mkMatchTermTC basering cring
+       
+       (r , vars) ← buildExpression matchTerm fuelBudget lhs
+       returnTC (
+         let ass : VarAss
+             ass n = indexOf n vars
+         in (r ass , vars ))
+
 
 
  module _ where
@@ -144,6 +155,52 @@ module CommRingSolver
         --        (inferType solution >>= normalise)
         --           <|> typeError (map,ₑ vars ++ₑ map,ₑ (lhs ∷ rhs ∷ []))
         -- typeError (("solution type: " ∷nl [ solutionType ]ₑ) ++nl (map,ₑ vars ++nl map,ₑ (lhs' ∷ rhs' ∷ [])))
+
+  module _ (normalizeName : Name) where
+   private
+    normalizeCallWithVars : ℕ → Vars → Term → Term  → Term
+    normalizeCallWithVars n vars R lhs =
+        def normalizeName
+            (R v∷ (harg {quantity-ω} (ℕAsTerm n)) ∷ lhs 
+              v∷ (variableList vars)
+              ∷ [])
+
+        where
+          variableList : Vars → Arg Term
+          variableList [] = varg (con (quote emptyVec) [])
+          variableList (t ∷ ts)
+            = varg (con (quote _∷vec_) (t v∷ (variableList ts) ∷ []))
+
+
+   normalize!-macro : Term → TC Unit
+   normalize!-macro hole = withReduceDefs
+       (false , doNotUnfold)
+     do
+       commRing ← quoteTC ring
+       baseCommRing ← quoteTC basering
+       goal ← inferType hole >>= normalise
+
+
+       -- wait-for-type goal
+       just (lhs) ← get-boundaryLHS goal
+         where
+           nothing
+             → typeError(strErr "The CommRingSolver failed to parse the goal "
+                                ∷ termErr goal ∷ [])
+
+       (lhs' , vars) ← 
+           CommRingReflection.toAlgebraExpressionLHS baseCommRing commRing lhs
+
+       
+       let solution = normalizeCallWithVars (length vars) vars commRing lhs'
+       unify hole solution 
+       --   -- <|> do prfHole ← checkType unknown unknown
+       --   --        unify hole (solution (just prfHole))
+       --   --       solutionType ←
+       --   --        (inferType solution >>= normalise)
+       --   --           <|> typeError (map,ₑ vars ++ₑ map,ₑ (lhs ∷ rhs ∷ []))
+       --   -- typeError (("solution type: " ∷nl [ solutionType ]ₑ) ++nl (map,ₑ vars ++nl map,ₑ (lhs' ∷ rhs' ∷ [])))
+
 
 
   solve!-lemma-macro : (Term → Term → TC Bool) → List (fst ring) -> Term → Term → TC Unit
@@ -234,9 +291,12 @@ module _ (ring : CommRing ℓ) where
    solve! : Term → TC Unit
    solve! = GenericCommRingSolverOverInt.solve!-macro 
 
- -- macro
+   normalize! : Term → TC Unit
+   normalize! = GenericCommRingSolverOverInt.normalize!-macro
+                   (quote (ETNF≟.normalizeByDec))
+   
    ring[_][_]! : Term → Term → TC Unit
-   ring[_][_]! = GenericCommRingSolverOverInt.solve_[_]!-macro (quote (ETNF≟.solveByDifference))
+   ring[_][_]! = GenericCommRingSolverOverInt.solve_[_]!-macro (quote (ETNF≟.solveByDifference'))
    
 module _ (ring : CommRing ℓ)
 
