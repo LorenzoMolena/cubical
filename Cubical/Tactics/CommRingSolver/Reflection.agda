@@ -23,6 +23,9 @@ open import Cubical.Relation.Nullary.Base
 
 open import Cubical.Algebra.CommRing
 
+import Cubical.Algebra.CommRing.Properties as CommRingProperties 
+import Cubical.Algebra.Ring.Properties as RingProperties 
+
 open import Cubical.Tactics.CommRingSolver.AlgebraExpression
 open import Cubical.Tactics.CommRingSolver.RawAlgebra
 open import Cubical.Tactics.CommRingSolver.Solver
@@ -182,7 +185,7 @@ module CommRingSolver
 
 
        -- wait-for-type goal
-       just (lhs) ← get-boundaryLHS goal
+       just (lhs , rhsMeta) ← get-boundaryLHS goal
          where
            nothing
              → typeError(strErr "The CommRingSolver failed to parse the goal "
@@ -192,15 +195,63 @@ module CommRingSolver
            CommRingReflection.toAlgebraExpressionLHS baseCommRing commRing lhs
 
        
-       let solution = normalizeCallWithVars (length vars) vars commRing lhs'
-       unify hole solution 
-       --   -- <|> do prfHole ← checkType unknown unknown
-       --   --        unify hole (solution (just prfHole))
-       --   --       solutionType ←
-       --   --        (inferType solution >>= normalise)
-       --   --           <|> typeError (map,ₑ vars ++ₑ map,ₑ (lhs ∷ rhs ∷ []))
-       --   -- typeError (("solution type: " ∷nl [ solutionType ]ₑ) ++nl (map,ₑ vars ++nl map,ₑ (lhs' ∷ rhs' ∷ [])))
+       (preNForm , solution) ← unquoteSigma (normalizeCallWithVars (length vars) vars commRing lhs')
 
+       
+       nForm ← withReduceDefs
+         (false , (quote (CommRingProperties.Exponentiation._^'_)
+                 ∷ quote (RingProperties.RingTheory.fromℕ)
+                 ∷ [ quote CommRingStr._-_ ])) (normalise preNForm) 
+       unify rhsMeta nForm
+       unify hole solution
+
+
+  module _ (solveForName : Name) where
+   private
+    solveForCallWithVars : ℕ → Vars → Term → Term → Term → Term
+    solveForCallWithVars n vars R lhs rhs =
+        def solveForName
+            (R v∷ (harg {quantity-ω} (ℕAsTerm (ℕ.predℕ n))) ∷ lhs v∷ rhs 
+              v∷ (variableList vars)
+              ∷ [])
+
+        where
+          variableList : Vars → Arg Term
+          variableList [] = varg (con (quote emptyVec) [])
+          variableList (t ∷ ts)
+            = varg (con (quote _∷vec_) (t v∷ (variableList ts) ∷ []))
+
+
+   solveFor!-macro : Term → Term → TC Unit
+   solveFor!-macro eqtn hole = withReduceDefs
+       (false , doNotUnfold)
+     do
+       commRing ← quoteTC ring
+       baseCommRing ← quoteTC basering
+       providedPathTy ← inferType eqtn >>= normalise
+
+
+       wait-for-type providedPathTy
+       just (lhs , rhs) ← get-boundary providedPathTy
+         where
+           nothing
+             → typeError(strErr "The sovleFor!-macro (ring solver) failed to parse the goal "
+                                ∷ termErr providedPathTy ∷ [])
+
+       (lhs' , rhs' , vars) ← 
+           CommRingReflection.toAlgebraExpression baseCommRing commRing (lhs , rhs)
+
+       
+       result ← normalise (solveForCallWithVars (length vars) vars commRing lhs' rhs')
+       typeError [ result ]ₑ
+               
+       -- nForm ← withReduceDefs
+       --   (false , (quote (CommRingProperties.Exponentiation._^'_)
+       --           ∷ quote (RingProperties.RingTheory.fromℕ)
+       --           ∷ [ quote CommRingStr._-_ ])) (normalise preNForm) 
+       -- -- unify rhsMeta nForm
+       -- -- unify hole solution
+       -- {!!}
 
 
   solve!-lemma-macro : (Term → Term → TC Bool) → List (fst ring) -> Term → Term → TC Unit
@@ -247,6 +298,7 @@ module CommRingSolver
          variableList (t ∷ ts)
            = varg (con (quote _∷vec_) (t v∷ (variableList ts) ∷ []))
 
+  
 
   solve_[_]!-macro : Term → Term → TC Unit
   solve_[_]!-macro lemma hole = withReduceDefs
@@ -297,6 +349,9 @@ module _ (ring : CommRing ℓ) where
    
    ring[_][_]! : Term → Term → TC Unit
    ring[_][_]! = GenericCommRingSolverOverInt.solve_[_]!-macro (quote (ETNF≟.solveByDifference'))
+
+   solveFor! : Term → Term → TC Unit
+   solveFor! = GenericCommRingSolverOverInt.solveFor!-macro (quote (ETNF≟.pickEliminations))
    
 module _ (ring : CommRing ℓ)
 

@@ -11,7 +11,8 @@ open import Cubical.Data.Vec as Vec
 open import Cubical.Data.Sigma
 import Cubical.Data.Prod as ×
 open import Cubical.Data.Empty
-open import Cubical.Data.List as L
+open import Cubical.Data.NatPlusOne
+open import Cubical.Data.List as L hiding (drop)
 open import Cubical.Data.List.Dependent
 open import Cubical.Data.Bool as 𝟚
 open import Cubical.Data.Maybe as Mb
@@ -36,8 +37,7 @@ private
     ℓ ℓ' : Level
 
 module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
-                         -- (_≟_ : Discrete ⟨R⟩ )
-                         (R'@(⟨R'⟩ , _) : CommRing ℓ')
+                          (R'@(⟨R'⟩ , _) : CommRing ℓ')
                          (hom@(scalar‵ , _) : CommRingHom R R') where
 
  open CommRingStr (snd R)
@@ -51,13 +51,14 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
  open CommRingStr (snd R') using () renaming
    (0r to 0r‵;1r to 1r‵;_+_ to _+‵_; _·_ to _·‵_; -_ to -‵_ ; _-_ to _-‵_)
 
- open Exponentiation R' using (_^'_)
+ open Exponentiation R' using (_^_ ; _^'_ ; ^'≡^)
 
  -- module EvalPoly where
  --  open Sum (CommRing→Ring R')
 
  _^''_ : ⟨R'⟩ → ℕ → Maybe ⟨R'⟩
  x ^'' ℕ.zero = nothing
+ x ^'' ℕ.suc ℕ.zero = just x
  x ^'' ℕ.suc n = just (x ^' (ℕ.suc n) )
 
  ^''-suc : ∀ m v → v ^' ℕ.suc m ≡ v ^' m ·‵ v
@@ -86,8 +87,8 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
  evMonomial∷ m [] v [] = refl
  evMonomial∷ m (x ∷ ms) v (x₁ ∷ vs) = refl
 
- PolynomialTerm : ℕ → Type ℓ'
- PolynomialTerm n = Bool × (Maybe ⟨R'⟩) × Monomial n
+ PolynomialTerm : ℕ → Type ℓ
+ PolynomialTerm n = Bool × (Maybe ⟨R⟩) × Monomial n
 
 
  -‵[_] : Bool → ⟨R'⟩ → ⟨R'⟩
@@ -104,9 +105,10 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
 
 
  evPolynomialTerm : ∀ {n} → PolynomialTerm n → Vec ⟨R'⟩ n → ⟨R'⟩
- evPolynomialTerm (b , mbK , m) xs = -‵[ b ] (Mb.fromJust-def 1r‵ (mbK mb·‵mb evMonomial m xs))
+ evPolynomialTerm (b , mbK , m) xs = -‵[ b ] (Mb.fromJust-def 1r‵
+   (map-Maybe (fst hom) mbK mb·‵mb evMonomial m xs))
 
- Polynomial : ℕ → Type ℓ'
+ Polynomial : ℕ → Type ℓ
  Polynomial n = List (PolynomialTerm n)
 
  evPolynomial :  ∀ {n} → Polynomial n → Vec ⟨R'⟩ n → ⟨R'⟩
@@ -139,20 +141,21 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
                              ≡ (evMonomial {ℕ.suc n} (m ∷ ms) (v ∷ vs) mb·‵mb just v)
  evMonomial·X n m ms v vs =
       evMonomial∷ (ℕ.suc m) ms v vs
-   ∙∙ cong (λ u → (evMonomial ms vs mb·‵mb just u))
-       (^''-suc m v)
-       ∙ hlp (evMonomial ms vs) m
+      ∙∙ hlp (evMonomial ms vs) m
    ∙∙ cong (_mb·‵mb just v) (sym (evMonomial∷ m ms v vs))
   where
    
 
 
-   hlp : ∀ u m → (u mb·‵mb just ((v ^' m) ·‵ v)) ≡
+   hlp : ∀ u m → (u mb·‵mb (v ^'' ℕ.suc m)) ≡
       ((u mb·‵mb (v ^'' m)) mb·‵mb just v)
-   hlp nothing ℕ.zero = cong just (R‵.·IdL _)
-   hlp nothing (ℕ.suc m) = refl
-   hlp (just x) ℕ.zero = cong (just ∘ (x ·‵_)) (R‵.·IdL _)
-   hlp (just x) (ℕ.suc m) = cong just (R‵.·Assoc _ _ _)
+   hlp nothing ℕ.zero = refl
+   hlp nothing one = refl
+   hlp nothing (ℕ.suc (ℕ.suc m)) = cong just (R‵.·Comm _ _)
+   hlp (just x) ℕ.zero = refl
+   hlp (just x) one = cong just (R‵.·Assoc _ _ _ )
+   hlp (just x) (ℕ.suc (ℕ.suc m)) = cong just (cong (x ·‵_) (R‵.·Comm _ _) ∙ R‵.·Assoc _ _ _)
+    
    
  evPolynomial·X : ∀ {n} p v vs →
       evPolynomial (Poly·X {n} p) (v ∷ vs) ≡
@@ -163,10 +166,11 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
     ∙∙ cong₂ _+‵_
         (evPolynomial·X p v vs)
         (cong -‵[ b ] (
-                (cong (λ u → fromJust-def 1r‵ (k mb·‵mb u))
+                (cong (λ u → fromJust-def 1r‵ ((map-Maybe (fst hom) k) mb·‵mb u))
                  (evMonomial·X n m ms v vs) ∙
-                  hlp (evMonomial (m ∷ ms) (v ∷ vs)) k)
-             ∙ sym (∘fromJust-def (_·‵ v) 1r‵ (k mb·‵mb evMonomial (m ∷ ms) (v ∷ vs))))
+                  hlp (evMonomial (m ∷ ms) (v ∷ vs)) (map-Maybe (fst hom) k))
+             ∙ sym (∘fromJust-def (_·‵ v) 1r‵
+              ((map-Maybe (fst hom) k) mb·‵mb evMonomial (m ∷ ms) (v ∷ vs))))
            ∙ sym (-‵[ b ]· _ _))
     ∙∙ sym (R‵.·DistL+ _ _ v)
       ∙ cong (_·‵ v) (sym (evPolynomial∷ _ p _))
@@ -185,26 +189,27 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
  evPolynomial↑ (x ∷ p) v vs =
        evPolynomial∷ _ (Poly↑ p) (v ∷ vs)
     ∙∙ cong₂ _+‵_ (evPolynomial↑ p v vs)
-        (cong (-‵[ x .fst ] ∘ fromJust-def 1r‵ ∘ x .snd .fst mb·‵mb_)
+        (cong (-‵[ x .fst ] ∘ fromJust-def 1r‵ ∘ (map-Maybe (fst hom) (x .snd .fst)) mb·‵mb_)
           (   evMonomial∷ _ _ v vs
            ∙ mb·‵mbIdR _))
     ∙∙ sym (evPolynomial∷ _ p vs)
 
  Horner→Poly : ∀ {n} → Maybe (Discrete ⟨R⟩) →  (h : IteratedHornerForms n)
                      → Σ (Polynomial n) λ pf → ∀ xs → evPolynomial pf xs ≡ eval h xs 
- Horner→Poly nothing (HornerForms.const x) = [ true , (just (fst hom x)) , [] ] , λ {[] → refl}
- Horner→Poly (just _≟_) (HornerForms.const x) = hlp (x ≟ 1r) (x ≟ (- 1r))
+ Horner→Poly nothing (const x) = [ true , (just x) , [] ] , λ {[] → refl}
+ Horner→Poly (just _≟_) (const x) = hlp (x ≟ 0r) (x ≟ 1r) (x ≟ (- 1r))
   where
-  hlp : Dec _ → Dec _ → _
-  hlp (yes x≡1) x₁ =
+  hlp : Dec _ →  Dec _ → Dec _ → _
+  hlp (yes x≡0) _ _ = [] , λ {[] → sym (IsCommRingHom.pres0 (snd hom)) ∙ cong (hom .fst) (sym x≡0) }
+  hlp _ (yes x≡1) x₁ =
     [ true , nothing , [] ] , λ {[] → sym (IsCommRingHom.pres1 (snd hom)) ∙ cong (hom .fst) (sym x≡1)}
-  hlp (no ¬p) (yes x≡-1) =
+  hlp _ (no ¬p) (yes x≡-1) =
     [ false , nothing , [] ] , λ {[] → sym (IsCommRingHom.pres- (snd hom) 1r
       ∙ cong -‵_ (IsCommRingHom.pres1 (snd hom))) ∙ cong (hom .fst) (sym x≡-1)}
-  hlp (no ¬p) (no ¬p₁) = [ true , (just (fst hom x)) , [] ] , λ {[] → refl}
+  hlp _ (no ¬p) (no ¬p₁) = [ true , (just x) , [] ] , λ {[] → refl}
 
- Horner→Poly _ HornerForms.0H = [] , λ _ → refl
- Horner→Poly mbD (h₀ HornerForms.·X+ h₁) =
+ Horner→Poly _ 0H = [] , λ _ → refl
+ Horner→Poly mbD (h₀ ·X+ h₁) =
   let p₀ , q₀ = Horner→Poly mbD h₀
       p₁ , q₁ = Horner→Poly mbD h₁
   in Poly·X p₀ L.++ Poly↑ p₁ , λ { vvs@(v ∷ vs) →
@@ -309,6 +314,9 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
  [_]ᵗʸ : List (Type ℓ) → Type (ℓ-suc ℓ)
  [_]ᵗʸ = ListP (idfun _)
 
+ ×[_]ᵗʸ : List (Type ℓ) → Type ℓ
+ ×[_]ᵗʸ = RepListP (idfun _)
+
   
  [X]? : ∀ {ℓ'} → Type ℓ'  → Type (ℓ-max (ℓ-suc ℓ) ℓ')
  [X]? A = (Σ (List (Type ℓ)) (λ XS → (([ XS ]ᵗʸ → A) ×
@@ -325,11 +333,11 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
 
  IHR?0 : ∀ {n} → ∀ (e : IteratedHornerForms n) →
            [X]?  (e ≑ 0ₕ) 
- IHR?0 (HornerForms.const x) = 
+ IHR?0 (const x) = 
     ([ x ≡ 0r ]) , (λ { (p ∷ []) [] → cong (hom .fst) p} )
     , ((λ _≟_ → decRec just (λ _ → nothing) (x ≟ 0r)) ∷ [])
- IHR?0 HornerForms.0H = [] , (λ _ xs → Eval0H xs) , [] 
- IHR?0 (e HornerForms.·X+ e₁) =
+ IHR?0 0H = [] , (λ _ xs → Eval0H xs) , [] 
+ IHR?0 (e ·X+ e₁) =
    map-[X]?
      (λ (f , f') → λ {(v ∷ vs) →
       cong₂ R‵._+_
@@ -342,12 +350,12 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
      [X]? (e₁ ≑ e₂)
  IHR? (const x) (const x') = [ x ≡ x' ] , (( λ { (p ∷ []) [] → cong (hom .fst) p }) ,
    (λ _≟_ → decToMaybe (x ≟ x')) ∷ [])
- IHR? HornerForms.0H e = map-[X]?
+ IHR? 0H e = map-[X]?
   (λ f → λ { (v ∷ vs) → sym   (f (v ∷ vs)) }) (IHR?0 e)
- IHR? e HornerForms.0H =
+ IHR? e 0H =
     map-[X]?
   (λ f → λ { (v ∷ vs) → (f (v ∷ vs)) }) (IHR?0 e)
- IHR? (e HornerForms.·X+ e₁) (e' HornerForms.·X+ e₁') =
+ IHR? (e ·X+ e₁) (e' ·X+ e₁') =
   map-[X]?
     ((λ (f , f') → λ {(v ∷ vs) →
        cong₂ R‵._+_ (cong (_·‵ v)  (f (v ∷ vs))) (f' vs)}))
@@ -358,9 +366,9 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
 
   
  IHR?-refl : ∀ {n} → ∀ (e : IteratedHornerForms n) → [ fst (IHR? e e) ]ᵗʸ
- IHR?-refl (HornerForms.const x) = refl ∷ []
- IHR?-refl HornerForms.0H = []
- IHR?-refl (e HornerForms.·X+ e₁) = IHR?-refl e ++P IHR?-refl e₁
+ IHR?-refl (const x) = refl ∷ []
+ IHR?-refl 0H = []
+ IHR?-refl (e ·X+ e₁) = IHR?-refl e ++P IHR?-refl e₁
 
 
 
@@ -379,8 +387,127 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
         ⁇→ (⟦ e₁ ⟧ xs ≡ ⟦ e₂ ⟧ xs)
  solveByDec e₁ e₂ xs = ⁇λ solve e₁ e₂ xs
 
+ IsConst : ∀ {n} → IteratedHornerForms n → Type (ℓ-suc ℓ)
+ IsConst (const x) = Unit* 
+ IsConst 0H = ⊥*
+ IsConst (P ·X+ Q) = [ fst (IHR?0 P)  ]ᵗʸ × IsConst Q
 
+ IsConst→ev : ∀ {n} e → IsConst {n} e → Σ[ a ∈ ⟨R⟩ ] (∀ xs → eval e xs ≡ fst hom a )
+ IsConst→ev (const a) _ = a , λ { [] → refl }
+ IsConst→ev (P ·X+ Q) (u , v) =
+  let (a , p) = IsConst→ev Q v
+  in a , λ { (x ∷ xs) → RT'.+IdL' _ _
+    (RT'.0LeftAnnihilates'  _ _ (fst (snd (IHR?0 P)) u (x ∷ xs)))
+     ∙ p xs }
+     
+ HeadVarMonomial : ∀ {n} → IteratedHornerForms (ℕ.suc n) → Type (ℓ-suc ℓ)
+ HeadVarMonomial 0H = ⊥*
+ HeadVarMonomial {n} x@(P ·X+ Q) =
+   (HeadVarMonomial P × [ fst (IHR?0 Q)  ]ᵗʸ) ⊎ IsConst x
+
+ 
+ record Elimination {n : ℕ} (P : IteratedHornerForms (ℕ.suc n)) (iX : Fin (ℕ.suc n)) : Type (ℓ-max ℓ' ℓ) where 
+  field
+   k : ℕ₊₁
+   a : ⟨R⟩ 
+   Q : IteratedHornerForms n
+   a·xᵏ≡p : ∀ xs b → eval P xs ≡ b → (fst hom a) ·‵
+       (lookup iX xs ^ ℕ₊₁→ℕ k) +‵ b ≡ eval Q (drop iX xs)
+
+
+
+ IsolatedPowerHeadVar : ∀ {n} → IteratedHornerForms (ℕ.suc n) → Type (ℓ-suc ℓ)
+ IsolatedPowerHeadVar 0H = ⊥*
+ IsolatedPowerHeadVar (P ·X+ Q) =
+   HeadVarMonomial P
+
+
+ toElimination : ∀ {n} P → (IsolatedPowerHeadVar P) → Elimination {n} P zero
+ toElimination (P ·X+ Q) hvm = 
+   let ((k , a) , eqtion) = h P hvm
+   in record { k = 1+ k
+             ; a = a
+             ; Q = Q
+             ; a·xᵏ≡p = λ { (x ∷ xs) b p →
+                cong (_+‵ b) (((cong (fst hom a ·‵_) (R‵.·Comm _ _)
+                  ∙ R‵.·Assoc _ _ _)
+                 ∙ cong (_·‵ x) (eqtion x xs))
+                 ∙ RT'.-DistL· _ _) ∙ R‵.+Comm _ _
+                  ∙  (cong (_-‵ (eval P (x ∷ xs) ·‵ x)) (sym p ∙ (R‵.+Comm _ _)))
+                   ∙ RT'.plusMinus _ _ } }
+  where
+  h : ∀ {n} e → HeadVarMonomial {n} e →
+        Σ (ℕ × ⟨R⟩)
+          λ (k , a) → ∀ x xs → (fst hom a) ·‵ (x ^ k) ≡ -‵ (eval e (x ∷ xs))  
+  h (e ·X+ e₁) =
+    ⊎.rec
+     (λ (u , v) →
+       let ((k , a) , eqtion) = h e u 
+       in (ℕ.suc k , a) , λ x xs →
+              (cong ((fst hom a) ·‵_) (R‵.·Comm _ _)
+              ∙ R‵.·Assoc _ _ _)
+            ∙∙ cong (_·‵ x) (eqtion x xs)
+            ∙∙ (RT'.-DistL· _ _
+             ∙ cong -‵_ (sym (RT'.+IdR' _ _ (fst (snd (IHR?0 e₁)) v xs ∙ Eval0H xs )))))
+     λ (u , v) →
+       let (a , p) = IsConst→ev e₁ v
+       in (0 , (- a)) , λ x xs →
+            R‵.·IdR _
+          ∙∙ IsCommRingHom.pres- (snd hom) a
+          ∙∙ cong -‵_ (sym (p xs)
+             ∙ sym (RT'.+IdL' _ _ (RT'.0LeftAnnihilates' _ _ (fst (snd (IHR?0 e)) u (x ∷ xs)) )))
+  
+ FreeOfVar : ∀ {n} → IteratedHornerForms n → Fin n → Type (ℓ-suc ℓ) 
+ FreeOfVar 0H _ = Unit*
+ FreeOfVar (P ·X+ Q) zero = [ fst (IHR?0 P)  ]ᵗʸ
+ FreeOfVar (P ·X+ Q) (suc k) = FreeOfVar P (suc k) × FreeOfVar Q k
+
+ FreeOfVar→ev : ∀ {n} P k → FreeOfVar {ℕ.suc n} P k
+    → Σ[ P' ∈ IteratedHornerForms n ] (∀ xs → eval P xs ≡ eval P' (Vec.drop k xs) )
+ FreeOfVar→ev 0H k _ = 0ₕ , λ xs → sym (Eval0H (Vec.drop k xs))
+   
+ FreeOfVar→ev (P ·X+ Q) zero u = Q ,
+   λ { (x ∷ xs) → RT'.+IdL' _ _ (RT'.0LeftAnnihilates' _ _
+     ((fst (snd (IHR?0 P)) u (x ∷ xs)))) }
+ FreeOfVar→ev {ℕ.suc n} (P HornerForms.·X+ Q) (suc k) (p , q) =
+   let (P' , p') = FreeOfVar→ev P (suc k) p 
+       (Q' , q') = FreeOfVar→ev Q k q
+   in (P' ·X+ Q') , λ { (x ∷ xs) →
+     cong₂ _+‵_ (cong (_·‵ x) (p' (x ∷ xs))) (q' xs) }
+
+
+ IsolatedPowerVar : ∀ {n} → IteratedHornerForms n → Fin n → Type (ℓ-suc ℓ)
+ IsolatedPowerVar {ℕ.suc n} 0H _ = ⊥*
+ IsolatedPowerVar {ℕ.suc n} (P ·X+ Q) zero =
+   HeadVarMonomial P
+ IsolatedPowerVar {ℕ.suc n} (P ·X+ Q) (suc k) =
+   FreeOfVar P (suc k) × IsolatedPowerVar Q k
+
+
+ IsolatedPowerVar→ev : ∀ {n} P → ∀ k →  IsolatedPowerVar {ℕ.suc n} P k
+    → Elimination P k
+ IsolatedPowerVar→ev {n} P@(_ ·X+ _) zero = toElimination P 
+ IsolatedPowerVar→ev {ℕ.suc n} (P ·X+ R) (suc m) (p , r) =
+   let (P' , p') = FreeOfVar→ev P (suc m) p
+        
+   in record {  k = k ; a = a ; Q = P' ·X+ Q ;
+        a·xᵏ≡p = λ { xss@(x ∷ xs) b p →
+          let zz = p' xss
+              zz' = a·xᵏ≡p xs (b -‵ eval P (x ∷ xs) ·‵ x)
+                        (sym (RT'.plusMinus _ _) ∙
+                         cong (_-‵ (eval P (x ∷ xs) ·‵ x)) (R‵.+Comm _ _ ∙ p))
+              zz'' = cong₂ _+‵_ (cong (_·‵ x) (p' xss))
+                     (zz')
+          in sym (RT'.minusPlus _ _)
+              ∙ R‵.+Comm _ _ ∙ cong₂ _+‵_ refl (sym (R‵.+Assoc _ _ _)) ∙ zz''
+         }}
+   where 
+   open Elimination (IsolatedPowerVar→ev R m r)
+
+ 
  module Decidable (_≟_ : Discrete ⟨R⟩) where
+
+  
 
   HF-Maybe-prfₕ : {n : ℕ} (e₁ e₂ : IteratedHornerForms n) 
                    → Maybe [ fst (IHR? e₁ e₂) ]ᵗʸ
@@ -392,11 +519,47 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
                    → Maybe [ fst (IHR? (normalize e₁) (normalize e₂)) ]ᵗʸ
   HF-Maybe-prf e₁ e₂ = HF-Maybe-prfₕ (normalize e₁) (normalize e₂)
 
-
-
-  normalizeIHF' : ∀ {n} → (e : IteratedHornerForms n) → ((e ≑ 0ₕ) ⊎ Σ _ (e ≑_ ))
+  mbIsConst : {n : ℕ}
+        → (e : IteratedHornerForms n)
+        → Maybe (IsConst e)
+  mbIsConst (const _) = just _
+  mbIsConst 0H = nothing
+  mbIsConst (P ·X+ Q) =
+    ⦇ (sequenceP (mapOverIdfun (λ _ f → f _≟_) _ (snd (snd (IHR?0 P)))))
+    , (mbIsConst Q) ⦈
   
+  mbHeadVarMonomial : {n : ℕ}
+        → (e : IteratedHornerForms (ℕ.suc n))
+        → Maybe (HeadVarMonomial e)
+  mbHeadVarMonomial 0H = nothing
+  mbHeadVarMonomial P+Q@(P ·X+ Q) =
+    Mb.rec (map-Maybe inl
+        ⦇ mbHeadVarMonomial P , (sequenceP (mapOverIdfun (λ _ f → f _≟_) _ (snd (snd (IHR?0 Q))))) ⦈)
+      (just ∘ inr)
+      (mbIsConst P+Q)
 
+
+  mbIsolatedPowerHeadVar : {n : ℕ}
+        → (e : IteratedHornerForms (ℕ.suc n))
+        → Maybe (IsolatedPowerHeadVar e)
+  mbIsolatedPowerHeadVar 0H = nothing
+  mbIsolatedPowerHeadVar {n} (P ·X+ Q) = mbHeadVarMonomial P
+
+  mbFreeOfVar : ∀ {n} P k → Maybe (FreeOfVar {n} P k)
+  mbFreeOfVar 0H k = just _
+  mbFreeOfVar (P ·X+ Q) zero =
+   sequenceP (mapOverIdfun (λ _ f → f _≟_) _ (snd (snd (IHR?0 P)))) 
+  mbFreeOfVar (P ·X+ Q) (suc k) =
+    ⦇ (mbFreeOfVar P (suc k)) , (mbFreeOfVar Q k) ⦈
+  
+  mbIsolatedPowerVar : ∀ {n} P k → Maybe (IsolatedPowerVar {n} P k)
+  mbIsolatedPowerVar {ℕ.suc n} HornerForms.0H zero = nothing
+  mbIsolatedPowerVar {ℕ.suc n} P@(_ ·X+ _) zero = mbIsolatedPowerHeadVar P
+  mbIsolatedPowerVar {ℕ.suc n} 0H (suc k) = nothing
+  mbIsolatedPowerVar {ℕ.suc n} (P ·X+ Q) (suc k) =
+    ⦇ (mbFreeOfVar P (suc k)) , (mbIsolatedPowerVar Q k) ⦈
+    
+  normalizeIHF' : ∀ {n} → (e : IteratedHornerForms n) → ((e ≑ 0ₕ) ⊎ Σ _ (e ≑_ ))
   normalizeIHF'  (const x) =
      decRec (λ x≡0 → inl λ xs i → eval (HornerForms.const (x≡0 i)) xs)
       (λ _ → inr (HornerForms.const x , λ _ → refl)) (x ≟ 0r)
@@ -414,15 +577,15 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
       in inr (u₀ ·X+ u₁ , λ { (v ∷ vs) i → y₀ (v ∷ vs) i ·‵ v +‵ y₁ vs i })
     
 
-  normalizeIHF : ∀ {n} → (e : IteratedHornerForms n) → (Σ _ (e ≑_ ))
+  normalizeIHF : ∀ {n} → (e : IteratedHornerForms n) → Σ _ (e ≑_ )
   normalizeIHF = ⊎.rec (0ₕ ,_) (idfun _) ∘ normalizeIHF'
 
   
   eval' : {n : ℕ} (P : IteratedHornerForms n)
          → (xs : Vec ⟨R'⟩ n) → Σ ⟨R'⟩ (_≡ eval P xs )
-  eval' (HornerForms.const x) xs = _ , refl
-  eval' HornerForms.0H xs = _ , refl
-  eval' P@(e₀ HornerForms.·X+ e₁) vvs@(v ∷ vs) =
+  eval' (const x) xs = _ , refl
+  eval' 0H xs = _ , refl
+  eval' P@(e₀ ·X+ e₁) vvs@(v ∷ vs) =
     h (normalizeIHF' e₀) (normalizeIHF' e₁)
    where
 
@@ -458,12 +621,20 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
 
   normalizeByDec :
     {n : ℕ} (e : RExpr n) (xs : Vec (fst R') n) 
-    →  (⟦ e ⟧ xs ≡
-        evPolynomial (Horner→Poly (just _≟_) (fst (normalizeIHF (normalize e))) . fst) xs)
-  normalizeByDec e xs =
+    →  Σ _ (⟦ e ⟧ xs ≡_)
+  normalizeByDec e xs = evPolynomial
+                         (Horner→Poly (just _≟_) (fst (normalizeIHF (normalize e))) .fst) xs ,
         sym (isEqualToNormalform e xs)
      ∙∙ snd (normalizeIHF (normalize e)) xs
      ∙∙ sym ((Horner→Poly (just _≟_) (fst (normalizeIHF (normalize e))) . snd) xs)
+
+
+  pickEliminations : {n : ℕ} (e₁ e₂ : RExpr (ℕ.suc n)) (xs : Vec (fst R') (ℕ.suc n)) →
+    Vec (Maybe ℕ) (ℕ.suc n)
+  pickEliminations e₁ e₂ xs =
+    let (ihf , u) = normalizeIHF (normalize (e₁ +' -' e₂))
+    in tabulate (λ k →
+          map-Maybe (ℕ₊₁→ℕ ∘ Elimination.k ∘ IsolatedPowerVar→ev ihf k ) (mbIsolatedPowerVar ihf k))
 
 
   solveByDifference :  {n : ℕ} (e₁ e₂ : RExpr n) (xs : Vec (fst R') n)
@@ -478,7 +649,8 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
 
 
   solveByDifference' :  {n : ℕ} (e₁ e₂ : RExpr n) (xs : Vec (fst R') n)
-     → evPolynomial (Horner→Poly (just _≟_) (fst (normalizeIHF (normalize (e₁ +' -' e₂)))) . fst) xs
+     → evPolynomial (Horner→Poly (just _≟_)
+      (fst (normalizeIHF (normalize (e₁ +' -' e₂)))) . fst) xs
        ≡ 0r‵ → ⟦ e₁ ⟧ xs ≡ ⟦ e₂ ⟧ xs
   solveByDifference' e₁ e₂ xs ev=0 = 
       RT'.equalByDifference _ _ $ 
@@ -486,7 +658,8 @@ module EqualityToNormalform (R@(⟨R⟩ , _) : CommRing ℓ)
           (cong -‵_ (sym (isEqualToNormalform e₂ xs)) ∙ sym (-EvalDist (normalize e₂) xs))
           ∙ sym (+Homeval (normalize e₁) (-ₕ (normalize e₂)) xs) ∙
               (snd (normalizeIHF (normalize (e₁ +' -' e₂))) xs)
-             ∙ sym ((Horner→Poly (just _≟_) (fst (normalizeIHF (normalize (e₁ +' -' e₂)))) . snd) xs) ∙ ev=0
+             ∙ sym ((Horner→Poly (just _≟_)
+              (fst (normalizeIHF (normalize (e₁ +' -' e₂)))) . snd) xs) ∙ ev=0
 
 
 

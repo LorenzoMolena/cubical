@@ -32,11 +32,11 @@ module ListDep {ℓA ℓB} {A : Type ℓA} (B : A → Type ℓB) where
  --------------------------
 
  -- Represent ListP via known operations in order to derive properties more easily.
- RepListP : (as : List A) → Type (ℓ-max ℓA ℓB)
+ RepListP : (as : List A) → Type ℓB
  RepListP [] = Lift Unit
  RepListP (a ∷ as) = B a × RepListP as
 
- isoRepListP :(as : List A) → ListP as ≅ RepListP as
+ isoRepListP : (as : List A) → ListP as ≅ RepListP as
  fun (isoRepListP []) bs = lift tt
  inv (isoRepListP []) u = []
  sec (isoRepListP []) u = refl
@@ -49,9 +49,8 @@ module ListDep {ℓA ℓB} {A : Type ℓA} (B : A → Type ℓB) where
  equivRepListP : (as : List A) → ListP as ≃ RepListP as
  equivRepListP as = isoToEquiv (isoRepListP as)
 
- pathRepListP : (as : List A) → ListP as ≡ RepListP as
- pathRepListP as = ua (equivRepListP as)
-
+ pathRepListP : (as : List A) → ListP as ≡ Lift {_} {ℓA} (RepListP as)
+ pathRepListP as = ua (equivRepListP as ∙ₑ LiftEquiv {A = RepListP as})
 
 module _ {ℓA ℓB} {A : Type ℓA} {B : A → Type ℓB} where
  open ListDep B
@@ -94,8 +93,7 @@ isOfHLevelSucSuc-ListP : ∀ {ℓA ℓB} (n : HLevel)
   → {as : List A}
   → isOfHLevel (suc (suc n)) (ListP B as)
 isOfHLevelSucSuc-ListP n {A} {B} isHB {as} =
-  subst⁻ (isOfHLevel (suc (suc n))) (pathRepListP B as) (isOfHLevelSucSuc-RepListP n isHB as)
-
+  isOfHLevelRespectEquiv (suc (suc n)) (invEquiv (equivRepListP _ _)) (isOfHLevelSucSuc-RepListP n isHB as) 
 --------------------------
 
 lookupP : ∀ {ℓA ℓB} {A : Type ℓA} {B : A → Type ℓB} {as} (bs : ListP B as) → (p : Fin (length as)) → B (lookup as p)

@@ -126,7 +126,7 @@ module PathTypesReflection (onWait : List ErrorPart  → TC Unit) where
      returnTC (just (domain , x , y))
    _ → returnTC nothing
 
- unapply-pathLHS : Term → TC (Maybe (Term × Term))
+ unapply-pathLHS : Term → TC (Maybe (Term × Term × Term))
  unapply-pathLHS red@(def (quote PathP) (l h∷ T v∷ x v∷ y v∷ [])) = do
    domain ← newMeta (def (quote Type) (l v∷ []))
    ty ← returnTC (def (quote Path) (domain v∷ x v∷ y v∷ []))
@@ -134,16 +134,16 @@ module PathTypesReflection (onWait : List ErrorPart  → TC Unit) where
      (strErr "(no reduction) unapply-path: got a " ∷ termErr red
      ∷ strErr " but I really want it to be " ∷ termErr ty ∷ [])
    unify red ty
-   returnTC (just (domain , x))
+   returnTC (just (domain , x , y))
  unapply-pathLHS tm = reduce tm >>= λ where
    tm@(meta _ _) → do
      dom ← newMeta (def (quote Type) [])
      l ← newMeta dom
-
-     unify tm (def (quote Type) (dom v∷ l v∷ []))
+     r ← newMeta dom
+     unify tm (def (quote Type) (dom v∷ l v∷ r v∷ []))
      wait-for-type l
 
-     returnTC (just (dom , l))
+     returnTC (just (dom , l , r))
    red@(def (quote PathP) (l h∷ T v∷ x v∷ y v∷ [])) → do
      domain ← newMeta (def (quote Type) (l v∷ []))
      ty ← returnTC (def (quote Path) (domain v∷ x v∷ y v∷ []))
@@ -151,7 +151,7 @@ module PathTypesReflection (onWait : List ErrorPart  → TC Unit) where
        (strErr "unapply-path: got a " ∷ termErr red
        ∷ strErr " but I really want it to be " ∷ termErr ty ∷ [])
      unify red ty
-     returnTC (just (domain , x))
+     returnTC (just (domain , x , y))
    _ → returnTC nothing
 
 
@@ -164,9 +164,9 @@ module PathTypesReflection (onWait : List ErrorPart  → TC Unit) where
    (just (_ , x , y)) → returnTC (just (x , y))
    nothing            → returnTC nothing
 
- get-boundaryLHS : Term → TC (Maybe Term)
+ get-boundaryLHS : Term → TC (Maybe (Term × Term))
  get-boundaryLHS tm = unapply-pathLHS tm >>= λ where
-   (just (_ , x)) → returnTC (just x)
+   (just (_ , x , y)) → returnTC (just (x , y))
    nothing            → returnTC nothing
 
 

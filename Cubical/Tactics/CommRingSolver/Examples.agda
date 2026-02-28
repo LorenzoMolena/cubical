@@ -72,7 +72,8 @@ module TestWithℤ where
 
 module Test (R : CommRing ℓ) (x y z w v : fst R) where
   open CommRingStr (snd R)
-  open RingTheory (CommRing→Ring R) using () renaming (fromℤ to scalar)
+  open RingTheory (CommRing→Ring R) using () renaming (fromℤ to scalar ; fromℕ to ⟨_⟩ₙ)
+  open Exponentiation R using () renaming (_^'_ to _^_)
 
 
   _ : 0r ≡ 0r
@@ -127,8 +128,18 @@ module Test (R : CommRing ℓ) (x y z w v : fst R) where
 
 
 
-  exNorm : (x + y) · (x - y) ≡ (0r + 0r · x + x · x + - (y · y))
+  exNorm : (x + y) · (x - y) ≡ (x ^ 2 + - y ^ 2)
   exNorm = normalize! R
+
+  exNorm2 : v + z · x + y + w · x + (- w) + v + (scalar 2 · v) + x + y + x + scalar 2 ≡
+             (⟨ 2 ⟩ₙ + - w + ⟨ 4 ⟩ₙ · v + ⟨ 2 ⟩ₙ · y + ⟨ 2 ⟩ₙ · x + z · x + w · x)
+  exNorm2 = normalize! R
+
+  module SolveForExamples
+    (eq1 : (v + z · x + y · y + w · x + (- w) + v + (scalar 2 · v) ≡ - x - (y · y) - x - scalar 2)) where
+
+    solveForEx : Unit
+    solveForEx = {!solveFor! R  eq1!}
 
 
 --   {-

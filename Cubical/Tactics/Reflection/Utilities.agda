@@ -433,3 +433,10 @@ newHole = do
  newHole ← checkType unknown unknown
  newHoleType ← inferType newHole
  pure (newHole , newHoleType) 
+
+unquoteSigma : Term → TC (Term × Term) 
+unquoteSigma tm = do
+  (x , _) ← newHole
+  (y , _) ← newHole
+  unify (con (quote _,_) (x v∷ v[ y ])) tm
+  pure (x , y)
