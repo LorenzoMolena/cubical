@@ -19,6 +19,7 @@ open import Cubical.Data.Nat as ℕ renaming (
   _+_ to _+ℕ_ ; _·_ to _·ℕ_ ; _∸_ to _∸ℕ_ ; _^_ to _^ℕ_)
 open import Cubical.Data.Nat.Order as ℕ renaming (
   _≤_ to _≤ℕ_ ; _<_ to _<ℕ_)
+open import Cubical.Data.Nat.Order.Inductive as ℕ using (_<ᵗ_ ; _≤ᵗ_)
 
 open import Cubical.Data.Fast.Int as ℤ using (ℤ ; pos ; negsuc ; _ℕ-_) renaming (
   _+_ to _+ℤ_ ; _·_ to _·ℤ_ ; _-_ to _-ℤ_ ; -_ to -ℤ_)
@@ -37,6 +38,7 @@ open import Cubical.Algebra.Semiring.BigOps
 open import Cubical.Algebra.CommSemiring
 open import Cubical.Algebra.Ring
 open import Cubical.Algebra.CommRing
+open import Cubical.Algebra.CommRing.Instances.Fast.Int
 open import Cubical.Algebra.OrderedCommRing.Base
 open import Cubical.Algebra.OrderedCommRing.Instances.Fast.Int
 
@@ -96,7 +98,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     R = fst R'
     RCR = OrderedCommRing→CommRing R'
   open OrderedCommRingStr (snd R')
-  open RingTheory (OrderedCommRing→Ring R')
+  open module R = RingTheory (OrderedCommRing→Ring R')
   open PseudolatticeTheory (OrderedCommRing→PseudoLattice R') renaming (
       L≤∨ to L≤⊔ ; R≤∨ to R≤⊔ ; ∨Comm to ⊔Comm ; ∨Idem to ⊔Idem ; ∨LUB to ⊔LUB
     ; ∧≤L to ⊓≤L ; ∧≤R to ⊓≤R ; ∧Comm to ⊓Comm ; ∧Idem to ⊓Idem ; ∧GLB to ⊓GLB)
@@ -108,6 +110,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     open BinaryRelation
 
     open ApartnessStr (str (OrderedCommRing→Apartness R')) using (_#_) public
+
+    0≤1 : 0r ≤ 1r
+    0≤1 = <-≤-weaken 0r 1r 0<1
 
     ≤→¬> : ∀ x y → x ≤ y → ¬ (y < x)
     ≤→¬> x y = equivFun (≤≃¬> x y)
@@ -197,6 +202,18 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         d + c <⟨ d+c<e·f ⟩
         e · f <⟨ e<g <·[ f , 0<f ] ⟩
         g · f ◾
+
+    <SumLeftPos : ∀ x y → 0r < y → x < x + y
+    <SumLeftPos x y 0<y = begin< x ≡→≤⟨ sym (+IdR x) ⟩ x + 0r <⟨ [ x ]+< 0<y ⟩ x + y ◾
+
+    <SumRightPos : ∀ x y → 0r < y → x < y + x
+    <SumRightPos x y 0<y = begin< x ≡→≤⟨ sym (+IdL x) ⟩ 0r + x <⟨ 0<y <+[ x ] ⟩ y + x ◾
+
+    ≤SumLeftNonNeg : ∀ x y → 0r ≤ y → x ≤ x + y
+    ≤SumLeftNonNeg x y 0≤y = begin≤ x ≡→≤⟨ sym (+IdR x) ⟩ x + 0r ≤⟨ [ x ]+≤ 0≤y ⟩ x + y ◾
+
+    ≤SumRightNonNeg : ∀ x y → 0r ≤ y → x ≤ y + x
+    ≤SumRightNonNeg x y 0≤y = begin≤ x ≡→≤⟨ sym (+IdL x) ⟩ 0r + x ≤⟨ 0≤y ≤+[ x ] ⟩ y + x ◾
 
     -Flip< : ∀ x y → x < y → - y < - x
     -Flip< x y x<y = begin<
@@ -368,137 +385,86 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     abs0 = 0≤→abs≡id 0r (is-refl 0r)
 
     abs1 : abs 1r ≡ 1r
-    abs1 = 0≤→abs≡id 1r (<-≤-weaken 0r 1r 0<1)
+    abs1 = 0≤→abs≡id 1r 0≤1
 
-{- TO DO: simplify this construction
   module CanonicalEmbeddings where
     open OrderedCommRingTheory
+    open CanonicalHomFromℤ RCR using (isHomFromℤ)
 
-    ℕ→⟨R⟩ : ℕ → R
-    ℕ→⟨R⟩ zero          = 0r
-    ℕ→⟨R⟩ one           = 1r
-    ℕ→⟨R⟩ (suc (suc n)) = 1r + ℕ→⟨R⟩ (suc n)
+    1≤fromℕsuc : ∀ n → 1r ≤ R.fromℕ (suc n)
+    1≤fromℕsuc zero    = is-refl 1r
+    1≤fromℕsuc (suc n) = begin≤
+      1r                   ≡→≤⟨ sym (+IdL 1r) ⟩
+      0r + 1r                ≤⟨ +Mono≤ _ _ _ _ 0≤1 (1≤fromℕsuc n) ⟩
+      1r + R.fromℕ (suc n)  ◾
 
-    ℤ→⟨R⟩ : ℤ → R
-    ℤ→⟨R⟩ (pos n)    = ℕ→⟨R⟩ n
-    ℤ→⟨R⟩ (negsuc n) = - ℕ→⟨R⟩ (suc n)
+    0<fromℕsuc : ∀ n → 0r < R.fromℕ (suc n)
+    0<fromℕsuc n = <-≤-trans _ _ _ 0<1 (1≤fromℕsuc n)
 
-    private
-      ℕ→⟨R⟩suc : ∀ x → ℕ→⟨R⟩ (suc x) ≡ 1r + ℕ→⟨R⟩ x
-      ℕ→⟨R⟩suc zero    = solve! RCR
-      ℕ→⟨R⟩suc (suc x) = refl
+    0≤fromℕ : ∀ n → 0r ≤ R.fromℕ n
+    0≤fromℕ zero    = is-refl 0r
+    0≤fromℕ (suc n) = <-≤-weaken _ _ (0<fromℕsuc n)
 
-      ℕ→⟨R⟩pres+ : ∀ x y → ℕ→⟨R⟩ (x +ℕ y) ≡ ℕ→⟨R⟩ x + ℕ→⟨R⟩ y
-      ℕ→⟨R⟩pres+ zero          n       = solve! RCR
-      ℕ→⟨R⟩pres+ one           zero    = solve! RCR
-      ℕ→⟨R⟩pres+ one           (suc n) = refl
-      ℕ→⟨R⟩pres+ (suc (suc m)) n       = cong (1r +_) (ℕ→⟨R⟩pres+ (suc m) n) ∙ solve! RCR
+    fromℕ-pres≤ᵗ : ∀ m n → m ℕ.≤ᵗ n → R.fromℕ m ≤ R.fromℕ n
+    fromℕ-pres≤ᵗ zero          n             t = 0≤fromℕ n
+    fromℕ-pres≤ᵗ one           (suc n)       t = 1≤fromℕsuc n
+    fromℕ-pres≤ᵗ (suc (suc m)) (suc (suc n)) t =
+      +MonoL≤ _ _ _ (fromℕ-pres≤ᵗ (suc m) (suc n) t)
 
-      ℕ→⟨R⟩pres· : ∀ x y → ℕ→⟨R⟩ (x ·ℕ y) ≡ ℕ→⟨R⟩ x · ℕ→⟨R⟩ y
-      ℕ→⟨R⟩pres· zero          n = solve! RCR
-      ℕ→⟨R⟩pres· one           n = cong ℕ→⟨R⟩ (ℕ.+-zero n) ∙ solve! RCR
-      ℕ→⟨R⟩pres· (suc (suc m)) n =
-        ℕ→⟨R⟩ (n +ℕ (n +ℕ m ·ℕ n))         ≡⟨ ℕ→⟨R⟩pres+ n (n +ℕ m ·ℕ n) ⟩
-        ℕ→⟨R⟩ n + ℕ→⟨R⟩ (n +ℕ m ·ℕ n)       ≡⟨ cong (ℕ→⟨R⟩ n +_) $ ℕ→⟨R⟩pres+ n (m ·ℕ n) ⟩
-        ℕ→⟨R⟩ n + (ℕ→⟨R⟩ n + ℕ→⟨R⟩ (m ·ℕ n)) ≡⟨ solve! RCR ⟩
-        ℕ→⟨R⟩ n + ℕ→⟨R⟩ n + ℕ→⟨R⟩ (m ·ℕ n)   ≡⟨ cong (_ +_) $ ℕ→⟨R⟩pres· m n ⟩
-        ℕ→⟨R⟩ n + ℕ→⟨R⟩ n + ℕ→⟨R⟩ m · ℕ→⟨R⟩ n ≡⟨ solve! RCR ⟩
-        (1r + (1r + ℕ→⟨R⟩ m)) · ℕ→⟨R⟩ n      ≡⟨ sym $ cong ((_· ℕ→⟨R⟩ n) ∘ (1r +_)) (ℕ→⟨R⟩suc m) ⟩
-        ℕ→⟨R⟩ (suc (suc m)) · ℕ→⟨R⟩ n        ∎
+    fromℕ-pres≤ : ∀ m n → m ≤ℕ n → R.fromℕ m ≤ R.fromℕ n
+    fromℕ-pres≤ m n = fromℕ-pres≤ᵗ m n ∘ ℕ.≤→≤ᵇ
 
-      0<ℕ→⟨R⟩∘suc : ∀ n → 0r < ℕ→⟨R⟩ (suc n)
-      0<ℕ→⟨R⟩∘suc zero    = 0<1
-      0<ℕ→⟨R⟩∘suc (suc n) = begin<
-        0r               ≡→≤⟨ solve! RCR ⟩
-        0r + 0r            <⟨ +MonoR< _ _ _ 0<1 ⟩
-        1r + 0r            <⟨ +MonoL< _ _ _ (0<ℕ→⟨R⟩∘suc n) ⟩
-        1r + ℕ→⟨R⟩ (suc n) ◾
+    fromℕ-pres<ᵗ : ∀ m n → m ℕ.<ᵗ n → R.fromℕ m < R.fromℕ n
+    fromℕ-pres<ᵗ zero          (suc n)       t = 0<fromℕsuc n
+    fromℕ-pres<ᵗ one           (suc (suc n)) t = <SumLeftPos 1r _ (0<fromℕsuc n)
+    fromℕ-pres<ᵗ (suc (suc m)) (suc (suc n)) t =
+      +MonoL< _ _ _ (fromℕ-pres<ᵗ (suc m) (suc n) t)
 
-      0≤ℕ→⟨R⟩ : ∀ n → 0r ≤ ℕ→⟨R⟩ n
-      0≤ℕ→⟨R⟩ zero    = is-refl 0r
-      0≤ℕ→⟨R⟩ (suc n) = <-≤-weaken _ _ (0<ℕ→⟨R⟩∘suc n)
+    fromℕ-pres< : ∀ m n → m <ℕ n → R.fromℕ m < R.fromℕ n
+    fromℕ-pres< m n = fromℕ-pres<ᵗ m n ∘ ℕ.<→<ᵇ
 
-      ℤ→⟨R⟩presℕ- : ∀ x y → ℤ→⟨R⟩ (x ℕ- y) ≡ ℕ→⟨R⟩ x - ℕ→⟨R⟩ y
-      ℤ→⟨R⟩presℕ- zero          zero          = solve! RCR
-      ℤ→⟨R⟩presℕ- zero          (suc y)       = solve! RCR
-      ℤ→⟨R⟩presℕ- (suc x)       zero          = solve! RCR
-      ℤ→⟨R⟩presℕ- one           one           = solve! RCR
-      ℤ→⟨R⟩presℕ- one           (suc (suc y)) = solve! RCR
-      ℤ→⟨R⟩presℕ- (suc (suc x)) one           = solve! RCR
-      ℤ→⟨R⟩presℕ- (suc (suc x)) (suc (suc y)) =
-        ℤ→⟨R⟩ (suc x ℕ- suc y)                    ≡⟨ ℤ→⟨R⟩presℕ- (suc x) (suc y) ⟩
-        ℕ→⟨R⟩ (suc x) - ℕ→⟨R⟩ (suc y)             ≡⟨ solve! RCR ⟩
-        1r + ℕ→⟨R⟩ (suc x) - (1r + ℕ→⟨R⟩ (suc y)) ∎
+    fromℤ-pres≤ : ∀ m n → m ℤ.≤ n → R.fromℤ m ≤ R.fromℤ n
+    fromℤ-pres≤ (pos m)    (pos n)    (pos≤pos p)       = fromℕ-pres≤ᵗ m n p
+    fromℤ-pres≤ (negsuc m) (pos n)    negsuc≤pos        = begin≤
+      - R.fromℕ (suc m) ≤⟨ 0≤→-≤0 _ (0≤fromℕ (suc m)) ⟩
+      0r                ≤⟨ 0≤fromℕ n ⟩
+      R.fromℕ n         ◾
+    fromℤ-pres≤ (negsuc m) (negsuc n) (negsuc≤negsuc p) =
+      -Flip≤ _ _ (fromℕ-pres≤ᵗ (suc n) (suc m) p)
 
-      ℤ→⟨R⟩pres+ : ∀ x y → ℤ→⟨R⟩ (x +ℤ y) ≡ ℤ→⟨R⟩ x + ℤ→⟨R⟩ y
-      ℤ→⟨R⟩pres+ (pos m)    (pos n)          = ℕ→⟨R⟩pres+ m n
-      ℤ→⟨R⟩pres+ (pos m)    (negsuc n)       = ℤ→⟨R⟩presℕ- m (suc n)
-      ℤ→⟨R⟩pres+ (negsuc m) (pos n)          = ℤ→⟨R⟩presℕ- n (suc m) ∙ solve! RCR
-      ℤ→⟨R⟩pres+ (negsuc m) (negsuc zero)    =
-        - (1r + ℕ→⟨R⟩ (suc (m +ℕ 0))) ≡⟨ cong (-_ ∘ (1r +_) ∘ ℕ→⟨R⟩) $ ℕ.+-zero (suc m) ⟩
-        - (1r + ℕ→⟨R⟩ (suc m))        ≡⟨ solve! RCR ⟩
-        - ℕ→⟨R⟩ (suc m) - 1r          ∎
-      ℤ→⟨R⟩pres+ (negsuc m) (negsuc (suc n)) =
-        - (1r + ℕ→⟨R⟩ (suc m +ℕ suc n))         ≡⟨ cong (-_ ∘ (1r +_)) $ ℕ→⟨R⟩pres+ (suc m) _ ⟩
-        - (1r + (ℕ→⟨R⟩ (suc m) + ℕ→⟨R⟩ (suc n))) ≡⟨ solve! RCR ⟩
-        - ℕ→⟨R⟩ (suc m) - (1r + ℕ→⟨R⟩ (suc n))   ∎
+    fromℤ-pres< : ∀ m n → m ℤ.< n → R.fromℤ m < R.fromℤ n
+    fromℤ-pres< (pos m)    (pos n)    (pos<pos p)       = fromℕ-pres<ᵗ m n p
+    fromℤ-pres< (negsuc m) (pos n)    negsuc<pos        = begin<
+      - R.fromℕ (suc m) <⟨ 0<→-<0 _ (0<fromℕsuc m) ⟩
+      0r                ≤⟨ 0≤fromℕ n ⟩
+      R.fromℕ n         ◾
+    fromℤ-pres< (negsuc m) (negsuc n) (negsuc<negsuc p) =
+      -Flip< _ _ (fromℕ-pres<ᵗ (suc n) (suc m) p)
 
-      ℤ→⟨R⟩pres· : ∀ x y → ℤ→⟨R⟩ (x ·ℤ y) ≡ ℤ→⟨R⟩ x · ℤ→⟨R⟩ y
-      ℤ→⟨R⟩pres· (pos m)    (pos n)       = ℕ→⟨R⟩pres· m n
-      ℤ→⟨R⟩pres· (pos zero) (negsuc n)    = solve! RCR
-      ℤ→⟨R⟩pres· (pos (suc m)) (negsuc n) =
-        - ℕ→⟨R⟩ (suc m ·ℕ suc n)         ≡⟨ cong -_ (ℕ→⟨R⟩pres· (suc m) (suc n)) ⟩
-        - (ℕ→⟨R⟩ (suc m) · ℕ→⟨R⟩ (suc n)) ≡⟨ solve! RCR ⟩
-        ℕ→⟨R⟩ (suc m) · - ℕ→⟨R⟩ (suc n)   ∎
-      ℤ→⟨R⟩pres· (negsuc m) (pos zero)    = solve! RCR
-      ℤ→⟨R⟩pres· (negsuc m) (pos (suc n)) =
-        - ℕ→⟨R⟩ (suc m ·ℕ suc n)         ≡⟨ cong -_ (ℕ→⟨R⟩pres· (suc m) (suc n)) ⟩
-        - (ℕ→⟨R⟩ (suc m) · ℕ→⟨R⟩ (suc n)) ≡⟨ solve! RCR ⟩
-        - ℕ→⟨R⟩ (suc m) · ℕ→⟨R⟩ (suc n)   ∎
-      ℤ→⟨R⟩pres· (negsuc m) (negsuc n)    =
-        ℕ→⟨R⟩ (suc m ·ℕ suc n)           ≡⟨ ℕ→⟨R⟩pres· (suc m) (suc n) ⟩
-        ℕ→⟨R⟩ (suc m) · ℕ→⟨R⟩ (suc n)     ≡⟨ solve! RCR ⟩
-        - ℕ→⟨R⟩ (suc m) · - ℕ→⟨R⟩ (suc n) ∎
+    fromℤ-reflect< : ∀ m n → R.fromℤ m < R.fromℤ n → m ℤ.< n
+    fromℤ-reflect< m n fm<fn with m ℤ.≟ n
+    ... | lt m<n = m<n
+    ... | eq m≡n = ⊥.rec (is-irrefl _ (subst (_< _) (cong R.fromℤ m≡n) fm<fn))
+    ... | gt m>n = ⊥.rec (is-asym _ _ fm<fn (fromℤ-pres< n m m>n))
 
-      ℤ→⟨R⟩pres< : ∀ x y → x <ℤ y → ℤ→⟨R⟩ x < ℤ→⟨R⟩ y
-      ℤ→⟨R⟩pres< x y (k , p) = begin<
-        ℤ→⟨R⟩ x                      ≡→≤⟨ solve! RCR ⟩
-        ℤ→⟨R⟩ x + 0r                   <⟨ +MonoL< _ _ _ (0<ℕ→⟨R⟩∘suc k) ⟩
-        ℤ→⟨R⟩ x + ℤ→⟨R⟩ (pos (suc k)) ≡→≤⟨ _ ≡⟨ sym (ℤ→⟨R⟩pres+ x (pos (suc k))) ⟩
-        ℤ→⟨R⟩ (x +ℤ pos (suc k))       ≡⟨ sym $ cong ℤ→⟨R⟩ (ℤ.+sucℤ x (pos k)) ⟩
-        ℤ→⟨R⟩ (ℤ.sucℤ (x +ℤ pos k))    ≡⟨ cong ℤ→⟨R⟩ (ℤ.sucℤ+ x (pos k)) ⟩
-        ℤ→⟨R⟩ (ℤ.sucℤ x +ℤ pos k)      ≡⟨ cong ℤ→⟨R⟩ p ⟩ refl ⟩
-        ℤ→⟨R⟩ y                        ◾
+    isOCRHomFromℤ : IsOrderedCommRingHom (str ℤOrderedCommRing) R.fromℤ (str R')
+    isOCRHomFromℤ .IsOrderedCommRingHom.isCommRingHom = isHomFromℤ
+    isOCRHomFromℤ .IsOrderedCommRingHom.pres≤         = fromℤ-pres≤
+    isOCRHomFromℤ .IsOrderedCommRingHom.reflect<      = fromℤ-reflect<
 
-      ℤ→⟨R⟩pres≤ : ∀ x y → x ≤ℤ y → ℤ→⟨R⟩ x ≤ ℤ→⟨R⟩ y
-      ℤ→⟨R⟩pres≤ x y (k , p) = begin≤
-        ℤ→⟨R⟩ x                ≡→≤⟨ solve! RCR ⟩
-        ℤ→⟨R⟩ x + 0r             ≤⟨ +MonoL≤ _ _ _ (0≤ℕ→⟨R⟩ k) ⟩
-        ℤ→⟨R⟩ x + ℤ→⟨R⟩ (pos k) ≡→≤⟨ sym (ℤ→⟨R⟩pres+ x (pos k)) ∙ cong ℤ→⟨R⟩ p ⟩
-        ℤ→⟨R⟩ y                  ◾
-
-      ℤ→⟨R⟩reflect< : ∀ x y → ℤ→⟨R⟩ x < ℤ→⟨R⟩ y → x <ℤ y
-      ℤ→⟨R⟩reflect< x y ιx<ιy with x ℤ.≟ y
-      ... | lt x<y = x<y
-      ... | eq x≡y = ⊥.rec (is-irrefl _ $ subst (_< ℤ→⟨R⟩ y) (cong ℤ→⟨R⟩ x≡y) ιx<ιy)
-      ... | gt x>y = ⊥.rec (is-asym _ _ ιx<ιy (ℤ→⟨R⟩pres< y x x>y))
-
-    ℤ→⟨R⟩Hom : IsOrderedCommRingHom (str ℤOrderedCommRing) ℤ→⟨R⟩ (str R')
-    ℤ→⟨R⟩Hom = makeIsOrderedCommRingHom
-      refl ℤ→⟨R⟩pres+ ℤ→⟨R⟩pres· ℤ→⟨R⟩pres≤ ℤ→⟨R⟩reflect<
-
-    ℤ→⟨R⟩Mono : IsOrderedCommRingMono (str ℤOrderedCommRing) ℤ→⟨R⟩ (str R')
-    ℤ→⟨R⟩Mono = makeIsOrderedCommRingMono
-      refl ℤ→⟨R⟩pres+ ℤ→⟨R⟩pres· ℤ→⟨R⟩pres≤ ℤ→⟨R⟩pres< ℤ→⟨R⟩reflect<
+    isOCRMonoFromℤ : IsOrderedCommRingMono (str ℤOrderedCommRing) R.fromℤ (str R')
+    isOCRMonoFromℤ .IsOrderedCommRingMono.isOrderedCommRingHom = isOCRHomFromℤ
+    isOCRMonoFromℤ .IsOrderedCommRingMono.pres<                = fromℤ-pres<
 
     ℤOCR→R : OrderedCommRingHom ℤOrderedCommRing R'
-    fst ℤOCR→R = ℤ→⟨R⟩
-    snd ℤOCR→R = ℤ→⟨R⟩Hom
+    fst ℤOCR→R = R.fromℤ
+    snd ℤOCR→R = isOCRHomFromℤ
 
     ℤOCR↣R : OrderedCommRingMono ℤOrderedCommRing R'
-    fst ℤOCR↣R = ℤ→⟨R⟩
-    snd ℤOCR↣R = ℤ→⟨R⟩Mono
+    fst ℤOCR↣R = R.fromℤ
+    snd ℤOCR↣R = isOCRMonoFromℤ
 
+{-
     isContrHom[ℤ,OCR] : isContr (OrderedCommRingHom ℤOrderedCommRing R')
     fst isContrHom[ℤ,OCR] = ℤOCR→R
     snd isContrHom[ℤ,OCR] (φ , φocrhom) = OrderedCommRingHom≡ λ i n → ℤ→⟨R⟩≡⟨φ⟩ n i
@@ -916,3 +882,4 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     id-[/4+/4]₊ : ∀ x → 0r < x -₊ (x /4₊ +₊ x /4₊)
     id-[/4+/4]₊ x = subst (0r <_) (cong (_-_ ⟨ x ⟩₊) (sym (/4+/4≡/2 ⟨ x ⟩₊))) (id-/2₊ x)
+-- -}
