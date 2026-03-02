@@ -36,7 +36,7 @@ open Characteristic≠2 ℚOrderedCommRing [ 1 / 2 ] (eq/ _ _ refl)
 
 open import Cubical.Relation.Premetric.Properties
 open import Cubical.Relation.Premetric.Mappings
-open PremetricTheory using (isLimit ; limit ; isComplete ; isLimit≈< ; isLim≈-)
+open PremetricTheory using (isLimit ; limit ; isComplete ; isLimit≈< ; isLim≈- ; isLim≈-₂)
 
 open import Cubical.Reflection.RecordEquiv
 
@@ -68,7 +68,7 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
       (ℭPremetricSpace to ℭMPrSpace)
 
   -- Theorem 3.19
-  continuous≡ : (f g : C[ ℭMPrSpace , N' ]) → ((fst f) ∘ ι ≡ (fst g) ∘ ι) → f ≡ g
+  continuous≡ : (f g : C[ ℭMPrSpace , N' ]) → (fst f ∘ ι ≡ fst g ∘ ι) → f ≡ g
   continuous≡ (f , fc) (g , gc) f∘ι≡g∘ι =
     ΣPathPProp (isPropIsContinuous (snd ℭMPrSpace) (snd N'))
     (funExt (Elimℭ-Prop.go e))
@@ -129,56 +129,124 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
         (gc (lim x xc) (ε /2₊))
       isPropA e x       = N.isSetM (f x) (g x)
 
-{-
-  -- Theorem 3.20
-  LiftLipschitz : isComplete N'
-                → ∀ L → (f : M → N) → isLipschitzWith (snd M') (snd N') f L
-                → Σ[ f' ∈ (ℭM → N) ] isLipschitzWith (snd ℭMPrSpace) (snd N') f' L
-  LiftLipschitz N-com L f f-lip = RecℭSym.go r , λ _ _ _ → RecℭSym.go∼ r where
-    open RecℭSym
-    open ℚ₊Inverse
+  lipschitz≡ : (f g : L[ ℭMPrSpace , N' ]) → (fst f ∘ ι ≡ fst g ∘ ι) → f ≡ g
+  lipschitz≡ f g =
+    Σ≡Prop (isPropIsLipschitz (snd ℭMPrSpace) (snd N')) ∘ cong fst
+    ∘ continuous≡
+      (fst f , uncurry (isLipschitz→isContinuous (snd ℭMPrSpace) (snd N')) f)
+      (fst g , uncurry (isLipschitz→isContinuous (snd ℭMPrSpace) (snd N')) g)
 
-    flim' : ∀ fx → (∀ ε δ → fx ε N.≈[ L ·₊ (ε +₊ δ) ] fx δ) → limit N' (fx ∘ (_/ L))
-    flim' fx fxcL = N-com (fx ∘ (_/ L)) fxc where
-      fxc : ∀ ε δ → fx (ε / L) N.≈[ ε +₊ δ ] fx (δ / L)
-      fxc ε δ = flip (N.subst≈ (fx (ε / L)) (fx (δ / L))) (fxcL (ε / L) (δ / L)) $
-        ⟨ L ·₊ (ε / L +₊ δ / L) ⟩₊          ≡⟨ ℚ.·DistL+ ⟨ L ⟩₊ ⟨ ε / L ⟩₊ ⟨ δ / L ⟩₊ ⟩
-        ⟨ L ·₊ ε / L ⟩₊ ℚ.+ ⟨ L ·₊ δ / L ⟩₊  ≡⟨ cong₂ ℚ._+_ (·/ L ε) (·/ L δ) ⟩
-        ⟨ ε +₊ δ ⟩₊                         ∎
+  uniformlyContinuous≡ : (f g : UC[ ℭMPrSpace , N' ]) → (fst f ∘ ι ≡ fst g ∘ ι) → f ≡ g
+  uniformlyContinuous≡ f g =
+    Σ≡Prop (isPropIsUniformlyContinuous (snd ℭMPrSpace) (snd N')) ∘ cong fst
+    ∘ continuous≡
+      (fst f , uncurry (isUniformlyContinuous→isContinuous (snd ℭMPrSpace) (snd N')) f)
+      (fst g , uncurry (isUniformlyContinuous→isContinuous (snd ℭMPrSpace) (snd N')) g)
 
-    flim : ∀ fx → (∀ ε δ → fx ε N.≈[ L ·₊ (ε +₊ δ) ] fx δ) → N
-    flim fx fxcL = fst (flim' fx fxcL)
+  module _ (N-com : isComplete N') where
+    -- Theorem 3.20
+    liftLipschitzWith : ∀ L → (f : M → N) → isLipschitzWith (snd M') (snd N') f L
+                      → Σ[ f' ∈ (ℭM → N) ] isLipschitzWith (snd ℭMPrSpace) (snd N') f' L
+    liftLipschitzWith L f f-lip = RecℭSym.go r , λ _ _ _ → RecℭSym.go∼ r where
+      open RecℭSym
+      open ℚ₊Inverse
 
-    islim-flim : ∀ fx fxcL → isLimit N' (fx ∘ (_/ L)) (flim fx fxcL)
-    islim-flim fx fxcL = snd (flim' fx fxcL)
+      flim' : ∀ fx → (∀ ε δ → fx ε N.≈[ L ·₊ (ε +₊ δ) ] fx δ) → limit N' (fx ∘ (_/ L))
+      flim' fx fxcL = N-com (fx ∘ (_/ L)) fxc where
+        fxc : ∀ ε δ → fx (ε / L) N.≈[ ε +₊ δ ] fx (δ / L)
+        fxc ε δ = flip (N.subst≈ (fx (ε / L)) (fx (δ / L))) (fxcL (ε / L) (δ / L)) $
+          ⟨ L ·₊ (ε / L +₊ δ / L) ⟩₊          ≡⟨ ℚ.·DistL+ ⟨ L ⟩₊ ⟨ ε / L ⟩₊ ⟨ δ / L ⟩₊ ⟩
+          ⟨ L ·₊ ε / L ⟩₊ ℚ.+ ⟨ L ·₊ δ / L ⟩₊  ≡⟨ cong₂ ℚ._+_ (·/ L ε) (·/ L δ) ⟩
+          ⟨ ε +₊ δ ⟩₊                         ∎
 
-    r : RecℭSym N λ u v ε → u N.≈[ L ·₊ ε ] v
-    ιA        r = f
-    limA      r = flim
-    eqA       r = λ u v u≈v →
-      N.isSeparated≈ u v (
-        λ ε → N.subst≈ u v (·/ L ε)
-          (u≈v (ε / L)
-          :> (u N.≈[ L ·₊ (ε / L) ] v))
-        :> u N.≈[ ε ] v)
-      :> u ≡ v
-    ι-ι-B     r = f-lip
-    ι-lim-B   r x fy ε δ fycL Δ fx≈fyδ        =
-      isLim≈- N' (f x) (fy ∘ (_/ L)) (flim fy fycL) (L ·₊ ε) (L ·₊ δ) Δ'
-        (islim-flim fy fycL) (
-        subst2 ((f x) N.≈[_]_)
-          (ℚ₊≡ $ ℚ.·DistL+ ⟨ L ⟩₊ ⟨ ε ⟩₊ _ ∙ cong (⟨ L ·₊ ε ⟩₊ ℚ.+_) (-DistR· ⟨ L ⟩₊ _))
-          (cong fy (ℚ₊≡ $ sym (·/ L δ) ∙ ℚ.·Assoc ⟨ L ⟩₊ ⟨ δ ⟩₊ ⟨ L ⁻¹₊ ⟩₊))
-          (fx≈fyδ
-            :> f x N.≈[ L ·₊ (ε -₊ δ , Δ) ] fy δ)
-          :> f x N.≈[ (L ·₊ ε) -₊ (L ·₊ δ) , Δ' ] fy ((L ·₊ δ) / L))
-        :> f x N.≈[ L ·₊ ε ] flim fy fycL
-      where
-        Δ' : 0 <ℚ (L ·₊ ε) -₊ (L ·₊ δ)
-        Δ' = <→0<- ⟨ L ·₊ δ ⟩₊ ⟨ L ·₊ ε ⟩₊
-              (·MonoL< ⟨ δ ⟩₊ ⟨ ε ⟩₊ ⟨ L ⟩₊ (snd L)
-                (0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ))
-    lim-lim-B r fx fy ε δ η fxcL fycL Δ fxδ≈fyη  = {!   !}
-    isSymB    r u v = N.isSym≈  u v ∘ (L ·₊_)
-    isPropB   r u v = N.isProp≈ u v ∘ (L ·₊_)
--}
+      flim : ∀ fx → (∀ ε δ → fx ε N.≈[ L ·₊ (ε +₊ δ) ] fx δ) → N
+      flim fx fxcL = fst (flim' fx fxcL)
+
+      islim-flim : ∀ fx fxcL → isLimit N' (fx ∘ (_/ L)) (flim fx fxcL)
+      islim-flim fx fxcL = snd (flim' fx fxcL)
+
+      r : RecℭSym N λ u v ε → u N.≈[ L ·₊ ε ] v
+      ιA        r = f
+      limA      r = flim
+      eqA       r = λ u v u≈v →
+        N.isSeparated≈ u v (
+          λ ε → N.subst≈ u v (·/ L ε)
+            (u≈v (ε / L)
+            :> (u N.≈[ L ·₊ (ε / L) ] v))
+          :> u N.≈[ ε ] v)
+        :> u ≡ v
+      ι-ι-B     r = f-lip
+      ι-lim-B   r x fy ε δ fycL Δ fx≈fyδ        =
+        isLim≈- N' (f x) (fy ∘ (_/ L)) (flim fy fycL) (L ·₊ ε) (L ·₊ δ) Δ'
+          (islim-flim fy fycL) (
+          subst2 ((f x) N.≈[_]_)
+            (ℚ₊≡ $ ℚ.·DistL+ ⟨ L ⟩₊ ⟨ ε ⟩₊ _ ∙ cong (⟨ L ·₊ ε ⟩₊ ℚ.+_) (-DistR· ⟨ L ⟩₊ _))
+            (cong fy (ℚ₊≡ $ sym (·/ L δ) ∙ ℚ.·Assoc ⟨ L ⟩₊ ⟨ δ ⟩₊ ⟨ L ⁻¹₊ ⟩₊))
+            (fx≈fyδ
+              :> f x N.≈[ L ·₊ (ε -₊ δ , Δ) ] fy δ)
+            :> f x N.≈[ (L ·₊ ε) -₊ (L ·₊ δ) , Δ' ] fy ((L ·₊ δ) / L))
+          :> f x N.≈[ L ·₊ ε ] flim fy fycL
+        where
+          Δ' : 0 <ℚ (L ·₊ ε) -₊ (L ·₊ δ)
+          Δ' = <→0<- ⟨ L ·₊ δ ⟩₊ ⟨ L ·₊ ε ⟩₊
+                (·MonoL< ⟨ δ ⟩₊ ⟨ ε ⟩₊ ⟨ L ⟩₊ (snd L)
+                  (0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ))
+      lim-lim-B r fx fy ε δ η fxcL fycL Δ fxδ≈fyη  =
+        isLim≈-₂ N' (fx ∘ (_/ L)) (fy ∘ (_/ L)) (flim fx fxcL) (flim fy fycL)
+        (L ·₊ ε) (L ·₊ δ) (L ·₊ η) Δ' (islim-flim fx fxcL) (islim-flim fy fycL)
+        (subst2 (N._≈[ (L ·₊ ε) -₊ (L ·₊ δ +₊ (L ·₊ η)) , Δ' ]_)
+          (cong fx (ℚ₊≡ $ sym (·/ L δ) ∙ ℚ.·Assoc ⟨ L ⟩₊ ⟨ δ ⟩₊ ⟨ L ⁻¹₊ ⟩₊))
+          (cong fy (ℚ₊≡ $ sym (·/ L η) ∙ ℚ.·Assoc ⟨ L ⟩₊ ⟨ η ⟩₊ ⟨ L ⁻¹₊ ⟩₊))
+          (N.subst≈ (fx δ) (fy η)
+            (ℚ.·DistL+ ⟨ L ⟩₊ ⟨ ε ⟩₊ _ ∙ cong (⟨ L ·₊ ε ⟩₊ ℚ.+_)
+            (-DistR· ⟨ L ⟩₊ _ ∙ cong ℚ.-_ (ℚ.·DistL+ ⟨ L ⟩₊ ⟨ δ ⟩₊ ⟨ η ⟩₊)))
+          fxδ≈fyη :> fx δ N.≈[ (L ·₊ ε) -₊ (L ·₊ δ +₊ (L ·₊ η)) , Δ' ] fy η)
+          :> fx ((L ·₊ δ) / L) N.≈[ (L ·₊ ε) -₊ (L ·₊ δ +₊ (L ·₊ η)) , Δ' ] fy ((L ·₊ η) / L))
+        :> flim fx fxcL N.≈[ L ·₊ ε ] flim fy fycL
+        where
+          Δ' : 0 <ℚ (L ·₊ ε) -₊ ((L ·₊ δ) +₊ (L ·₊ η))
+          Δ' = <→0<- ⟨ (L ·₊ δ) +₊ (L ·₊ η) ⟩₊ ⟨ L ·₊ ε ⟩₊ (begin<
+            ⟨ (L ·₊ δ) +₊ (L ·₊ η) ⟩₊ ≡→≤⟨ sym $ ℚ.·DistL+ ⟨ L ⟩₊ ⟨ δ ⟩₊ ⟨ η ⟩₊ ⟩
+            ⟨ L ·₊ (δ +₊ η) ⟩₊          <⟨ ·MonoL< _ _ ⟨ L ⟩₊ (snd L)
+                                        (0<-→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ) ⟩
+            ⟨ L ·₊ ε ⟩₊                 ◾)
+      isSymB    r u v = N.isSym≈  u v ∘ (L ·₊_)
+      isPropB   r u v = N.isProp≈ u v ∘ (L ·₊_)
+
+    liftLipschitzWithFun : ∀ L f → isLipschitzWith (snd M') (snd N') f L → ℭM → N
+    liftLipschitzWithFun = ((fst ∘_) ∘_) ∘ liftLipschitzWith
+
+    isContinuosLiftLipschitzWithFun :
+      ∀ L f isLip → isContinuous (snd ℭMPrSpace) (snd N') (liftLipschitzWithFun L f isLip)
+    isContinuosLiftLipschitzWithFun L f isLip = isLipschitz→isContinuous
+      (snd ℭMPrSpace) (snd N') _ ∣ L , snd (liftLipschitzWith L f isLip) ∣₁
+
+    isIrrelevantLiftLipschitzWith : ∀ L L' f isLip isLip'
+      → liftLipschitzWithFun L f isLip ≡ liftLipschitzWithFun L' f isLip'
+    isIrrelevantLiftLipschitzWith L L' f isLip isLip' = cong fst $
+      lipschitz≡
+        (liftLipschitzWithFun L  f isLip  , ∣ L  , snd (liftLipschitzWith L  f isLip) ∣₁)
+        (liftLipschitzWithFun L' f isLip' , ∣ L' , snd (liftLipschitzWith L' f isLip')∣₁)
+        refl
+
+    isUniqueLiftLipschitz : ∀ (f : L[ M' , N' ])
+                            → isProp (Σ[ g ∈ L[ ℭMPrSpace , N' ] ] fst g ∘ ι ≡ fst f)
+    isUniqueLiftLipschitz = uncurry λ f → PT.rec isPropIsProp
+      λ (L , f-lip) ((g , g-lip) , g∘ι≡f) ((h , h-lip) , h∘ι≡f) →
+      Σ≡Prop
+      (λ g → λ p q i j x → N.isSetM (fst g (ι x)) (f x) (λ k → p k x) (λ k → q k x) i j)
+      (Σ≡Prop (isPropIsLipschitz (snd ℭMPrSpace) (snd N'))
+        (cong fst (lipschitz≡ (g , g-lip) (h , h-lip) (g∘ι≡f ∙ sym h∘ι≡f))))
+
+    liftLipschitzExtension : (f : L[ M' , N' ])
+                           → Σ[ g ∈ L[ ℭMPrSpace , N' ] ] (fst g ∘ ι ≡ fst f)
+    liftLipschitzExtension = uncurry λ f → PT.elim (curry isUniqueLiftLipschitz f) λ
+      { (L , isLip) .fst .fst → liftLipschitzWithFun L f isLip
+      ; (L , isLip) .fst .snd → ∣ L , snd (liftLipschitzWith L f isLip) ∣₁
+      ; (L , isLip) .snd      → refl }
+
+    liftLipschitz : L[ M' , N' ] → L[ ℭMPrSpace , N' ]
+    liftLipschitz = fst ∘ liftLipschitzExtension
+
+    liftLipschitzFun : L[ M' , N' ] → ℭM → N
+    liftLipschitzFun = fst ∘ liftLipschitz
