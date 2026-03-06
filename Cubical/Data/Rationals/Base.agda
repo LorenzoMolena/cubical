@@ -39,7 +39,8 @@ isSetℚ = SetQuotient.squash/
 isEquivRel∼ : isEquivRel _∼_
 isEquivRel.reflexive isEquivRel∼ (a , b) = refl
 isEquivRel.symmetric isEquivRel∼ (a , b) (c , d) = sym
-isEquivRel.transitive isEquivRel∼ (a , b) (c , d) (e , f) p q = ·rCancel _ _ (e · pos (ℕ.suc (ℕ₊₁.n b))) r (ℕ.snotz ∘ injPos)
+isEquivRel.transitive isEquivRel∼ (a , b) (c , d) (e , f) p q =
+ ·rCancel _ _ (e · pos (ℕ.suc (ℕ₊₁.n b))) r (ℕ.snotz ∘ injPos)
   where r = (a · ℕ₊₁→ℤ f) · ℕ₊₁→ℤ d ≡[ i ]⟨ ·Comm a (ℕ₊₁→ℤ f) i · ℕ₊₁→ℤ d ⟩
             (ℕ₊₁→ℤ f · a) · ℕ₊₁→ℤ d ≡⟨ sym (·Assoc (ℕ₊₁→ℤ f) a (ℕ₊₁→ℤ d)) ⟩
             ℕ₊₁→ℤ f · (a · ℕ₊₁→ℤ d) ≡[ i ]⟨ ℕ₊₁→ℤ f · p i ⟩
@@ -50,6 +51,8 @@ isEquivRel.transitive isEquivRel∼ (a , b) (c , d) (e , f) p q = ·rCancel _ _ 
             e · (ℕ₊₁→ℤ d · ℕ₊₁→ℤ b) ≡[ i ]⟨ e · ·Comm (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ b) i ⟩
             e · (ℕ₊₁→ℤ b · ℕ₊₁→ℤ d) ≡⟨ ·Assoc e (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ d) ⟩
             (e · ℕ₊₁→ℤ b) · ℕ₊₁→ℤ d ∎
+
+
 
 eq/⁻¹ : ∀ x y → Path ℚ [ x ] [ y ] → x ∼ y
 eq/⁻¹ = SetQuotient.effective (λ _ _ → isSetℤ _ _) isEquivRel∼

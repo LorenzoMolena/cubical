@@ -52,6 +52,12 @@ module ListDep {ℓA ℓB} {A : Type ℓA} (B : A → Type ℓB) where
  pathRepListP : (as : List A) → ListP as ≡ Lift {_} {ℓA} (RepListP as)
  pathRepListP as = ua (equivRepListP as ∙ₑ LiftEquiv {A = RepListP as})
 
+ -- IsoListΣListDep : (Σ _ ListP) ≅ List (Σ A B) 
+ -- IsoListΣListDep .fun x = {!!}
+ -- IsoListΣListDep .inv = {!!}
+ -- IsoListΣListDep .sec = {!!}
+ -- IsoListΣListDep .ret = {!!}
+ 
 module _ {ℓA ℓB} {A : Type ℓA} {B : A → Type ℓB} where
  open ListDep B
  _++P_ : ∀ {xs ys} → ListP xs → ListP ys → ListP (xs ++ ys) 
@@ -75,6 +81,9 @@ module _ {ℓA ℓB} {A : Type ℓA} {B : A → Type ℓB} where
  split++Iso .inv = uncurry _++P_
  split++Iso .sec = split++-sec
  split++Iso {xs} .ret = split++-ret {xs}
+
+ split++Equiv : ∀ {xs ys} → (ListP (xs ++ ys)) ≃ (ListP xs Σ.× ListP ys)  
+ split++Equiv = isoToEquiv split++Iso
  
 open ListDep public
 

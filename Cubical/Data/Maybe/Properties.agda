@@ -197,3 +197,11 @@ A ⁇→ B = (mbA : Maybe A) → caseMaybe Unit* B mbA
            (x : Maybe A) → f (fromJust-def n x) ≡ fromJust-def (f n) (map-Maybe f x)
 ∘fromJust-def f n nothing = refl
 ∘fromJust-def f n (just x) = refl
+
+FromMaybeΣ : ∀ {ℓ ℓ' A B} → Maybe (Σ {ℓ} {ℓ'} A B) → Type ℓ'
+FromMaybeΣ nothing = Unit*
+FromMaybeΣ {B = B} (just (a , _)) = B a
+
+fromMaybeΣ : ∀ {ℓ ℓ' A B} a,b → FromMaybeΣ {ℓ} {ℓ'} {A = A} {B = B} a,b
+fromMaybeΣ nothing = tt*
+fromMaybeΣ (just (_ , x)) = x

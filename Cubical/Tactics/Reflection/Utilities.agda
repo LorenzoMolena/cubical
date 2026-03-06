@@ -440,3 +440,13 @@ unquoteSigma tm = do
   (y , _) ← newHole
   unify (con (quote _,_) (x v∷ v[ y ])) tm
   pure (x , y)
+
+unquoteJust : Term → TC Term
+unquoteJust tm = do
+ (x , _) ← newHole
+ unify (con (quote just) (v[ x ])) tm
+ pure x
+-- unquoteMaybe : Term → TC (Maybe Term)
+-- unquoteMaybe tm = 
+--   ((y , _) ← newHole
+--    unify (con (quote _,_) (x v∷ v[ y ])) tm)

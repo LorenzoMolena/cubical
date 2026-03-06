@@ -1,6 +1,7 @@
 module Cubical.Tactics.CommRingSolver.HornerEval where
 
 open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.HLevels
 
 open import Cubical.Data.Nat using (ℕ)
 open import Cubical.Data.Vec
@@ -55,3 +56,5 @@ module HornerEval (R@(⟨R⟩ , _) : CommRing ℓ)
  _≑_ : ∀ {n} → IteratedHornerForms n → IteratedHornerForms n → Type ℓ'
  P ≑ Q = ∀ xs → eval P xs ≡ eval Q xs
 
+ isProp≑ : ∀ {n} P Q → isProp (_≑_ {n} P Q) 
+ isProp≑ P Q  = isPropΠ λ _ → R‵.is-set _ _

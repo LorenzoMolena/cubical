@@ -73,6 +73,7 @@ appendWithoutRepetition : Vars → Vars → Vars
 appendWithoutRepetition (x ∷ l) l' = appendWithoutRepetition l (addWithoutRepetition x l')
 appendWithoutRepetition [] l' = l'
 
+
 -- this can be used to get a map from variables to numbers 0,...,n
 indexOf : Term → Vars → Maybe ℕ
 indexOf t (t' ∷ l) =
@@ -85,6 +86,10 @@ elemVars : Term → Vars → Bool
 elemVars t (t' ∷ l) =
   (t =T t') or (elemVars t l)
 elemVars t [] = false
+
+prependWithoutRepetition : Term → Vars → Vars
+prependWithoutRepetition t vs =
+  t ∷ catMaybes (map (λ t' →  if t =T t' then nothing else just t') vs)
 
 infixr 40 _<>_
 
