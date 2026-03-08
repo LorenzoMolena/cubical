@@ -6,6 +6,8 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.SIP
 
+open import Cubical.Categories.Category.Base
+
 open import Cubical.Data.Sigma
 open import Cubical.Data.Empty as ⊥
 
@@ -164,6 +166,96 @@ UC[ (M , MPr) , (N , NPr) ] = Σ[ f ∈ (M → N) ] isUniformlyContinuous MPr NP
 
 L[_,_] : PremetricSpace ℓM ℓM' → PremetricSpace ℓN ℓN' → Type _
 L[ (M , MPr) , (N , NPr) ] = Σ[ f ∈ (M → N) ] isLipschitz MPr NPr f
+
+module CategoryStructures where
+  open OrderedCommRingStr (str ℚOrderedCommRing)
+
+  idᶜ : ∀ {M : PremetricSpace ℓM ℓM'} → C[ M , M ]
+  fst idᶜ = idfun _
+  snd idᶜ = λ x ε → ∣ ε , (λ y → idfun _) ∣₁
+
+  idᵘᶜ : ∀ {M : PremetricSpace ℓM ℓM'} → UC[ M , M ]
+  fst idᵘᶜ = idfun _
+  snd idᵘᶜ = ∣ idfun _ , (λ x y ε → idfun _) ∣₁
+
+  idᴸ : ∀ {M : PremetricSpace ℓM ℓM'} → L[ M , M ]
+  fst (idᴸ {M = M}) = idfun ⟨ M ⟩
+  snd (idᴸ {M = M}) = ∣ (1 , 0<1) , (λ x y ε → subst≈ x y (sym (ℚ.·IdL ⟨ ε ⟩₊))) ∣₁
+    where open PremetricStr (str M)
+
+  _∘C_ : ∀ {M N O : PremetricSpace ℓM ℓM'} → C[ N , O ] → C[ M , N ] → C[ M , O ]
+  fst (_∘C_ (g , g-c) (f , f-c)) = g ∘ f
+  snd (_∘C_ (g , g-c) (f , f-c)) = λ x ε → PT.rec squash₁ (λ
+    { (δ , fx≈z→gfx≈gz) → PT.map (λ
+    { (η , x≈y→fx≈fy)   → η , λ y → fx≈z→gfx≈gz (f y) ∘ x≈y→fx≈fy y })
+    (f-c x δ) })
+    (g-c (f x) ε)
+
+  _∘UC_ : ∀ {M N O : PremetricSpace ℓM ℓM'} → UC[ N , O ] → UC[ M , N ] → UC[ M , O ]
+  fst (_∘UC_ (g , g-uc) (f , f-uc)) = g ∘ f
+  snd (_∘UC_ (g , g-uc) (f , f-uc)) = PT.map2 (λ
+    { (μ , μ-uc) (ν , ν-uc) .fst       → μ ∘ ν
+    ; (μ , μ-uc) (ν , ν-uc) .snd x y ε → ν-uc (f x) (f y) ε ∘ μ-uc x y (ν ε) })
+    f-uc g-uc
+
+  _∘L_ : ∀ {M N O : PremetricSpace ℓM ℓM'} → L[ N , O ] → L[ M , N ] → L[ M , O ]
+  fst (_∘L_ {O = O} (g , g-lip) (f , f-lip)) = g ∘ f
+  snd (_∘L_ {O = O} (g , g-lip) (f , f-lip)) = PT.map2 (λ
+    { (L , L-lip) (R , R-lip) .fst       → R ·₊ L
+    ; (L , L-lip) (R , R-lip) .snd x y ε →
+        subst≈ (g (f x)) (g (f y)) (ℚ.·Assoc ⟨ R ⟩₊ ⟨ L ⟩₊ _)
+      ∘ R-lip (f x) (f y) (L ·₊ ε)
+      ∘ L-lip x y ε })
+    f-lip g-lip
+    where open PremetricStr (str O)
+
+  lip≡ : ∀ {M N : PremetricSpace ℓM ℓM'} → {f g : L[ M , N ]} → fst f ≡ fst g → f ≡ g
+  lip≡ = ΣPathPProp (λ _ → squash₁)
+
+  uc≡ : ∀ {M N : PremetricSpace ℓM ℓM'} → {f g : UC[ M , N ]} → fst f ≡ fst g → f ≡ g
+  uc≡ = ΣPathPProp (λ _ → squash₁)
+
+  c≡ : ∀ {M N : PremetricSpace ℓM ℓM'} → {f g : C[ M , N ]} → fst f ≡ fst g → f ≡ g
+  c≡ {M = M} {N} = ΣPathPProp (isPropIsContinuous (str M) (str N))
+
+  module _ (ℓM ℓM' : Level) where
+    open Category
+
+    PremetricSpaceCategoryᶜ : Category (ℓ-suc (ℓ-max ℓM ℓM')) (ℓ-max ℓM ℓM')
+    ob       PremetricSpaceCategoryᶜ                 = PremetricSpace ℓM ℓM'
+    Hom[_,_] PremetricSpaceCategoryᶜ                 = C[_,_]
+    id       PremetricSpaceCategoryᶜ {M}             = idᶜ {M = M}
+    _⋆_      PremetricSpaceCategoryᶜ {M} {N} {O}     = flip (_∘C_ {M = M} {N} {O})
+    ⋆IdL     PremetricSpaceCategoryᶜ {M} {N}         = λ _ → c≡ {M = M} {N} refl
+    ⋆IdR     PremetricSpaceCategoryᶜ {M} {N}         = λ _ → c≡ {M = M} {N} refl
+    ⋆Assoc   PremetricSpaceCategoryᶜ {M} {N} {O} {P} = λ _ _ _ → c≡ {M = M} {P} refl
+    isSetHom PremetricSpaceCategoryᶜ {M} {N}         =
+      isSetΣSndProp (isSet→ isSetM) (isPropIsContinuous (str M) (str N))
+      where open PremetricStr (str N)
+
+    PremetricSpaceCategoryᵘᶜ : Category (ℓ-suc (ℓ-max ℓM ℓM')) (ℓ-max ℓM ℓM')
+    ob       PremetricSpaceCategoryᵘᶜ                 = PremetricSpace ℓM ℓM'
+    Hom[_,_] PremetricSpaceCategoryᵘᶜ                 = UC[_,_]
+    id       PremetricSpaceCategoryᵘᶜ {M}             = idᵘᶜ {M = M}
+    _⋆_      PremetricSpaceCategoryᵘᶜ {M} {N} {O}     = flip (_∘UC_ {M = M} {N} {O})
+    ⋆IdL     PremetricSpaceCategoryᵘᶜ {M} {N}         = λ _ → uc≡ {M = M} {N} refl
+    ⋆IdR     PremetricSpaceCategoryᵘᶜ {M} {N}         = λ _ → uc≡ {M = M} {N} refl
+    ⋆Assoc   PremetricSpaceCategoryᵘᶜ {M} {N} {O} {P} = λ _ _ _ → uc≡ {M = M} {P} refl
+    isSetHom PremetricSpaceCategoryᵘᶜ {M} {N}         =
+      isSetΣSndProp (isSet→ isSetM) (isPropIsUniformlyContinuous (str M) (str N))
+      where open PremetricStr (str N)
+
+    PremetricSpaceCategoryᴸ : Category (ℓ-suc (ℓ-max ℓM ℓM')) (ℓ-max ℓM ℓM')
+    ob       PremetricSpaceCategoryᴸ                 = PremetricSpace ℓM ℓM'
+    Hom[_,_] PremetricSpaceCategoryᴸ                 = L[_,_]
+    id       PremetricSpaceCategoryᴸ {M}             = idᴸ {M = M}
+    _⋆_      PremetricSpaceCategoryᴸ {M} {N} {O}     = flip (_∘L_ {M = M} {N} {O})
+    ⋆IdL     PremetricSpaceCategoryᴸ {M} {N}         = λ _ → lip≡ {M = M} {N} refl
+    ⋆IdR     PremetricSpaceCategoryᴸ {M} {N}         = λ _ → lip≡ {M = M} {N} refl
+    ⋆Assoc   PremetricSpaceCategoryᴸ {M} {N} {O} {P} = λ _ _ _ → lip≡ {M = M} {P} refl
+    isSetHom PremetricSpaceCategoryᴸ {M} {N}         =
+      isSetΣSndProp (isSet→ isSetM) (isPropIsLipschitz (str M) (str N))
+      where open PremetricStr (str N)
 
 record IsPremetricEquiv {A : Type ℓM} {B : Type ℓN}
   (M : PremetricStr ℓM' A) (e : A ≃ B) (N : PremetricStr ℓN' B)

@@ -7,7 +7,11 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.Structure
 open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Univalence
+
+open import Cubical.Categories.Category.Base
+open import Cubical.Categories.Functor.Base
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.Empty as ⊥
@@ -250,3 +254,93 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
 
     liftLipschitzFun : L[ M' , N' ] → ℭM → N
     liftLipschitzFun = fst ∘ liftLipschitz
+
+    lift∘ι : ∀ (f : L[ M' , N' ]) → liftLipschitzFun f ∘ ι ≡ fst f
+    lift∘ι = snd ∘ liftLipschitzExtension
+
+module _ {M' : PremetricSpace ℓM ℓM'} where
+  private
+    M = ⟨ M' ⟩
+  open import Cubical.Relation.Premetric.Completion.Base M' renaming (ℭ to ℭM)
+  open import Cubical.Relation.Premetric.Completion.Properties.Closeness M' renaming
+    (ℭPremetricSpace to ℭMPrSpace)
+
+  open OrderedCommRingStr (str ℚOrderedCommRing)
+  open PremetricStr (str ℭMPrSpace)
+
+  isLipschitzι : isLipschitz (str M') (str ℭMPrSpace) ι
+  isLipschitzι =
+    ∣ (1 , 0<1) , (λ x y ε → subst≈ (ι x) (ι y) (sym (ℚ.·IdL ⟨ ε ⟩₊)) ∘ ι-ι x y ε) ∣₁
+
+module CompletionFunctor (ℓ : Level) where
+  open CategoryStructures using (lip≡ ; idᴸ ; _∘L_) renaming (
+    PremetricSpaceCategoryᴸ to PrSpaces)
+
+  open import Cubical.Relation.Premetric.Completion.Base
+  open import Cubical.Relation.Premetric.Completion.Properties.Closeness renaming (
+    ℭPremetricSpace to ℭPS ; isCompleteℭ to compℭ)
+
+  isComplete→≃ℭ : ∀ {M : PremetricSpace ℓ ℓ} → isComplete M → ⟨ M ⟩ ≃ ℭ M
+  isComplete→≃ℭ {M} isCompM = isoToEquiv M≅ℭM
+    where
+    open Iso
+
+    L[id] : L[ ℭPS M , M ]
+    L[id] = liftLipschitz M M isCompM (idᴸ {M = M})
+
+    M≅ℭM : Iso ⟨ M ⟩ (ℭ M)
+    M≅ℭM .fun      = ι
+    M≅ℭM .inv      = fst L[id]
+    M≅ℭM .rightInv = funExt⁻ $ cong fst $ lipschitz≡ M (ℭPS M)
+      (_∘L_ {M = ℭPS M} {M} {ℭPS M} (ι , isLipschitzι) L[id])
+      (idᴸ {M = ℭPS M})
+      (cong (ι {M' = M} ∘_) (lift∘ι M M isCompM (idᴸ {M = M})))
+    M≅ℭM .leftInv  = funExt⁻ (lift∘ι M M isCompM (idᴸ {M = M}))
+
+  -- This theorem needs the relation ≈ and the underlying type ⟨ M ⟩ to live in the same
+  -- universe to be well-typed if we want to state it without using `Lift`s:
+  -- Theorem 3.21
+  isComplete→≡ℭ : ∀ {M : PremetricSpace ℓ ℓ} → isComplete M → ⟨ M ⟩ ≡ ℭ M
+  isComplete→≡ℭ = ua ∘ isComplete→≃ℭ
+
+  isIdempotentℭ : ∀ {M : PremetricSpace ℓ ℓ} → ℭ M ≡ ℭ (ℭPS M)
+  isIdempotentℭ = isComplete→≡ℭ (compℭ _)
+
+  -- TO DO: prove that the category is univalent, and as a consequence,
+  -- conclude the following generalization of Theorem 3.21: "M ≡ ℭPS M"
+  -- obtaining an equality between the *premetric spaces*, instead of only
+  -- between the underlying types (and similarly for isIdempotentℭ)
+
+  open Functor
+
+  ℭFunctor : Functor (PrSpaces ℓ ℓ) (PrSpaces ℓ ℓ)
+  F-ob  ℭFunctor             = ℭPS
+  F-hom ℭFunctor {M} {N}     = liftLipschitz M (ℭPS N) (compℭ N)
+    ∘ (_∘L_ {M = M} {N} {ℭPS N} (ι , isLipschitzι {M' = N}))
+  F-id  ℭFunctor {M}         = lipschitz≡ M (ℭPS M) _ _ refl
+  F-seq ℭFunctor {M} {N} {O} = λ
+    { (f , f') (g , g') → lipschitz≡ M (ℭPS O) _ _
+      let
+        ι∘g∘f : L[ M , ℭPS O ]
+        ι∘g∘f = _∘L_ {M = M} {O} {ℭPS O}
+          (ι , isLipschitzι) (_∘L_ {M = M} {N} {O} (g , g') (f , f'))
+
+        ι∘f : L[ M , ℭPS N ]
+        ι∘f = _∘L_ {M = M} {N} {ℭPS N} (ι , isLipschitzι) (f , f')
+
+        ι∘g : L[ N , ℭPS O ]
+        ι∘g = _∘L_ {M = N} {O} {ℭPS O} (ι , isLipschitzι) (g , g')
+
+        L[ι∘g∘f] : ℭ M → ℭ O
+        L[ι∘g∘f] = liftLipschitzFun M (ℭPS O) (compℭ O) ι∘g∘f
+
+        L[ι∘f] : ℭ M → ℭ N
+        L[ι∘f] = liftLipschitzFun M (ℭPS N) (compℭ N) ι∘f
+
+        L[ι∘g] : ℭ N → ℭ O
+        L[ι∘g] = liftLipschitzFun N (ℭPS O) (compℭ O) ι∘g
+      in
+        L[ι∘g∘f] ∘ ι        ≡⟨ lift∘ι M (ℭPS O) (compℭ O) ι∘g∘f ⟩
+        ι ∘ g ∘ f           ≡⟨ sym $ cong (_∘ f) (lift∘ι N (ℭPS O) (compℭ O) ι∘g) ⟩
+        L[ι∘g] ∘ ι ∘ f      ≡⟨ sym $ cong (L[ι∘g] ∘_) (lift∘ι M (ℭPS N) (compℭ N) ι∘f) ⟩
+        L[ι∘g] ∘ L[ι∘f] ∘ ι ∎ }
