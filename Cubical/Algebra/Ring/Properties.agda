@@ -15,6 +15,7 @@ open import Cubical.Foundations.Path
 open import Cubical.Functions.Embedding
 
 open import Cubical.Data.Sigma
+open import Cubical.Data.Empty
 import Cubical.Data.Nat as ℕ
 import Cubical.Data.Int as ℤ
 
@@ -24,6 +25,8 @@ open import Cubical.Algebra.Ring.Base
 open import Cubical.Algebra.Group
 open import Cubical.Algebra.AbGroup.Base
 open import Cubical.Algebra.Semiring.Base
+
+-- open import Cubical.Algebra.CommRing.Instances.Unit
 
 open import Cubical.HITs.PropositionalTruncation
 
@@ -61,6 +64,13 @@ module RingTheory (R' : Ring ℓ) where
     (x - y) + y     ≡⟨ congL _+_ p ⟩
     0r + y          ≡⟨ +IdL _ ⟩
     y               ∎
+
+  differenceByEqual : (x y : R)
+                      → x ≡ y
+                      → x - y ≡ 0r
+                      
+  differenceByEqual x y p = cong (_- y) p ∙ +InvR y
+
 
   0Selfinverse : - 0r ≡ 0r
   0Selfinverse = sym (implicitInverse _ _ (+IdR 0r))
@@ -189,6 +199,7 @@ module RingTheory (R' : Ring ℓ) where
   minusPlus' : ∀ x y y' → y ≡ y' → (x - y) + y' ≡ x
   minusPlus' x y y' p = sym (+Assoc _ _ _) ∙ +IdR' _ _ (+InvL' y y' p)
 
+
   ·IdR' : ∀ x y → y ≡ 1r → x · y ≡ x
   ·IdR' x y y=0 = cong (x ·_) y=0 ∙ ·IdR x
 
@@ -210,6 +221,18 @@ module RingTheory (R' : Ring ℓ) where
   fromℤ : ℤ.ℤ → R
   fromℤ (ℤ.pos n) = fromℕ n
   fromℤ (ℤ.negsuc n) = - (fromℕ (ℕ.suc n))
+
+  ·lCancel≃integralDomain : ((c m n : R) → c · m ≡ c · n → (c ≡ 0r → ⊥) → m ≡ n)
+                               ≃ ((c m : R) → c · m ≡ 0r → (c ≡ 0r → ⊥) → m ≡ 0r) 
+  ·lCancel≃integralDomain = propBiimpl→Equiv
+    (isPropΠ5 λ _ _ _ _ _ → is-set _ _ ) (isPropΠ4 λ _ _ _ _ → is-set _ _ )
+     (λ lc → λ c m n w → lc c m 0r (n ∙ sym (0RightAnnihilates _)) w)
+     λ iD → λ x y z w v → equalByDifference _ _ (iD x (y - z)
+        (·DistR- x y z ∙ differenceByEqual (x · y) (x · z) w) v)
+   
+  module zeroRing (1≡0 : 1r ≡ 0r) where
+   isContrR : isContr R
+   isContrR = 0r , λ x → sym (0RightAnnihilates x) ∙∙ cong (x ·_) (sym (1≡0)) ∙∙ ·IdR x
 
 
 Ring→Semiring : Ring ℓ → Semiring ℓ
@@ -366,3 +389,6 @@ recPT→Ring 𝓕 σ compCoh = rec→Gpd isGroupoidRing 𝓕
   (3-ConstantCompChar 𝓕 (λ x y → uaRing (σ x y))
                           λ x y z → sym (  cong uaRing (compCoh x y z)
                                          ∙ uaCompRingEquiv (σ x y) (σ y z)))
+
+
+ 

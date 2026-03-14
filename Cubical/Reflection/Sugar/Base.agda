@@ -50,9 +50,22 @@ record RawApplicative (F : Functorω) : Typeω where
   pure : A → F A
   _<*>_ : F (A → B) → F A → F B
 
- infixl 4 _<*>_ _<$>_
+ infixl 4 _<*>_ _<$>_ 
 
+module _ {F : Functorω} {{RA : RawApplicative F}} where
 
+ open RawApplicative RA
+
+ infixl 4 _<$'>_ _<*'_ _<*_
+
+ _<$'>_ : ({A} → B) → F A → F B
+ f <$'> x = (λ x → f {x}) <$> x
+
+ _<*_ : {B : A → Type ℓ} → F (∀ a → B a) → ∀ a → F (B a)
+ f <* x = (λ f → f x) <$> f 
+
+ _<*'_ : {B : A → Type ℓ} → F (∀ {a} → B a) → ∀ a → F (B a)
+ f <*' x = (λ f → f {x}) <$> f
 
 
 module _ (M : Functorω) {{RA : RawApplicative M}} where
@@ -186,3 +199,9 @@ _>>=<|>_ : {M : Functorω} ⦃ RA : RawApplicative M ⦄ ⦃ RM : RawMonad M ⦄
           {ℓ' ℓ'' : Level} {A : Type ℓ'} {B : Type ℓ''} →
           (A → M B) → E → (A → M B)
 (f >>=<|> e) x = f x <|> fail e
+
+fapp : {F : Functorω} {{_ : RawApplicative F}} → {B : A → Type ℓ} → F (∀ a → B a) → ∀ a → F (B a)
+fapp x a =  (λ z → z a) <$> x
+
+fapp' : {F : Functorω} {{_ : RawApplicative F}} → {B : A → Type ℓ} → F (∀ {a} → B a) → ∀ a → F (B a)
+fapp' x a =  (λ z → z {a}) <$> x

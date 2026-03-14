@@ -1,6 +1,7 @@
 module Cubical.Tactics.CommRingSolver.Reflection where
 
 open import Cubical.Foundations.Prelude hiding (Type)
+open import Cubical.Foundations.Function
 
 open import Agda.Builtin.Reflection hiding (Type)
 open import Agda.Builtin.String
@@ -9,11 +10,13 @@ open import Agda.Builtin.Nat using () renaming (_==_ to _=ℕ_)
 open import Cubical.Reflection.Base
 
 open import Cubical.Data.Maybe
+open import Cubical.Data.Sum
+open import Cubical.Data.Empty
 open import Cubical.Data.Sigma
 open import Cubical.Data.List
 open import Cubical.Data.Nat.Literals
 
-open import Cubical.Data.Int using (fromNegℤ; fromNatℤ)
+open import Cubical.Data.Int as Slowℤ using (fromNegℤ; fromNatℤ)
 open import Cubical.Data.Nat using (ℕ; discreteℕ) renaming (_+_ to _+ℕ_)
 import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Bool
@@ -54,6 +57,9 @@ private
 module CommRingSolver
          (basering : CommRing ℓ)
          (ring : CommRing ℓ')
+         (mbIntDom : Maybe ((c m n : ring .fst) →
+                                  (snd ring CommRingStr.· c) m ≡ (snd ring CommRingStr.· c) n →
+                                  (c ≡ CommRingStr.0r (snd ring) → ⊥) → m ≡ n))
          (rrm : RingReflectionMatcher)
          (doNotUnfold : List Name)
          (solverName : Name)
@@ -99,6 +105,23 @@ module CommRingSolver
          let ass : VarAss
              ass n = indexOf n vars
          in (fst r1 ass , fst r2 ass , vars ))
+
+   toAlgebraExpression'2 : (Vars → Vars) → Term × Term → Term × Term → TC
+      ((Term × Term) × (Term × Term) × Vars)
+   toAlgebraExpression'2 f (lhs , rhs) (lhs' , rhs') = do
+
+       matchTerm ← mkMatchTermTC basering cring
+       r1 ← buildExpression matchTerm fuelBudget lhs
+       r2 ← buildExpression matchTerm fuelBudget rhs
+       r1' ← buildExpression matchTerm fuelBudget lhs'
+       r2' ← buildExpression matchTerm fuelBudget rhs'
+       vars ← returnTC (f (appendWithoutRepetition (appendWithoutRepetition (snd r1) (snd r2))
+            (appendWithoutRepetition (snd r1') (snd r2'))))
+       returnTC (
+         let ass : VarAss
+             ass n = indexOf n vars
+         in ((fst r1 ass , fst r2 ass) , (fst r1' ass , fst r2' ass) , vars ))
+
 
    toAlgebraExpression : Term × Term → TC (Term × Term × Vars)
    toAlgebraExpression =  toAlgebraExpression' (λ x → x)
@@ -264,13 +287,67 @@ module CommRingSolver
 
 
        unify hole result
-       -- nForm ← withReduceDefs
-       --   (false , (quote (CommRingProperties.Exponentiation._^'_)
-       --           ∷ quote (RingProperties.RingTheory.fromℕ)
-       --           ∷ [ quote CommRingStr._-_ ])) (normalise preNForm) 
-       -- -- unify rhsMeta nForm
-       -- -- unify hole solution
-       -- {!!}
+
+  module _ (eliminateName : Name) where
+   private
+    eliminateCallWithVars : ℕ → Vars → Term → Term → Term → Term → Term → Term → Term → Term → Term
+    eliminateCallWithVars n vars R mbIntdDom lhs rhs lhs' rhs' eqTerm eqTerm' =
+        def eliminateName
+            (R v∷ mbIntdDom v∷ (harg {quantity-ω} (ℕAsTerm (ℕ.predℕ n))) ∷
+               lhs v∷ rhs v∷  lhs' v∷ rhs' v∷
+              (variableList vars) ∷ eqTerm v∷ eqTerm' v∷ [])
+
+        where
+          variableList : Vars → Arg Term
+          variableList [] = varg (con (quote emptyVec) [])
+          variableList (t ∷ ts)
+            = varg (con (quote _∷vec_) (t v∷ (variableList ts) ∷ []))
+
+
+   eliminate!-macro : Term → Term → Term → Term → Term → TC Unit
+   eliminate!-macro unknVar eqtn eqtn' lemmasHole hole = withReduceDefs
+       (false , doNotUnfold)
+     do
+       commRing ← quoteTC ring
+       mbIntDomTerm ← quoteTC mbIntDom >>= unquoteJust 
+       baseCommRing ← quoteTC basering
+       providedPathTy ← inferType eqtn >>= normalise
+       providedPathTy' ← inferType eqtn' >>= normalise
+              
+       holeTy ← inferType hole
+       wait-for-type providedPathTy
+       wait-for-type providedPathTy'
+       just (lhs , rhs) ← get-boundary providedPathTy
+         where
+           nothing
+             → typeError(strErr "The sovleFor!-macro (ring solver) failed to parse the goal "
+                                ∷ termErr providedPathTy ∷ [])
+       just (lhs' , rhs') ← get-boundary providedPathTy'
+         where
+           nothing
+             → typeError(strErr "The sovleFor!-macro (ring solver) failed to parse the goal "
+                                ∷ termErr providedPathTy' ∷ [])
+
+       ((lhs* , rhs*) , (lhs'* , rhs'*) , vars) ← 
+           CommRingReflection.toAlgebraExpression'2 baseCommRing commRing
+              (prependWithoutRepetition unknVar) (lhs , rhs) (lhs' , rhs')
+
+       unquoteSum (eliminateCallWithVars (length vars) vars commRing
+              mbIntDomTerm
+             lhs* rhs* lhs'* rhs'* eqtn eqtn')
+                  >>= λ where
+          (inr r) → do
+            (u , solutionNotYetAppliedToLemmas) ← unquoteSigma r
+            (_ , lhsRes) ← unquoteSigma u
+            (lhsGoalHole , _) ← newHole
+            unify holeTy (def (quote _≡_) (lhsGoalHole v∷ unknown v∷ []))
+            refineRingGoal lhsRes lhsGoalHole
+            let solution = def (quote _$_) (solutionNotYetAppliedToLemmas v∷ v[ lemmasHole ]) 
+            -- inferType result >>= normalise >>= λ nty →  typeError [ nty ]ₑ
+            unify hole solution
+            -- typeError [ "test0" ]ₑ
+            -- unify lemmas lemmas'
+          (inl err) → typeError [ err ]ₑ
 
 
   solve!-lemma-macro : (Term → Term → TC Bool) → List (fst ring) -> Term → Term → TC Unit
@@ -346,15 +423,23 @@ mbNegℤ : (x : Fastℤ.ℤ) → Maybe (Σ Fastℤ.ℤ (λ -x → Fastℤ.- -x �
 mbNegℤ (Fastℤ.pos n) = nothing
 mbNegℤ (Fastℤ.negsuc n) = just (Fastℤ.pos (ℕ.suc n) ,  refl)
 
-module _ (ring : CommRing ℓ) where
+cdℤ : (a b : Fastℤ.ℤ) → Σ[ (a' , b' , c ) ∈ _ × _ × _ ]
+                (a ≡ a' Fastℤ.· c) × (b ≡ b' Fastℤ.· c)
+cdℤ a b = _ , snd (Fastℤ.gcdℤ a b)
+
+·lCancelℤ : ∀ c m n → c Fastℤ.· m ≡ c Fastℤ.· n → ¬ c ≡ 0 → m ≡ n
+·lCancelℤ = Fastℤ.·lCancel
+
+module CommRingSolverMacros (ring : CommRing ℓ) where
 
  private
   module ETNF =  EqualityToNormalform Fastℤ'.ℤCommRing ring
                   (_ , Fastℤ'.CanonicalHomFromℤ.isHomFromℤ ring)
-  module ETNF≟ = ETNF.Decidable Fastℤ.discreteℤ mbNegℤ
+  module ETNF≟ = ETNF.Decidable Fastℤ.discreteℤ mbNegℤ (just cdℤ) (just ·lCancelℤ) nothing
+                  nothing nothing
 
  module GenericCommRingSolverOverInt =
-   CommRingSolver Fastℤ'.ℤCommRing ring
+   CommRingSolver Fastℤ'.ℤCommRing ring nothing
     (GenericCommRingReflection.genericCommRingMatchTerm) []
      (quote ETNF.solveByDec)
      (quote ETNF≟.HF-Maybe-prf)
@@ -373,7 +458,46 @@ module _ (ring : CommRing ℓ) where
 
    solveFor! : Term → Term → Term → TC Unit
    solveFor! = GenericCommRingSolverOverInt.solveFor!-macro (quote (ETNF≟.solveForHead))
+
+   eliminate! : Term → Term → Term → Term → Term → TC Unit
+   eliminate! = GenericCommRingSolverOverInt.eliminate!-macro (quote (ETNF≟.eliminateHead))
+
+module CommRingSolverMacrosIntDom (ring : CommRing ℓ)
+                                  (intDom : ((c m n : ring .fst) →
+                                  (snd ring CommRingStr.· c) m ≡ (snd ring CommRingStr.· c) n →
+                                  (c ≡ CommRingStr.0r (snd ring) → ⊥) → m ≡ n)) where
+
+ private
+  module ETNF =  EqualityToNormalform Fastℤ'.ℤCommRing ring
+                  (_ , Fastℤ'.CanonicalHomFromℤ.isHomFromℤ ring)
+  module ETNF≟ = ETNF.Decidable Fastℤ.discreteℤ mbNegℤ (just cdℤ) (just ·lCancelℤ) (just intDom)
+                    nothing nothing
+
+ module GenericCommRingSolverOverInt =
+   CommRingSolver Fastℤ'.ℤCommRing ring (just intDom)
+    (GenericCommRingReflection.genericCommRingMatchTerm) []
+     (quote ETNF.solveByDec)
+     (quote ETNF≟.HF-Maybe-prf)
+     (λ _ → pure true)
+
+ macro
+   solve! : Term → TC Unit
+   solve! = GenericCommRingSolverOverInt.solve!-macro 
+
+   normalize! : Term → TC Unit
+   normalize! = GenericCommRingSolverOverInt.normalize!-macro
+                   (quote (ETNF≟.normalizeByDec))
    
+   ring[_][_]! : Term → Term → TC Unit
+   ring[_][_]! = GenericCommRingSolverOverInt.solve_[_]!-macro (quote (ETNF≟.solveByDifference'))
+
+   solveFor! : Term → Term → Term → TC Unit
+   solveFor! = GenericCommRingSolverOverInt.solveFor!-macro (quote (ETNF≟.solveForHead))
+
+   eliminate! : Term → Term → Term → Term → Term → TC Unit
+   eliminate! = GenericCommRingSolverOverInt.eliminate!-macro (quote (ETNF≟.eliminateHead))
+
+
 module _ (ring : CommRing ℓ)
 
        where
@@ -385,7 +509,7 @@ module _ (ring : CommRing ℓ)
 
   scalarSolver : Term → Term → TC Bool
   scalarSolver hole _ = 
-    sucesfullM? (GenericCommRingSolverOverInt.solve!-macro ring hole)
+    sucesfullM? (CommRingSolverMacros.GenericCommRingSolverOverInt.solve!-macro ring hole)
     
 
  module _ (vars : List (fst ring)) where
@@ -393,7 +517,7 @@ module _ (ring : CommRing ℓ)
     ring! : Term → Term → TC _
     ring! lemma hole =
      do varsTms ← traverseList quoteTC vars
-        CommRingSolver.solve!-lemma-macro ring ring
+        CommRingSolver.solve!-lemma-macro ring ring nothing
          (GenericCommRingReflection.genericCommRingMatchTerm) []
           (quote ETNF.solveByDec)
           (quote tt)
@@ -443,7 +567,8 @@ module FastℤRingSolver where
      r1 ← buildExpressionFromNat x
      r2 ← do y' ← do u1 ← `1` []
                      u2 ← buildExpressionFromNat y
-                     returnTC {A = Template × Vars} ((λ ass → con (quote _+'_) (fst u1 ass v∷ fst u2 ass v∷ [])) ,
+                     returnTC {A = Template × Vars} ((λ ass → con (quote _+'_)
+                      (fst u1 ass v∷ fst u2 ass v∷ [])) ,
                           appendWithoutRepetition (snd u1) (snd u2))
              returnTC {A = Template × Vars} ((λ ass → con (quote -'_) (fst y' ass v∷ [])) , snd y')
      returnTC ((λ ass → con (quote _+'_) (fst r1 ass v∷ fst r2 ass v∷ [])) ,
@@ -475,10 +600,11 @@ module FastℤRingSolver where
   module _ (zring : CommRing ℓ-zero) where
    module ETNF = EqualityToNormalform ℤCommRing  ℤCommRing
                   (idCommRingHom _)
-   module ETNF≟ = ETNF.Decidable discreteℤ mbNegℤ
+   module ETNF≟ = ETNF.Decidable discreteℤ mbNegℤ (just cdℤ) (just ·lCancelℤ) (just ·lCancelℤ)
+                   (just (Slowℤ.0≢1-ℤ ∘S sym)) (just (λ _ x → x))
  macro
    ℤ! : Term → TC _
-   ℤ! = CommRingSolver.solve!-macro ℤCommRing ℤCommRing fastℤMatcher
+   ℤ! = CommRingSolver.solve!-macro ℤCommRing ℤCommRing (just ·lCancelℤ) fastℤMatcher
        ((quote ℕ._·_) ∷ (quote ℕ._+_) ∷ (quote _+_) ∷ (quote (-_)) ∷ (quote _·_) ∷ (quote _ℕ-_) ∷ [])
        (quote ETNF.solveByDec) (quote ETNF≟.HF-Maybe-prf)
        λ _ → pure true
@@ -510,10 +636,11 @@ module ℚRingSolver where
   module _ (zring : CommRing ℓ-zero) where
    module ETNF = EqualityToNormalform ℚCommRing ℚCommRing
                   (idCommRingHom _)
-   module ETNF≟ = ETNF.Decidable discreteℚ (λ _ → nothing)
+   module ETNF≟ = ETNF.Decidable discreteℚ (λ _ → nothing) nothing nothing nothing
+           (just ℚ'.ℚCommRingIsNotZeroRing) (just (λ _ x → x))
  macro
    ℚ! : Term → TC _
-   ℚ! = CommRingSolver.solve!-macro ℚCommRing ℚCommRing ℚMatcher
+   ℚ! = CommRingSolver.solve!-macro ℚCommRing ℚCommRing nothing ℚMatcher
        ((quote ℕ._·_) ∷ (quote ℕ._+_) ∷ (quote _+_) ∷ (quote (-_)) ∷ (quote _·_) ∷ [])
        (quote ETNF.solveByDec) (quote ETNF≟.HF-Maybe-prf)
        λ _ → pure true

@@ -162,6 +162,9 @@ module SumUnit where
   SumUnit→Maybe→SumUnit (inl _) = refl
   SumUnit→Maybe→SumUnit (inr _) = refl
 
+maybeToSum : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → B → Maybe A → B ⊎ A 
+maybeToSum b = rec (inl b) inr
+
 Maybe≡SumUnit : Maybe A ≡ Unit ⊎ A
 Maybe≡SumUnit = isoToPath (iso Maybe→SumUnit SumUnit→Maybe SumUnit→Maybe→SumUnit Maybe→SumUnit→Maybe)
   where open SumUnit

@@ -134,6 +134,13 @@ instance
  RawMonad._>>=_ MonadMaybe = flip (Mb.rec nothing)
  RawMonad._>>_ MonadMaybe = flip (Mb.rec nothing ∘ const)
 
+
+ RawMonadFailMaybe : RawMonadFail Maybe Unit
+ RawMonadFailMaybe .RawMonadFail.fail _ = nothing
+ (RawMonadFailMaybe RawMonadFail.<|> nothing) x₁ = x₁
+ (RawMonadFailMaybe RawMonadFail.<|> just x) x₁ = just x
+
+
  ApplicativeList : RawApplicative List
  RawApplicative._<$>_ ApplicativeList = L.map
  RawApplicative.pure ApplicativeList = [_]
@@ -157,12 +164,11 @@ infixl 4 _<⊎>_
 private
  variable
   ℓ : Level
-  A B E : Type ℓ
+  A B C E : Type ℓ
 
 _<⊎>_ : {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} {{_ : RawMonadFail M E}} →
   (M A) → (M B) → M (A ⊎.⊎ B)
 a <⊎> b = (⊎.inl <$> a) <|> (⊎.inr <$> b)
-
 
 sequenceP : {M : Functorω} {{_ : RawApplicative M}} →
  ∀ {ℓ ℓ'} {A} {B} {xs}
