@@ -387,9 +387,12 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     abs1 : abs 1r ≡ 1r
     abs1 = 0≤→abs≡id 1r 0≤1
 
+  -- TO DO:
+  -- - Move the definitions and basic properties of Hom/Mono to a "Mappings" module
+  -- - Move the module below to a separate file (either "Mappings" or "Mappings.Properties")
   module CanonicalEmbeddings where
     open OrderedCommRingTheory
-    open CanonicalHomFromℤ RCR using (isHomFromℤ)
+    open CanonicalHomFromℤ RCR using (isHomFromℤ ; isContrHom[ℤCR,-])
 
     1≤fromℕsuc : ∀ n → 1r ≤ R.fromℕ (suc n)
     1≤fromℕsuc zero    = is-refl 1r
@@ -464,34 +467,19 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     fst ℤOCR↣R = R.fromℤ
     snd ℤOCR↣R = isOCRMonoFromℤ
 
+    isContrHom[ℤOCR,-] : isContr (OrderedCommRingHom ℤOrderedCommRing R')
+    fst isContrHom[ℤOCR,-]   = ℤOCR→R
+    snd isContrHom[ℤOCR,-] φ = OrderedCommRingHom≡ $
+      cong fst (snd isContrHom[ℤCR,-] (fst φ , isCommRingHom))
+      where open IsOrderedCommRingHom (snd φ)
+
+    isContrMono[ℤOCR,-] : isContr (OrderedCommRingMono ℤOrderedCommRing R')
+    fst isContrMono[ℤOCR,-]   = ℤOCR↣R
+    snd isContrMono[ℤOCR,-] φ = OrderedCommRingMono≡ $
+      cong fst (snd isContrHom[ℤCR,-] (fst φ , isCommRingHom))
+      where open IsOrderedCommRingMono (snd φ)
+
 {-
-    isContrHom[ℤ,OCR] : isContr (OrderedCommRingHom ℤOrderedCommRing R')
-    fst isContrHom[ℤ,OCR] = ℤOCR→R
-    snd isContrHom[ℤ,OCR] (φ , φocrhom) = OrderedCommRingHom≡ λ i n → ℤ→⟨R⟩≡⟨φ⟩ n i
-      where
-        open IsOrderedCommRingHom φocrhom
-
-        ℕ→⟨R⟩≡⟨φ⟩ : ∀ n → ℕ→⟨R⟩ n ≡ φ (pos n)
-        ℕ→⟨R⟩≡⟨φ⟩ zero          = sym pres0
-        ℕ→⟨R⟩≡⟨φ⟩ one           = sym pres1
-        ℕ→⟨R⟩≡⟨φ⟩ (suc (suc n)) =
-          1r  + ℕ→⟨R⟩ (suc n)   ≡⟨ cong (1r +_) (ℕ→⟨R⟩≡⟨φ⟩ (suc n)) ⟩
-          1r  + φ (pos (suc n)) ≡⟨ sym $ cong (_+ φ (pos (suc n))) pres1 ⟩
-          φ 1 + φ (pos (suc n)) ≡⟨ sym $ pres+ 1 (pos (suc n)) ⟩
-          φ (pos (suc (suc n))) ∎
-
-        ℤ→⟨R⟩≡⟨φ⟩ : ∀ n → ℤ→⟨R⟩ n ≡ φ n
-        ℤ→⟨R⟩≡⟨φ⟩ (pos n)    = ℕ→⟨R⟩≡⟨φ⟩ n
-        ℤ→⟨R⟩≡⟨φ⟩ (negsuc n) = cong -_ (ℕ→⟨R⟩≡⟨φ⟩ (suc n)) ∙ sym (pres- (pos (suc n)))
-
-    isContrℤ↣OCR : isContr (ℤOrderedCommRing ↣ R')
-    fst isContrℤ↣OCR = ℤOCR↣R
-    snd isContrℤ↣OCR (φ , φocrmono) =
-      let
-        φocrhom = isOrderedCommRingMono→isOrderedCommRingHom φocrmono
-        ℤ→⟨R⟩≡φ = cong fst $ snd isContrHom[ℤ,OCR] (φ , φocrhom)
-      in
-        OrderedCommRingMono≡ ℤ→⟨R⟩≡φ
 
   module SumTheory where
     open OrderedCommRingTheory

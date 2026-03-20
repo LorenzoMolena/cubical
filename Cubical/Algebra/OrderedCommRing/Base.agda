@@ -172,6 +172,8 @@ record IsOrderedCommRingHom {ℓ<≤} {ℓ<≤'} {A : Type ℓ} {B : Type ℓ'}
     pres≤         : ∀ x y → x R.≤ y → f x S.≤ f y
     reflect<      : ∀ x y → f x S.< f y → x R.< y
 
+  open IsCommRingHom isCommRingHom public
+
 unquoteDecl IsOrderedCommRingHomIsoΣ = declareRecordIsoΣ IsOrderedCommRingHomIsoΣ (quote IsOrderedCommRingHom)
 
 OrderedCommRingHom : ∀ {ℓ<≤} {ℓ<≤'}

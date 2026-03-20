@@ -125,3 +125,24 @@ module CanonicalHomFromℤ (ring : CommRing ℓ) where
  isHomFromℤ .IsCommRingHom.pres+ = fromℤ-pres-+
  isHomFromℤ .IsCommRingHom.pres· = fromℤ-pres-·
  isHomFromℤ .IsCommRingHom.pres- = fromℤ-pres-minus
+
+ fromℤCR : CommRingHom ℤCommRing ring
+ fst fromℤCR = R.fromℤ
+ snd fromℤCR = isHomFromℤ
+
+ isContrHom[ℤCR,-] : isContr (CommRingHom ℤCommRing ring)
+ fst isContrHom[ℤCR,-]   = fromℤCR
+ snd isContrHom[ℤCR,-] φ = CommRingHom≡ (funExt fromℤ≡φ)
+  where
+   open IsCommRingHom (snd φ)
+   fromℕ≡φ∘pos : ∀ n → R.fromℕ n ≡ φ $cr pos n
+   fromℕ≡φ∘pos zero            = sym pres0
+   fromℕ≡φ∘pos (suc zero)      = sym pres1
+   fromℕ≡φ∘pos (suc k@(suc n)) =
+    R.1r R.+ R.fromℕ k      ≡⟨ cong₂ R._+_ (sym pres1) (fromℕ≡φ∘pos k) ⟩
+    φ $cr 1 R.+ φ $cr pos k ≡⟨ sym (pres+ 1 (pos k)) ⟩
+    φ $cr pos (suc k)       ∎
+
+   fromℤ≡φ : ∀ n → R.fromℤ n ≡ φ $cr n
+   fromℤ≡φ (pos n)    = fromℕ≡φ∘pos n
+   fromℤ≡φ (negsuc n) = cong R.-_ (fromℕ≡φ∘pos (suc n)) ∙ sym (pres- (pos (suc n)))
