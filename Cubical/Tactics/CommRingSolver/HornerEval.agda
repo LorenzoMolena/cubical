@@ -8,6 +8,7 @@ open import Cubical.Data.Vec
 open import Cubical.Data.Bool as 𝟚
 
 open import Cubical.Relation.Nullary
+open import Cubical.Relation.Binary
 
 open import Cubical.Tactics.CommRingSolver.Utility
 open import Cubical.Tactics.CommRingSolver.RawRing
@@ -23,7 +24,6 @@ private
 
 
 module HornerEval (R@(⟨R⟩ , _) : CommRing ℓ)
-                         -- (_≟_ : Discrete ⟨R⟩ )
                          (R'@(⟨R'⟩ , _) : CommRing ℓ')
                          (hom@(scalar‵ , _) : CommRingHom R R') where
  open CommRingStr (snd R)
@@ -51,10 +51,32 @@ module HornerEval (R@(⟨R⟩ , _) : CommRing ℓ)
           Q' = eval Q xs
       in ((P' ·‵ x) +‵ Q')
 
- 
 
- _≑_ : ∀ {n} → IteratedHornerForms n → IteratedHornerForms n → Type ℓ'
- P ≑ Q = ∀ xs → eval P xs ≡ eval Q xs
+ record EvalInVecR {ℓ} (A : ℕ → Type ℓ) : Type (ℓ-max ℓ ℓ') where
+  no-eta-equality
+  field
+   evalInVecR : {n : ℕ} → A n → Vec ⟨R'⟩ n → ⟨R'⟩
 
- isProp≑ : ∀ {n} P Q → isProp (_≑_ {n} P Q) 
- isProp≑ P Q  = isPropΠ λ _ → R‵.is-set _ _
+  _≑_ : ∀ {n} → A n → A n → Type ℓ'
+  P ≑ Q = ∀ xs → evalInVecR P xs ≡ evalInVecR Q xs
+
+  isProp≑ : ∀ {n} P Q → isProp (_≑_ {n} P Q) 
+  isProp≑ P Q  = isPropΠ λ _ → R‵.is-set _ _
+
+  module ≑Rel {n} where
+   open BinaryRelation (_≑_ {n})
+   open isEquivRel
+   isEquivRel≑ : isEquivRel
+   isEquivRel≑ .reflexive _ _ = refl
+   isEquivRel≑ .symmetric _ _ x _ = sym (x _)
+   isEquivRel≑ .transitive _ _ _ x y _ = x _ ∙ y _
+
+   open isEquivRel isEquivRel≑
+     public using () renaming (symmetric to sym ; reflexive to refl ; _equivRel∙_ to _∙∶_)
+   
+   
+ open EvalInVecR ⦃...⦄ public
+
+ instance
+  EvalInVecRIteratedHornerForms : EvalInVecR IteratedHornerForms
+  EvalInVecRIteratedHornerForms .EvalInVecR.evalInVecR = eval

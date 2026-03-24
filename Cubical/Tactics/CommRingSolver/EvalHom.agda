@@ -38,7 +38,8 @@ module HomomorphismProperties (R@(⟨R⟩ , _) : CommRing ℓ)
  open CommRingStr (snd R') using () renaming
    (0r to 0r‵;1r to 1r‵;_+_ to _+‵_; _·_ to _·‵_; -_ to -‵_)
 
- module RT' = RingTheory (CommRing→Ring R')
+ private
+  module RT' = RingTheory (CommRing→Ring R')
 
  EvalHom+0 : {n : ℕ} (P : IteratedHornerForms n) (xs : Vec ⟨R'⟩ n)
      → eval (0ₕ +ₕ P) xs ≡ eval P xs

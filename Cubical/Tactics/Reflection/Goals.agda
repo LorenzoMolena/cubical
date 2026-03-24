@@ -36,13 +36,16 @@ module _ {ℓA ℓB} {A : Type ℓA} {B : A → Type ℓB} where
 
 maybeSolveMaybe : (Term → TypeTm →  TC Bool) → Term → TC Unit
 maybeSolveMaybe tactic' Maybe-hole = do
-  holeTy ← inferType Maybe-hole
-  (h , hTy) ← newHole
-  unify (def (quote Maybe) v[ hTy ]) holeTy
-  sucess ← tactic' h hTy
-  if sucess
-   then unify Maybe-hole (con (quote just) v[ h ])
-   else unify Maybe-hole (con (quote nothing) [])
+   s' ← (runSpeculative $ do
+           holeTy ← inferType Maybe-hole
+           (h , hTy) ← newHole
+           unify (def (quote Maybe) v[ hTy ]) holeTy
+           sucess ← tactic' h hTy
+           if sucess
+            then (do unify Maybe-hole (con (quote just) v[ h ])
+                     pure (sucess , sucess))
+            else (pure (sucess , sucess)))
+   when (not s') (unify Maybe-hole (con (quote nothing) []))
 
 
 
@@ -79,6 +82,20 @@ satisfySomeTC tactic' hole = do
 
 
 
+
+macro
+ testSatisfySomeTC' : Term → Term → TC Unit
+ testSatisfySomeTC' lemHole hole = do
+   lemHole' ← satisfySomeTC
+     (λ h _ → pure false)
+     hole 
+   unify lemHole' lemHole
+   
+
+
+zzz' : ListP (idfun _) ((2 ≡ 2) ∷ (1 ≡ 1) ∷ (3 ≡ 3) ∷ []) 
+zzz' = testSatisfySomeTC' (refl ∷ refl ∷ P[ refl ])
+
 macro
  testSatisfySomeTC : Term → Term → TC Unit
  testSatisfySomeTC lemHole hole = do
@@ -88,6 +105,6 @@ macro
    unify lemHole' lemHole
    
 
-
--- zzz : ListP (idfun _) ((2 ≡ 3) ∷ (1 ≡ 1) ∷ (1 ≡ 3) ∷ []) 
--- zzz = testSatisfySomeTC {!!}
+module _ (p : _) (q : _) where
+ zzz : ListP (idfun _) ((2 ≡ 3) ∷ (1 ≡ 1) ∷ (1 ≡ 3) ∷ []) 
+ zzz = testSatisfySomeTC (p ∷ q ∷ [])

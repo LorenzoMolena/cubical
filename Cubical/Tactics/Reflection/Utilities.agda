@@ -423,6 +423,27 @@ macro
  q[_] tm h =
    quoteTC tm >>= unify h
 
+infixr 5 _ω∷_
+
+data HetListω : Typeω where
+ ω[] : HetListω
+ _ω∷_ : ∀ {ℓ} {A : Type ℓ} → A → HetListω → HetListω
+
+HetListω→[Term] : HetListω → TC (List Term)
+HetListω→[Term] ω[] = pure []
+HetListω→[Term] (x ω∷ xs) = ⦇ quoteTC x ∷ (HetListω→[Term] xs) ⦈
+
+module _ hlω where
+ macro
+  quoteDefsfNames : Term → TC Unit 
+  quoteDefsfNames hole = do
+    xx ← HetListω→[Term] hlω >>=
+           mapM λ { (def nm []) → pure nm
+                  ; tm → typeError
+                    (strErr "only unaplied definitions can be quoted in `quoteDefNames` \n\n"
+                       ∷ [ termErr tm ]) } 
+    (quoteTC xx) >>= unify hole
+    
 atTargetLam : Term → (Term → TC Term) → TC Term
 atTargetLam (pi a@(arg (arg-info v _) _) (abs s b)) m =
   lam v ∘ abs s <$> extendContext s a (atTargetLam b m)
@@ -457,7 +478,10 @@ unquoteJust tm = do
  (x , _) ← newHole
  unify (con (quote just) (v[ x ])) tm
  pure x
--- unquoteMaybe : Term → TC (Maybe Term)
--- unquoteMaybe tm = 
---   ((y , _) ← newHole
---    unify (con (quote _,_) (x v∷ v[ y ])) tm)
+
+matchList : Term → TC (List Term)
+matchList (con (quote []) _) = pure []
+matchList (con (quote _∷_) (_ h∷ _ h∷ x v∷ v[ xs ])) = (x ∷_) <$> matchList xs 
+matchList (con (quote _∷_) (_ h∷ x v∷ v[ xs ])) = (x ∷_) <$> matchList xs
+matchList (con (quote _∷_) (x v∷ v[ xs ])) = (x ∷_) <$> matchList xs
+matchList _ = typeError [ strErr "failed to match list" ]

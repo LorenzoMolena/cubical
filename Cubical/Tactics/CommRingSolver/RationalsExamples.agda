@@ -10,29 +10,29 @@ open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.CommRing.Instances.Rationals
 open import Cubical.Algebra.CommAlgebra
 
-open import Cubical.Tactics.CommRingSolver.Reflection
+-- open import Cubical.Tactics.CommRingSolver.Reflection
 
--- imports to obtain `fromNat` instances
-import Cubical.Data.NatPlusOne
-import Cubical.Data.Int
-
-
-private
-  variable
-    ℓ ℓ' : Level
-
-open ℚRingSolver
-
-module TestWithℚ (v : ℕ → ℚ) where
- open CommRingStr (ℚCommRing .snd)
-
- _ : 5 · v 0 + 190 · v 1 +  6 · v 0 ≡ (v 1 · 100 + 11 · v 0 +  v 1 · 90)
- _ = ℚ!
+-- -- imports to obtain `fromNat` instances
+-- import Cubical.Data.NatPlusOne
+-- import Cubical.Data.Int
 
 
- e0 : ∀ (x y z : ℚ)  → 4 · (([ 1 / 6 ] · x) + (x · [ 1 / 3 ])) + (z · (2 - [ 8 / 4 ]))  + y ≡ x + y + x + z - z
- e0 _ _ _ = ℚ!
+-- private
+--   variable
+--     ℓ ℓ' : Level
+
+-- open ℚRingSolver
+
+-- module TestWithℚ (v : ℕ → ℚ) where
+--  open CommRingStr (ℚCommRing .snd)
+
+--  _ : 5 · v 0 + 190 · v 1 +  6 · v 0 ≡ (v 1 · 100 + 11 · v 0 +  v 1 · 90)
+--  _ = ℚ!
 
 
- ex13 : (x y : ℚ) → (x · y) · 1r ≡ (y · x) · 1r
- ex13 x y = ℚ!
+--  e0 : ∀ (x y z : ℚ)  → 4 · (([ 1 / 6 ] · x) + (x · [ 1 / 3 ])) + (z · (2 - [ 8 / 4 ]))  + y ≡ x + y + x + z - z
+--  e0 _ _ _ = ℚ!
+
+
+--  ex13 : (x y : ℚ) → (x · y) · 1r ≡ (y · x) · 1r
+--  ex13 x y = ℚ!

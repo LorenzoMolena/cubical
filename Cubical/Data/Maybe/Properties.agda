@@ -208,3 +208,11 @@ FromMaybeΣ {B = B} (just (a , _)) = B a
 fromMaybeΣ : ∀ {ℓ ℓ' A B} a,b → FromMaybeΣ {ℓ} {ℓ'} {A = A} {B = B} a,b
 fromMaybeΣ nothing = tt*
 fromMaybeΣ (just (_ , x)) = x
+
+
+IsJust : ∀ {ℓ} {A : Type ℓ} → Maybe A → Type
+IsJust nothing = ⊥
+IsJust (just _) = Unit
+
+fromIsJust : ∀ {ℓ} {A : Type ℓ} → {mbA : Maybe A} → (IsJust mbA) → A
+fromIsJust {mbA = just a} _ = a
