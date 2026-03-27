@@ -528,6 +528,11 @@ max- (suc x) (suc y) = refl
 -max : ∀ x y → max (- (pos x)) (pos y) ≡ pos y
 -max x y = maxComm (- (pos x)) (pos y) ∙ max- y x
 
+abs-max : ∀ n → pos (abs n) ≡ max n (- n)
+abs-max (pos zero) = refl
+abs-max (pos (suc n)) = refl
+abs-max (negsuc n) = refl
+
 inj-z+ : ∀ {z l n} → z + l ≡ z + n → l ≡ n
 inj-z+ {z} {l} {n} p =
   l             ≡⟨ pos0+ l ⟩

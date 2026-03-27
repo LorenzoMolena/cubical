@@ -5,9 +5,9 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Function
 
 open import Cubical.Data.Nat as ℕ using (discreteℕ)
-open import Cubical.Data.NatPlusOne
+open import Cubical.Data.NatPlusOne hiding (_+₁_)
 open import Cubical.Data.Sigma
-open import Cubical.Data.Int
+open import Cubical.Data.Fast.Int
 
 open import Cubical.HITs.SetQuotients as SetQuotient
   using ([_]; eq/; discreteSetQuotients) renaming (_/_ to _//_) public
@@ -15,10 +15,6 @@ open import Cubical.HITs.SetQuotients as SetQuotient
 open import Cubical.Relation.Nullary
 open import Cubical.Relation.Binary.Base
 open BinaryRelation
-
-ℕ₊₁→ℤ : ℕ₊₁ → ℤ
-ℕ₊₁→ℤ n = pos (ℕ₊₁→ℕ n)
-
 
 -- ℚ as a set quotient of ℤ × ℕ₊₁ (as in the HoTT book)
 
@@ -39,8 +35,7 @@ isSetℚ = SetQuotient.squash/
 isEquivRel∼ : isEquivRel _∼_
 isEquivRel.reflexive isEquivRel∼ (a , b) = refl
 isEquivRel.symmetric isEquivRel∼ (a , b) (c , d) = sym
-isEquivRel.transitive isEquivRel∼ (a , b) (c , d) (e , f) p q =
- ·rCancel _ _ (e · pos (ℕ.suc (ℕ₊₁.n b))) r (ℕ.snotz ∘ injPos)
+isEquivRel.transitive isEquivRel∼ (a , b) (c , d) (e , f) p q = ·rCancel _ _ (e · pos (ℕ.suc (ℕ₊₁.n b))) r (ℕ.snotz ∘ injPos)
   where r = (a · ℕ₊₁→ℤ f) · ℕ₊₁→ℤ d ≡[ i ]⟨ ·Comm a (ℕ₊₁→ℤ f) i · ℕ₊₁→ℤ d ⟩
             (ℕ₊₁→ℤ f · a) · ℕ₊₁→ℤ d ≡⟨ sym (·Assoc (ℕ₊₁→ℤ f) a (ℕ₊₁→ℤ d)) ⟩
             ℕ₊₁→ℤ f · (a · ℕ₊₁→ℤ d) ≡[ i ]⟨ ℕ₊₁→ℤ f · p i ⟩
@@ -52,10 +47,11 @@ isEquivRel.transitive isEquivRel∼ (a , b) (c , d) (e , f) p q =
             e · (ℕ₊₁→ℤ b · ℕ₊₁→ℤ d) ≡⟨ ·Assoc e (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ d) ⟩
             (e · ℕ₊₁→ℤ b) · ℕ₊₁→ℤ d ∎
 
-
-
 eq/⁻¹ : ∀ x y → Path ℚ [ x ] [ y ] → x ∼ y
 eq/⁻¹ = SetQuotient.effective (λ _ _ → isSetℤ _ _) isEquivRel∼
+
+eqℚ : ∀ {k m k' m'} → (k , 1+ m) ∼ (k' , 1+ m') → [ k / 1+ m ] ≡ [ k' / 1+ m' ]
+eqℚ = eq/ _ _
 
 discreteℚ : Discrete ℚ
 discreteℚ = discreteSetQuotients isEquivRel∼ (λ _ _ → discreteℤ _ _)

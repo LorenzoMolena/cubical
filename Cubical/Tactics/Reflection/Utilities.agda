@@ -485,3 +485,20 @@ matchList (con (quote _∷_) (_ h∷ _ h∷ x v∷ v[ xs ])) = (x ∷_) <$> matc
 matchList (con (quote _∷_) (_ h∷ x v∷ v[ xs ])) = (x ∷_) <$> matchList xs
 matchList (con (quote _∷_) (x v∷ v[ xs ])) = (x ∷_) <$> matchList xs
 matchList _ = typeError [ strErr "failed to match list" ]
+
+data Q[_]≡_ {ℓ} {A : Type ℓ} : A → Term → Type ℓ where
+ q[_]≡_ : ∀ a t → Q[ a ]≡ t 
+
+
+
+macro
+ showQuoted : Term → Term → TC Unit 
+ showQuoted tm hole = do
+   qtm ← quoteTC tm
+   unify hole (con (quote q[_]≡_) (tm v∷ v[ qtm ]))
+
+macro
+ showQuotedN : Term → Term → TC Unit 
+ showQuotedN tm hole = withReduceDefs (false , []) do
+   qtm ← normalise tm >>= quoteTC 
+   unify hole (con (quote q[_]≡_) (tm v∷ v[ qtm ]))

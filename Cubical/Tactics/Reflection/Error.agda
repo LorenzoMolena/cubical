@@ -97,6 +97,9 @@ instance
 map,ₑ : ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → List A → List R.ErrorPart
 map,ₑ = join ∘ map ((_++ₑ [ ", " ]ₑ) ∘S [_]ₑ)
 
+map␤ₑ : ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → List A → List R.ErrorPart
+map␤ₑ = join ∘ map ((_++ₑ [ "\n" ]ₑ) ∘S [_]ₑ)
+
 _∷nl_ :  ∀ {ℓ} {A : Type ℓ} → {{ToErrorPart A}} → A → List R.ErrorPart → List R.ErrorPart
 _∷nl_  x y = x ∷ₑ "\n" ∷ₑ y
 
@@ -221,4 +224,3 @@ showTeles = concatMapM h ∘S liftedTele
 macro
  showCtx : R.Term → R.TC Unit
  showCtx _ = R.getContext >>= (showTeles >=> R.typeError)
-

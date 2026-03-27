@@ -105,9 +105,18 @@ record RingReflectionMatcher : Type where
 
 module GenericCommRingReflection where
 
-
-
   record RingNames : Type where
+    field
+      0nm : Name
+      1nm : Name
+      ·nm : Name
+      +nm : Name
+      -nm : Name
+
+    allRingOpsNames : List Name
+    allRingOpsNames = ·nm ∷ +nm ∷ -nm ∷ []
+
+  record RingNamesTest : Type where
     field
       is0 : Name → Bool
       is1 : Name → Bool
@@ -115,7 +124,7 @@ module GenericCommRingReflection where
       is+ : Name → Bool
       is- : Name → Bool
 
-  findRingNames : Term → TC RingNames
+  findRingNames : Term → TC RingNamesTest
   findRingNames cring =
     let cringStr = (def (quote snd) (cring v∷ [])) v∷ []
     in do
@@ -142,16 +151,15 @@ module GenericCommRingReflection where
    buildMatcher n nothing  x = n == x
    buildMatcher n (just m) x = n == x or m == x
 
-
-  genericCommRingMatchTerm : RingReflectionMatcher
-  genericCommRingMatchTerm .RingReflectionMatcher.mkMatchTermTC baseRingTm cring = do
-    matchTerm <$> findRingNames cring
+  commRingMatchTerm : RingNamesTest → RingReflectionMatcher
+  (commRingMatchTerm ringNamesTest) .RingReflectionMatcher.mkMatchTermTC baseRingTm cring =
+    pure matchTerm 
 
    where
 
-   module _ (ringNames : RingNames) (be : (Term → TC (Template × Vars))) where
+   module _ (be : (Term → TC (Template × Vars))) where
     open BE baseRingTm be
-    open RingNames ringNames
+    open RingNamesTest ringNamesTest
 
     matchTerm' : Name → List (Arg Term) → TC (Maybe (Template × Vars))
     matchTerm' n xs =
@@ -170,3 +178,15 @@ module GenericCommRingReflection where
     -- there should be cases for definitions (with arguments)
 
     matchTerm _ = returnTC nothing
+
+
+  genericCommRingMatchTerm : RingReflectionMatcher
+  genericCommRingMatchTerm .RingReflectionMatcher.mkMatchTermTC baseRingTm cring = do
+    rnt ← findRingNames cring
+    ((commRingMatchTerm rnt) .RingReflectionMatcher.mkMatchTermTC baseRingTm cring)
+
+  genericCommRingMatchTermFromNames : RingNames → RingReflectionMatcher
+  genericCommRingMatchTermFromNames rn =
+    commRingMatchTerm
+      (record { is0 = _== 0nm ; is1 = _== 1nm ; is· = _== ·nm ; is+ = _== +nm ; is- = _== -nm })
+   where open RingNames rn

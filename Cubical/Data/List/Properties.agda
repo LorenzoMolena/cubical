@@ -390,3 +390,7 @@ dropBy f (x ∷ xs) =
 catMaybes : List (Maybe A) → List A
 catMaybes [] = []
 catMaybes (x ∷ xs) = Mb.rec [] [_] x ++ catMaybes xs
+
+zipWithIndex : List A → List (ℕ × A)
+zipWithIndex [] = []
+zipWithIndex (x ∷ xs) = (zero , x) ∷ map (map-fst suc) (zipWithIndex xs)

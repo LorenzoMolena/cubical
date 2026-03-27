@@ -19,8 +19,10 @@ private
 
 open FastℤRingSolver
 
+open CommRingStr (ℤCommRing .snd)
+
 module TestWithℤ (v : ℕ → ℤ) (v' : ℕ → ℕ) where
- open CommRingStr (ℤCommRing .snd)
+ 
 
  _ : 5 · v 0 + 190 · v 1 +  6 · v 0 ≡ (v 1 · 100 + 11 · v 0 +  v 1 · 90)
  _ = ℤ!
@@ -38,3 +40,40 @@ module TestWithℤ (v : ℕ → ℤ) (v' : ℕ → ℕ) where
 
  ex1 : (a b : fst ℤCommRing) → 2 + a + b + pos (v' 0 ℕ.+ v' 1) ≡ pos (suc (suc (v' 0))) + b + a + pos (v' 1)
  ex1 a b = ℤ!
+
+
+module _ (z z₁ : ℤ) (n n₁ : ℕ) where
+ _ : PathP (λ i → ℤ)
+          (((pos 40 · z · pos (suc (n₁ ℕ.+ 0 ℕ.· suc n₁)) +
+             pos 190 · z₁ · pos (suc (n ℕ.+ 59 ℕ.· suc n)))
+            · pos (suc (n ℕ.+ 29 ℕ.· suc n))
+            +
+            pos 50 · z ·
+            pos
+            (suc
+             (n₁ ℕ.+ 0 ℕ.· suc n₁ ℕ.+
+              (n ℕ.+ 59 ℕ.· suc n) ℕ.· suc (n₁ ℕ.+ 0 ℕ.· suc n₁))))
+           ·
+           pos
+           (suc
+            (0 ℕ.+ n₁ ℕ.· 1 ℕ.+
+             (n ℕ.+ 29 ℕ.· suc n ℕ.+
+              (0 ℕ.+ n₁ ℕ.· 1) ℕ.· suc (n ℕ.+ 29 ℕ.· suc n))
+             ℕ.· suc (0 ℕ.+ n₁ ℕ.· 1))))
+          (((z₁ · pos 100 · pos (suc (n ℕ.+ 29 ℕ.· suc n)) +
+             pos 70 · z · pos (suc (0 ℕ.+ n₁ ℕ.· 1)))
+            · pos (suc (0 ℕ.+ n₁ ℕ.· 1))
+            +
+            z₁ · pos 90 ·
+            pos
+            (suc
+             (n ℕ.+ 29 ℕ.· suc n ℕ.+
+              (0 ℕ.+ n₁ ℕ.· 1) ℕ.· suc (n ℕ.+ 29 ℕ.· suc n))))
+           ·
+           pos
+           (suc
+            (n ℕ.+ 29 ℕ.· suc n ℕ.+
+             (n₁ ℕ.+ 0 ℕ.· suc n₁ ℕ.+
+              (n ℕ.+ 59 ℕ.· suc n) ℕ.· suc (n₁ ℕ.+ 0 ℕ.· suc n₁))
+             ℕ.· suc (n ℕ.+ 29 ℕ.· suc n))))
+ _ = FastℤPlusRingSolver.solve!

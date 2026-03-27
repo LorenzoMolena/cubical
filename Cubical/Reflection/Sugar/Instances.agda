@@ -170,6 +170,11 @@ _<⊎>_ : {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} {{_ : RawM
   (M A) → (M B) → M (A ⊎.⊎ B)
 a <⊎> b = (⊎.inl <$> a) <|> (⊎.inr <$> b)
 
+msum :  {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} {{_ : RawMonadFail M E}}
+         → E → List (M A) → M A 
+msum e [] = fail e 
+msum e (x ∷ xs) = x <|> msum e xs
+
 sequenceP : {M : Functorω} {{_ : RawApplicative M}} →
  ∀ {ℓ ℓ'} {A} {B} {xs}
   → ListP {ℓ} {ℓ'} {A} (M ∘ B) xs
