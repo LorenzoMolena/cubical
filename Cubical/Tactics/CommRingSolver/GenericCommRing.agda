@@ -153,7 +153,7 @@ module GenericCommRingReflection where
 
   commRingMatchTerm : RingNamesTest → RingReflectionMatcher
   (commRingMatchTerm ringNamesTest) .RingReflectionMatcher.mkMatchTermTC baseRingTm cring =
-    pure matchTerm 
+    pure matchTerm
 
    where
 

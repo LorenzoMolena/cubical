@@ -50,7 +50,7 @@ record RawApplicative (F : Functorω) : Typeω where
   pure : A → F A
   _<*>_ : F (A → B) → F A → F B
 
- infixl 4 _<*>_ _<$>_ 
+ infixl 4 _<*>_ _<$>_
 
 module _ {F : Functorω} {{RA : RawApplicative F}} where
 
@@ -62,7 +62,7 @@ module _ {F : Functorω} {{RA : RawApplicative F}} where
  f <$'> x = (λ x → f {x}) <$> x
 
  _<*_ : {B : A → Type ℓ} → F (∀ a → B a) → ∀ a → F (B a)
- f <* x = (λ f → f x) <$> f 
+ f <* x = (λ f → f x) <$> f
 
  _<*'_ : {B : A → Type ℓ} → F (∀ {a} → B a) → ∀ a → F (B a)
  f <*' x = (λ f → f {x}) <$> f

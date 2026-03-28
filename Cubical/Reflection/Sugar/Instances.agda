@@ -171,16 +171,16 @@ _<⊎>_ : {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} {{_ : RawM
 a <⊎> b = (⊎.inl <$> a) <|> (⊎.inr <$> b)
 
 msum :  {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} {{_ : RawMonadFail M E}}
-         → E → List (M A) → M A 
-msum e [] = fail e 
+         → E → List (M A) → M A
+msum e [] = fail e
 msum e (x ∷ xs) = x <|> msum e xs
 
 sequenceP : {M : Functorω} {{_ : RawApplicative M}} →
  ∀ {ℓ ℓ'} {A} {B} {xs}
   → ListP {ℓ} {ℓ'} {A} (M ∘ B) xs
-  → M (ListP B xs)  
+  → M (ListP B xs)
 sequenceP {M} {{RA}} [] = RawApplicative.pure RA []
-sequenceP {M} {{RA}} (y ∷ xs) = ((λ x₁ → x₁ ∷_) <$> y) <*> (sequenceP xs) 
+sequenceP {M} {{RA}} (y ∷ xs) = ((λ x₁ → x₁ ∷_) <$> y) <*> (sequenceP xs)
 
 
 traverseList : {M : Functorω} {{_ : RawApplicative M}} →
@@ -188,6 +188,6 @@ traverseList : {M : Functorω} {{_ : RawApplicative M}} →
 traverseList f [] = ⦇ [] ⦈
 traverseList f (x ∷ xs) = ⦇ (f x) ∷ (traverseList f xs) ⦈
 
-sucesfullM? :  {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} {{_ : RawMonadFail M E}} → 
+sucesfullM? :  {M : Functorω} {{_ : RawApplicative M}} {{_ : RawMonad M}} {{_ : RawMonadFail M E}} →
                 M A → M Bool
 sucesfullM? m = (m >> pure true) <|> pure false

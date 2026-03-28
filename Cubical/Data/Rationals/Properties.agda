@@ -418,22 +418,6 @@ maxAbsorbLMin = SetQuotient.elimProp2 (λ _ _ → isSetℚ _ _)
   equalByDifference _ _ (ℤ! ∙ differenceByEqual _ _ (cong (ℤ._· (ℕ₊₁→ℤ f)) p))
   where
    open RingTheory (CommRing→Ring ℤCommRing)
-  -- where
-   
-  -- {!!} ∙∙ cong (ℤ._· (ℕ₊₁→ℤ b ℤ.· ℕ₊₁→ℤ f ℤ.· e)) p ∙∙ {!ℤ!!}
- -- eq
- --  where abstract
- --    eq : ((a , b) (c , d) (e , f) : ℤ × ℕ₊₁) (p : a ℤ.· ℕ₊₁→ℤ d ≡ c ℤ.· ℕ₊₁→ℤ b)
- --       → ℕ₊₁→ℤ d ℤ.· (a ℤ.· ℕ₊₁→ℤ f ℤ.+ e ℤ.· ℕ₊₁→ℤ b)
- --       ≡ ℕ₊₁→ℤ b ℤ.· (c ℤ.· ℕ₊₁→ℤ f ℤ.+ e ℤ.· ℕ₊₁→ℤ d)
- --    eq (a , b) (c , d) (e , f) p =
- --      ℕ₊₁→ℤ d ℤ.· (a ℤ.· ℕ₊₁→ℤ f ℤ.+ e ℤ.· ℕ₊₁→ℤ b)
- --        ≡⟨ ℤ.·DistR+ (ℕ₊₁→ℤ d) (a ℤ.· ℕ₊₁→ℤ f) (e ℤ.· ℕ₊₁→ℤ b) ⟩
- --      ℕ₊₁→ℤ d ℤ.· (a ℤ.· ℕ₊₁→ℤ f) ℤ.+ ℕ₊₁→ℤ d ℤ.· (e ℤ.· ℕ₊₁→ℤ b)
- --        ≡[ i ]⟨ lem₁ a (ℕ₊₁→ℤ d) c (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ f) p i ℤ.+ lem₂ (ℕ₊₁→ℤ d) e (ℕ₊₁→ℤ b) i ⟩
- --      ℕ₊₁→ℤ b ℤ.· (c ℤ.· ℕ₊₁→ℤ f) ℤ.+ ℕ₊₁→ℤ b ℤ.· (e ℤ.· ℕ₊₁→ℤ d)
- --        ≡⟨ sym (ℤ.·DistR+ (ℕ₊₁→ℤ b) (c ℤ.· ℕ₊₁→ℤ f) (e ℤ.· ℕ₊₁→ℤ d)) ⟩
- --      ℕ₊₁→ℤ b ℤ.· (c ℤ.· ℕ₊₁→ℤ f ℤ.+ e ℤ.· ℕ₊₁→ℤ d) ∎
 
 _impl+_ : ℚ → ℚ → ℚ
 _impl+_ = OnCommonDenomSym.go +Rec
@@ -604,6 +588,7 @@ x - y = x + (- y)
 +CancelR : ∀ x y z → x + y ≡ z + y → x ≡ z
 +CancelR x y z p = +CancelL y x z (+Comm y x ∙ p ∙ +Comm z y)
 
+
 +CancelL- : ∀ x y z → x + y ≡ z → x ≡ z - y
 +CancelL- x y z p = (sym (+IdR x)  ∙ cong (x +_) (sym (+InvR y)))
   ∙∙  (+Assoc x y (- y)) ∙∙ cong (_- y) p
@@ -687,3 +672,17 @@ sign = Rec.go w
        tt ((cong (ℤ.-_) (ℤ.pos·pos (suc n) (ℕ₊₁→ℕ snd₂))
         ∙ sym (ℤ.negsuc·pos n (ℕ₊₁→ℕ snd₂))) ∙∙ x ∙∙ sym (ℤ.pos·pos n₁ _) ))
  w .Rec.f∼ (ℤ.negsuc n , snd₁) (ℤ.negsuc n₁ , snd₂) x = refl
+
+numerator0→0 : (u : ℤ × ℕ₊₁) → u .fst ≡ 0 → [ u ] ≡ 0
+numerator0→0 (a , b) p = eq/ ((a , b)) ((0 , 1)) q
+  where
+  q : a ℤ.· (ℕ₊₁→ℤ 1) ≡ 0 ℤ.· (ℕ₊₁→ℤ b)
+  q =
+    a ℤ.· (ℕ₊₁→ℤ 1)
+      ≡⟨ ℤ.·IdR a ⟩
+    a
+      ≡⟨ p ⟩
+    0
+      ≡⟨ sym (ℤ.·AnnihilL (ℕ₊₁→ℤ b)) ⟩
+    0 ℤ.· (ℕ₊₁→ℤ b) ∎
+

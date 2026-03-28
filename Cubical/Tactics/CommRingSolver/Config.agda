@@ -26,7 +26,7 @@ record CommRingSolverConfig : Typeω where
   mbDiscreteScalars : Maybe (Discrete ⟨ R ⟩)
  R` : CommRing ℓ`
  R` = fst commAlg
- 
+
  scalar` : ⟨ R ⟩ → ⟨ R` ⟩
  scalar` = fst (snd commAlg)
 
@@ -44,10 +44,10 @@ record CommRingSolverConfig : Typeω where
  open Exponentiation R`
    public
 
-  
+
 
  CommonDenom : ⟨ R ⟩ → ⟨ R ⟩ → Type ℓ
- CommonDenom a b = 
+ CommonDenom a b =
              Σ[ (a' , b' , c ) ∈ ⟨ R ⟩ × ⟨ R ⟩ × ⟨ R ⟩ ]
                 (a ≡ a' · c) × (b ≡ b' · c)
 

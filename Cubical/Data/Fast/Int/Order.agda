@@ -636,6 +636,7 @@ min≤ {negsuc (suc m)} {negsuc (suc n)} with m ℕ.<ᵇ n UsingEq
       ∙ cong₂ ℤ.max (≤→max p) (≤→max q))
     ≤max
 
+
 0<→ℕ₊₁-fst : ℤ → ℕ₊₁
 0<→ℕ₊₁-fst (pos zero) = 1
 0<→ℕ₊₁-fst (pos (suc n)) = 1+ n
@@ -687,6 +688,7 @@ pos-≤-pos≃ℕ≤ m n = propBiimpl→Equiv isProp≤ ℕ.isProp≤
 -- the first component will normalize quickly, but not the path itself
 <→Σℕ : m < n → Σ[ k ∈ ℕ ] m ℤ.+ pos (suc k) ≡ n
 <→Σℕ {m} = map-snd (sym (+sucℤ m _) ∙∙ sucℤ+ m _ ∙∙_) ∘ ≤→Σℕ ∘ <→suc≤
+
 
 0≤x² : ∀ n → 0 ≤ n ℤ.· n
 0≤x² (pos n) = subst (0 ≤_) (pos·pos n n) zero-≤pos

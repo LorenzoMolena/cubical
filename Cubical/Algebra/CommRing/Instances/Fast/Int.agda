@@ -3,6 +3,7 @@ module Cubical.Algebra.CommRing.Instances.Fast.Int where
 open import Cubical.Foundations.Prelude
 
 open import Cubical.Algebra.CommRing
+
 open import Cubical.Algebra.Ring.Properties
 open import Cubical.Data.Fast.Int as Int renaming (_+_ to _+ℤ_; _·_ to _·ℤ_ ; -_ to -ℤ_)
 
@@ -25,7 +26,6 @@ isCommRing (snd ℤCommRing) = isCommRingℤ
     isCommRingℤ = makeIsCommRing isSetℤ Int.+Assoc +IdR
                                  -Cancel Int.+Comm Int.·Assoc
                                  Int.·IdR ·DistR+ Int.·Comm
-
 
 private
  variable

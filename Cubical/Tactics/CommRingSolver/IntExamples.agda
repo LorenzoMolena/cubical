@@ -22,7 +22,7 @@ open FastℤRingSolver
 open CommRingStr (ℤCommRing .snd)
 
 module TestWithℤ (v : ℕ → ℤ) (v' : ℕ → ℕ) where
- 
+
 
  _ : 5 · v 0 + 190 · v 1 +  6 · v 0 ≡ (v 1 · 100 + 11 · v 0 +  v 1 · 90)
  _ = ℤ!

@@ -54,7 +54,7 @@ module HomomorphismProperties (R@(⟨R⟩ , _) : CommRing ℓ)
  Eval1ₕ : {n : ℕ} (xs : Vec ⟨R'⟩ n)
         → eval  1ₕ xs ≡ 1r‵
  Eval1ₕ [] = pres1
- Eval1ₕ (x ∷ xs) = 
+ Eval1ₕ (x ∷ xs) =
    eval  0H (x ∷ xs) ·‵ x +‵ eval 1ₕ xs   ≡⟨ cong (λ u → u ·‵ x +‵ eval 1ₕ xs)
                                                                   (Eval0H (x ∷ xs)) ⟩
    0r‵ ·‵ x +‵ eval 1ₕ xs                          ≡⟨ cong (λ u → 0r‵ ·‵ x +‵ u)
@@ -163,7 +163,7 @@ module HomomorphismProperties (R@(⟨R⟩ , _) : CommRing ℓ)
    ≡⟨ cong (λ u → u  +‵ eval r xs ·‵ eval Q xs) (sym (R‵.·Assoc _ _ _)) ⟩
      eval r xs ·‵ (eval P (x ∷ xs) ·‵ x) +‵ eval r xs ·‵ eval Q xs
    ≡⟨ sym (R‵.·DistR+ _ _ _) ⟩
-     
+
      eval r xs ·‵ eval (P ·X+ Q) (x ∷ xs) ∎
 
  ·Homeval (const x) (const y) [] = pres· _ _
@@ -173,7 +173,7 @@ module HomomorphismProperties (R@(⟨R⟩ , _) : CommRing ℓ)
    0r‵ ·‵ eval Q xs         ≡⟨ cong (λ u → u ·‵ eval Q xs) (sym (Eval0H xs)) ⟩
    eval 0H xs ·‵ eval Q xs ∎
  ·Homeval (P ·X+ Q) S (x ∷ xs) =
-     
+
      eval (((P ·ₕ S) ·X+ 0ₕ) +ₕ (Q ⋆ S)) (x ∷ xs)
    ≡⟨ +Homeval ((P ·ₕ S) ·X+ 0ₕ) (Q ⋆ S) (x ∷ xs) ⟩
      (eval (P ·ₕ S) (x ∷ xs) ·‵ x +‵ eval 0ₕ xs) +‵ eval (Q ⋆ S) (x ∷ xs)
@@ -197,5 +197,5 @@ module HomomorphismProperties (R@(⟨R⟩ , _) : CommRing ℓ)
            (⋆Homeval Q S x xs) ⟩
      (eval P (x ∷ xs) ·‵ x) ·‵ eval S (x ∷ xs) +‵ eval Q xs ·‵ eval S (x ∷ xs)
    ≡⟨ sym (R‵.·DistL+ _ _ _) ⟩
-     
+
      eval (P ·X+ Q) (x ∷ xs) ·‵ eval S (x ∷ xs) ∎

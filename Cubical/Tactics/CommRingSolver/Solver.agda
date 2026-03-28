@@ -8,7 +8,7 @@ open import Cubical.Data.FinData
 open import Cubical.Data.Nat using (ℕ;suc;zero)
 import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Nat.Order as ℕ using (zero-≤)
-open import Cubical.Data.Vec as Vec 
+open import Cubical.Data.Vec as Vec
 open import Cubical.Data.Sigma
 import Cubical.Data.Prod as ×
 open import Cubical.Data.Empty as ⊥
@@ -42,8 +42,8 @@ module SansReflection (crs : CommRingSolverConfig) where
 
  open CommRingSolverConfig crs
 
- open HomomorphismProperties R  R` (snd commAlg) 
-     
+ open HomomorphismProperties R  R` (snd commAlg)
+
  mb≟ : ∀ x y → Maybe (x ≡ y)
  mb≟ x y = mbDiscreteScalars <* x <* y >>= decToMaybe
 
@@ -69,10 +69,10 @@ module SansReflection (crs : CommRingSolverConfig) where
  x ^'' suc n = just (x ^' (suc n) )
 
 
- ^''suc : ∀ v m → v ^'' suc m ≡ just (v ^ (suc m))  
+ ^''suc : ∀ v m → v ^'' suc m ≡ just (v ^ (suc m))
  ^''suc v zero = cong just (sym (R`.·IdR v))
  ^''suc v (suc m) = refl
- 
+
 
  ^''-suc : ∀ m v → v ^' suc m ≡ v ^' m ·` v
  ^''-suc zero v = sym (R`.·IdL _)
@@ -89,7 +89,7 @@ module SansReflection (crs : CommRingSolverConfig) where
  ^''-+ one zero = refl
  ^''-+ {x} one one = cong (λ x' → just (x ·` (x'))) (R`.·IdR _)
  ^''-+ one (suc (suc f)) = refl
- ^''-+ {x} (suc (suc e)) zero = 
+ ^''-+ {x} (suc (suc e)) zero =
    cong (λ e → just (x ·` (x ·` x ^ e))) (ℕ.+-zero e)
  ^''-+ {x} (suc (suc e)) one = cong just
    (sym (·-of-^-is-^-of-+ x (suc (suc e)) 1) ∙
@@ -98,31 +98,31 @@ module SansReflection (crs : CommRingSolverConfig) where
    (sym (·-of-^-is-^-of-+ x (suc (suc e)) (suc (suc f))))
 
 
- mb·`mbIdR : ∀ x → x mb·`mb nothing ≡ x 
+ mb·`mbIdR : ∀ x → x mb·`mb nothing ≡ x
  mb·`mbIdR nothing = refl
  mb·`mbIdR (just x) = refl
- 
+
  Monomial : ℕ → Type
  Monomial n = Vec ℕ n
 
  evMonomial : ∀ {n} → Monomial n → Vec ⟨ R` ⟩ n → Maybe ⟨ R` ⟩
  evMonomial {n = 0} _ _ = nothing
- evMonomial {n = 1} (m ∷ _) (v ∷ _) = v ^'' m 
+ evMonomial {n = 1} (m ∷ _) (v ∷ _) = v ^'' m
  evMonomial {n = suc (suc _)} (m ∷ xs) (v ∷ vs) = (evMonomial xs vs) mb·`mb (v ^'' m)
 
  evMonomial∷ : ∀ {n} m ms v vs → evMonomial {suc n} (m ∷ ms) (v ∷ vs) ≡
-                                   ((evMonomial ms vs) mb·`mb (v ^'' m)) 
+                                   ((evMonomial ms vs) mb·`mb (v ^'' m))
  evMonomial∷ m [] v [] = refl
  evMonomial∷ m (x ∷ ms) v (x₁ ∷ vs) = refl
 
  PolynomialTerm : ℕ → Type ℓ
  PolynomialTerm n = Bool × (Maybe ⟨ R ⟩) × Monomial n
 
- fromJust-def-scalar : ∀ k → fromJust-def 1r` (map-Maybe scalar` k) 
+ fromJust-def-scalar : ∀ k → fromJust-def 1r` (map-Maybe scalar` k)
       ≡ scalar` (fromJust-def 1r k)
  fromJust-def-scalar nothing = sym pres1
  fromJust-def-scalar (just x) = refl
- 
+
  -[_] : Bool → ⟨ R ⟩ → ⟨ R ⟩
  -[ false ] = -_
  -[ true ] = idfun _
@@ -135,22 +135,22 @@ module SansReflection (crs : CommRingSolverConfig) where
  -`[not] : ∀ b x → -` (-`[ b ] x) ≡ -`[ not b ] x
  -`[not] false x = R`.-Idempotent x
  -`[not] true x = refl
- 
- -`[_]distR+ : ∀ b x y → -`[ b ] (x +` y) ≡ -`[ b ] x +` -`[ b ] y 
+
+ -`[_]distR+ : ∀ b x y → -`[ b ] (x +` y) ≡ -`[ b ] x +` -`[ b ] y
  -`[ false ]distR+ x y = sym (R`.-Dist _ _)
  -`[ true ]distR+ x y = refl
- 
+
  -`[_]· : ∀ b x y → (-`[ b ] x) ·` y ≡ -`[ b ] (x ·` y)
  -`[ false ]· x y = R`.-DistL· _ _
  -`[ true ]· x y = refl
 
  -`[]-fromJust-def-scalar : ∀ b k →
-     -`[ b ] (fromJust-def 1r` (map-Maybe scalar` k)) 
+     -`[ b ] (fromJust-def 1r` (map-Maybe scalar` k))
       ≡
-      scalar` (-[ b ] (fromJust-def 1r k)) 
+      scalar` (-[ b ] (fromJust-def 1r k))
  -`[]-fromJust-def-scalar false k = cong (-`_) (fromJust-def-scalar k) ∙ sym (pres- _)
  -`[]-fromJust-def-scalar true k = fromJust-def-scalar k
- 
+
  _mb·`_ : Maybe ⟨ R` ⟩ → ⟨ R` ⟩ → ⟨ R` ⟩
  nothing mb·` y = y
  just x mb·` y = x ·` y
@@ -158,11 +158,11 @@ module SansReflection (crs : CommRingSolverConfig) where
  -`[_]0 : ∀ b → -`[ b ] 0r` ≡ 0r`
  -`[ false ]0 =  R`.0Selfinverse
  -`[ true ]0 = refl
- 
+
  -`[_]-flip≡ : ∀ b x y → -`[ b ] x ≡ y → x ≡ -`[ b ] y
  -`[ false ]-flip≡ x y p = sym (R`.-Idempotent x) ∙ cong -`_ p
  -`[ true ]-flip≡ x y p = p
- 
+
  evPolynomialTerm' : ∀ {n} → ((Maybe ⟨ R ⟩) × Monomial n) → Vec ⟨ R` ⟩ n → ⟨ R` ⟩
  evPolynomialTerm' (mbK , m) xs =  (Mb.fromJust-def 1r`
    (map-Maybe scalar` mbK mb·`mb evMonomial m xs))
@@ -188,25 +188,25 @@ module SansReflection (crs : CommRingSolverConfig) where
   EvalInVecRPolynomial .EvalInVecR.evalInVecR = evPolynomial
 
 
- Poly·X : ∀ {n} → Polynomial (suc n) → Polynomial (suc n) 
+ Poly·X : ∀ {n} → Polynomial (suc n) → Polynomial (suc n)
  Poly·X {n} = L.map (map-snd (map-snd λ { (x ∷ xs) → suc x ∷ xs  }))
 
- Poly↑ : ∀ {n} → Polynomial n → Polynomial (suc n) 
+ Poly↑ : ∀ {n} → Polynomial n → Polynomial (suc n)
  Poly↑ {n} = L.map (map-snd (map-snd (zero ∷_)))
 
  evPolynomial∷ : ∀ {n} t p vs → evPolynomial {n = n} (t ∷ p) vs
-                         ≡ evPolynomial p vs +` evPolynomialTerm t vs   
+                         ≡ evPolynomial p vs +` evPolynomialTerm t vs
  evPolynomial∷ t [] vs = sym (R`.+IdL _)
  evPolynomial∷ (false , _) (x ∷ p) vs = refl
  evPolynomial∷ (true , _) (x ∷ p) vs = refl
- 
+
  evPolynomial++ : ∀ {n} p₀ p₁ vs → evPolynomial {n = n} (p₀ L.++ p₁) vs
-                         ≡ evPolynomial p₁ vs +` evPolynomial p₀ vs 
+                         ≡ evPolynomial p₁ vs +` evPolynomial p₀ vs
  evPolynomial++ [] p₁ vs = sym (R`.+IdR _)
  evPolynomial++ (x ∷ p₀) p₁ vs =
       evPolynomial∷ x (p₀ L.++ p₁) vs
    ∙∙ cong (_+` _) (evPolynomial++ p₀ p₁ vs)
-      ∙ sym (R`.+Assoc _ _ _)  
+      ∙ sym (R`.+Assoc _ _ _)
    ∙∙ cong (evPolynomial p₁ vs +`_) (sym (evPolynomial∷ x p₀ vs)  )
 
  evMonomial·X : ∀ n m ms v vs → evMonomial {suc n} (suc m ∷ ms) (v ∷ vs)
@@ -216,7 +216,7 @@ module SansReflection (crs : CommRingSolverConfig) where
       ∙∙ hlp (evMonomial ms vs) m
    ∙∙ cong (_mb·`mb just v) (sym (evMonomial∷ m ms v vs))
   where
-   
+
 
 
    hlp : ∀ u m → (u mb·`mb (v ^'' suc m)) ≡
@@ -229,8 +229,8 @@ module SansReflection (crs : CommRingSolverConfig) where
      (cong (x ·`_) (cong (v ·`_) (R`.·IdR _)) ∙ R`.·Assoc _ _ _ )
    hlp (just x) (suc (suc m)) = cong just
      (cong (x ·`_) (R`.·Comm _ _) ∙ R`.·Assoc _ _ _)
-    
-   
+
+
  evPolynomial·X : ∀ {n} p v vs →
       evPolynomial (Poly·X {n} p) (v ∷ vs) ≡
       evPolynomial p (v ∷ vs) ·` v
@@ -255,7 +255,7 @@ module SansReflection (crs : CommRingSolverConfig) where
   hlp nothing (just x) = refl
   hlp (just x) nothing = refl
   hlp (just x) (just x₁) = R`.·Assoc _ _ _
-     
+
  evPolynomial↑ : ∀ {n} p v vs →
                     evPolynomial (Poly↑ p) (v ∷ vs) ≡
                      evPolynomial {n = n} p (vs)
@@ -295,7 +295,7 @@ module SansReflection (crs : CommRingSolverConfig) where
 
  PolynomialTerm· : ∀ {n} → PolynomialTerm n → PolynomialTerm n → PolynomialTerm n
  PolynomialTerm· {n} (b₁ , a₁) (b₂ , a₂) =
-   ( b₁ ⊙ b₂ , PolynomialTerm'· a₁ a₂ 
+   ( b₁ ⊙ b₂ , PolynomialTerm'· a₁ a₂
    )
 
 
@@ -306,7 +306,7 @@ module SansReflection (crs : CommRingSolverConfig) where
  -`[]-⊙ true false x y = sym (R`.-DistR· x y)
  -`[]-⊙ false true x y = sym (R`.-DistL· x y)
  -`[]-⊙ false false x y =  sym (R`.-Dist· x y)
-   
+
 
 
  map-Maybe-mb·mb : ∀ k₁ k₂ →
@@ -371,14 +371,14 @@ module SansReflection (crs : CommRingSolverConfig) where
         ∙∙ cong₂ _·`_
           (sym (fromJust-def-mb·`mb (map-Maybe scalar` k₁) (evMonomial m₁ xs)))
           (sym (fromJust-def-mb·`mb (map-Maybe scalar` k₂) (evMonomial m₂ xs)))
- 
+
  PolynomialTerm·-sound : ∀ {n} (t₁ t₂ : PolynomialTerm n) (xs : Vec ⟨ R` ⟩ n) →
    evPolynomialTerm (PolynomialTerm· t₁ t₂) xs
    ≡ evPolynomialTerm t₁ xs ·` evPolynomialTerm t₂ xs
  PolynomialTerm·-sound (b₁ , a₁) (b₂ , a₂) xs =
      cong (-`[ b₁ ⊙ b₂ ]) (PolynomialTerm'·-sound a₁ a₂ xs)
      ∙ -`[]-⊙ b₁ b₂ _ _
-   
+
  RExpr : (n : ℕ) → Type _
  RExpr = Expr RRng ⟨ R` ⟩
 
@@ -395,8 +395,8 @@ module SansReflection (crs : CommRingSolverConfig) where
  evalConstant zero r [] = refl
  evalConstant (suc n) r (x ∷ xs) =
    R`.+IdL' _ _ (R`.0LeftAnnihilates _)
-      ∙ evalConstant n r xs 
- 
+      ∙ evalConstant n r xs
+
  isEqualToNormalform :
       {n : ℕ} (e : RExpr n) (xs : Vec (fst R`) n)
     → eval (normalize e) xs ≡ ⟦ e ⟧ xs
@@ -404,7 +404,7 @@ module SansReflection (crs : CommRingSolverConfig) where
 
  isEqualToNormalform {n = n} (K r) xs = evalConstant n r xs
 
- isEqualToNormalform (∣ zero) (x ∷ xs) = 
+ isEqualToNormalform (∣ zero) (x ∷ xs) =
    eval 1ₕ (x ∷ xs) ·` x +` eval 0ₕ xs   ≡⟨ cong (λ u → u ·` x +` eval 0ₕ xs)
                                              (Eval1ₕ (x ∷ xs)) ⟩
    1r` ·` x +` eval 0ₕ xs                 ≡⟨ cong (λ u → 1r`  ·` x +` u ) (Eval0H xs) ⟩
@@ -477,7 +477,7 @@ module SansReflection (crs : CommRingSolverConfig) where
  ×[_]ᵗʸ : ∀ {ℓ} → List (Type ℓ) → Type ℓ
  ×[_]ᵗʸ = RepListP (idfun _)
 
-  
+
  [X]? : ∀ {ℓ'} → Type ℓ'  → Type (ℓ-max (ℓ-suc ℓ) ℓ')
  [X]? A = (Σ (List (Type ℓ)) (λ XS → (([ XS ]ᵗʸ → A) ×
                (ListP (λ X → Discrete ⟨ R ⟩ → Maybe X) XS))))
@@ -485,18 +485,18 @@ module SansReflection (crs : CommRingSolverConfig) where
  ×-[X]? : ∀ {ℓ'} → {A A' : Type ℓ'} → [X]? A → [X]? A' → [X]? (A × A')
  ×-[X]? (XS , f , d) (XS' , f' , d') =
    XS L.++ XS' , (map-× f f') ∘S splitP {xs = XS} {XS'} , (d ++P d')
- 
+
  map-[X]? : ∀ {ℓ'} → {A A' : Type ℓ'} → (A → A')
-           → [X]? A → [X]? A' 
+           → [X]? A → [X]? A'
  map-[X]? f = map-snd (map-fst (f ∘S_))
- 
+
 
  IHR?0 : ∀ {n} → ∀ (e : IteratedHornerForms n) →
-           [X]?  (e ≑ 0ₕ) 
- IHR?0 (const x) = 
+           [X]?  (e ≑ 0ₕ)
+ IHR?0 (const x) =
     ([ x ≡ 0r ]) , (λ { (p ∷ []) [] → cong scalar` p} )
     , ((λ _≟_ → decRec just (λ _ → nothing) (x ≟ 0r)) ∷ [])
- IHR?0 0H = [] , (λ _ xs → Eval0H xs) , [] 
+ IHR?0 0H = [] , (λ _ xs → Eval0H xs) , []
  IHR?0 (e ·X+ e₁) =
    map-[X]?
      (λ (f , f') → λ {(v ∷ vs) →
@@ -509,7 +509,7 @@ module SansReflection (crs : CommRingSolverConfig) where
  --              [ fst (IHR?0 (P ·X+ Q)) ]ᵗʸ →
  --              [ fst (IHR?0 P) ]ᵗʸ
  -- formIHR?0 = {!!}
- 
+
  IHR? : ∀ {n} → ∀ (e₁ e₂ : IteratedHornerForms n) →
      [X]? (e₁ ≑ e₂)
  IHR? (const x) (const x') = [ x ≡ x' ] , (( λ { (p ∷ []) [] → cong scalar` p }) ,
@@ -523,12 +523,12 @@ module SansReflection (crs : CommRingSolverConfig) where
   map-[X]?
     ((λ (f , f') → λ {(v ∷ vs) →
        cong₂ R`._+_ (cong (_·` v)  (f (v ∷ vs))) (f' vs)}))
-    (×-[X]? (IHR? e e') (IHR? e₁ e₁'))  
+    (×-[X]? (IHR? e e') (IHR? e₁ e₁'))
 
 
- 
 
-  
+
+
  IHR?-refl : ∀ {n} → ∀ (e : IteratedHornerForms n) → [ fst (IHR? e e) ]ᵗʸ
  IHR?-refl (const x) = refl ∷ []
  IHR?-refl 0H = []
@@ -546,13 +546,13 @@ module SansReflection (crs : CommRingSolverConfig) where
    ⟦ e₂ ⟧ xs ∎
 
  solveByDec :
-   (n : ℕ) (e₁ e₂ : RExpr n) (xs : Vec (fst R`) n) 
+   (n : ℕ) (e₁ e₂ : RExpr n) (xs : Vec (fst R`) n)
    → [ fst (IHR? (normalize e₁) (normalize e₂)) ]ᵗʸ
         ⁇→ (⟦ e₁ ⟧ xs ≡ ⟦ e₂ ⟧ xs)
  solveByDec _ e₁ e₂ xs = ⁇λ solve e₁ e₂ xs
 
  IsConstPossiblyNonNull : ∀ {n} → IteratedHornerForms n → Type (ℓ-suc ℓ)
- IsConstPossiblyNonNull (const x) = Unit* 
+ IsConstPossiblyNonNull (const x) = Unit*
  IsConstPossiblyNonNull 0H = ⊥*
  IsConstPossiblyNonNull (P ·X+ Q) = [ fst (IHR?0 P)  ]ᵗʸ × IsConstPossiblyNonNull Q
 
@@ -565,7 +565,7 @@ module SansReflection (crs : CommRingSolverConfig) where
      ∙ p xs }
 
  --
- FreeOfVar : ∀ {n} → IteratedHornerForms n → Fin n → Type (ℓ-suc ℓ) 
+ FreeOfVar : ∀ {n} → IteratedHornerForms n → Fin n → Type (ℓ-suc ℓ)
  FreeOfVar 0H _ = Unit*
  FreeOfVar (P ·X+ Q) zero = [ fst (IHR?0 P)  ]ᵗʸ
  FreeOfVar (P ·X+ Q) (suc k) = FreeOfVar P (suc k) × FreeOfVar Q k
@@ -573,12 +573,12 @@ module SansReflection (crs : CommRingSolverConfig) where
  FreeOfVar→ev : ∀ {n} P k → FreeOfVar {suc n} P k
     → Σ[ P' ∈ IteratedHornerForms n ] (∀ xs → eval P xs ≡ eval P' (Vec.drop k xs) )
  FreeOfVar→ev 0H k _ = 0ₕ , λ xs → sym (Eval0H (Vec.drop k xs))
-   
+
  FreeOfVar→ev (P ·X+ Q) zero u = Q ,
    λ { (x ∷ xs) → R`.+IdL' _ _ (R`.0LeftAnnihilates' _ _
      ((fst (snd (IHR?0 P)) u (x ∷ xs)))) }
  FreeOfVar→ev {suc n} (P HornerForms.·X+ Q) (suc k) (p , q) =
-   let (P' , p') = FreeOfVar→ev P (suc k) p 
+   let (P' , p') = FreeOfVar→ev P (suc k) p
        (Q' , q') = FreeOfVar→ev Q k q
    in (P' ·X+ Q') , λ { (x ∷ xs) →
      cong₂ _+`_ (cong (_·` x) (p' (x ∷ xs))) (q' xs) }
@@ -590,17 +590,17 @@ module SansReflection (crs : CommRingSolverConfig) where
  HeadVarOnlyInPow (P HornerForms.·X+ Q) (suc k) =
     HeadVarOnlyInPow P k × [ fst (IHR?0 Q)  ]ᵗʸ
 
- 
- 
+
+
  record Elimination {n : ℕ}
           (P : IteratedHornerForms (suc n))
           (iX : Fin (suc n)) (k : ℕ₊₁) : Type (ℓ-max ℓ` ℓ) where
- 
-  field   
+
+  field
    S Q : IteratedHornerForms n
-   S·xᵏ+Q≡P : ∀ xs → 
+   S·xᵏ+Q≡P : ∀ xs →
        (eval S (drop iX xs) ·` (lookup iX xs ^ ℕ₊₁→ℕ k)) +` eval Q (drop iX xs)
-          ≡ eval P xs 
+          ≡ eval P xs
 
  IsolatedPowerHeadVar : ∀ {n} → IteratedHornerForms (suc n) → ℕ → Type (ℓ-suc ℓ)
  IsolatedPowerHeadVar 0H _ = ⊥*
@@ -618,10 +618,10 @@ module SansReflection (crs : CommRingSolverConfig) where
          ∙∙ cong (_·` x) (w x xs))
       ∙ sym (R`.+IdR' _ _ (fst (snd (IHR?0 Q)) v xs ∙ Eval0H xs)))
      (HeadVarOnlyInPow→ev P m u)
-   
- 
+
+
  toElimination : ∀ {n} P m → (IsolatedPowerHeadVar P m) → Elimination {n} P zero (1+ m)
- toElimination (P ·X+ Q) k hvm =  
+ toElimination (P ·X+ Q) k hvm =
    let (S , eqtion) = HeadVarOnlyInPow→ev P k hvm
    in record { S = S
              ; Q = Q
@@ -631,7 +631,7 @@ module SansReflection (crs : CommRingSolverConfig) where
                           ∙∙  R`.·Assoc _ _ _
                           ∙∙ cong (_·` x) (eqtion x xs))
                       refl } }
-                   
+
 
  IsolatedPowerVar : ∀ {n} → IteratedHornerForms n → Fin n → ℕ → Type (ℓ-suc ℓ)
  IsolatedPowerVar {suc n} 0H _ _ = ⊥*
@@ -643,7 +643,7 @@ module SansReflection (crs : CommRingSolverConfig) where
 
  -- IsolatedPowerVar→ev : ∀ {n} P → ∀ k m →  IsolatedPowerVar {suc n} P k m
  --    → Elimination P k (1+ m)
- -- IsolatedPowerVar→ev {n} P@(_ ·X+ _) zero = toElimination P 
+ -- IsolatedPowerVar→ev {n} P@(_ ·X+ _) zero = toElimination P
  -- IsolatedPowerVar→ev {suc n} (P ·X+ R) (suc k) m (p , r) =
  --   let RE = (IsolatedPowerVar→ev {n} R k m r)
  --       PE = (IsolatedPowerVar→ev {suc n} P (suc k) m p)
@@ -662,16 +662,16 @@ module SansReflection (crs : CommRingSolverConfig) where
  --               ∙ cong₂ _+`_ refl
  --                 (R`.+Comm _ _))
  --              ∙ RE .a·xᵏ≡p xs (b -` (eval P (x ∷ xs) ·` x))
- --               (sym (R`.plusMinus _ _) 
- --                ∙ cong (_-` (eval P (x ∷ xs) ·` x)) (R`.+Comm _ _ ∙ v))) } }   
+ --               (sym (R`.plusMinus _ _)
+ --                ∙ cong (_-` (eval P (x ∷ xs) ·` x)) (R`.+Comm _ _ ∙ v))) } }
  --   where open Elimination
 
-  
+
  trivialCD : ∀ a b → CommonDenom a b
  trivialCD a b = (a , (b , 1r)) , sym (·IdR _) , sym (·IdR _)
 
  PoorFactor : ∀ {n} → (P : IteratedHornerForms n) → Type (ℓ-max ℓ ℓ`)
-                        
+
  PoorFactor {n} P = Σ[ a ∈ Maybe ⟨ R ⟩ ] Σ[ m ∈ Monomial n ]
                         Σ[ P' ∈ IteratedHornerForms n ]
                          (∀ xs → just (eval P xs) ≡
@@ -692,7 +692,7 @@ module SansReflection (crs : CommRingSolverConfig) where
 
  ev1PolynomialTerm : ∀ {n} xs → evPolynomialTerm (1PolynomialTerm {n}) xs ≡ 1r`
  ev1PolynomialTerm [] = refl
- ev1PolynomialTerm (x ∷ xs) =  
+ ev1PolynomialTerm (x ∷ xs) =
 
   cong (fromJust-def 1r`) (evMonomial∷ zero (replicate zero) x xs)
     ∙∙ fromJust-def-mb·`mb (evMonomial (replicate zero) xs) nothing
@@ -700,7 +700,7 @@ module SansReflection (crs : CommRingSolverConfig) where
 
  ev[PolynomialTerm·Polynomial] :  ∀ {n} mm P xs →
       (evPolynomialTerm mm xs ·` evPolynomial P xs)
-    ≡ evPolynomial (L.map (PolynomialTerm· {n} mm) P) xs  
+    ≡ evPolynomial (L.map (PolynomialTerm· {n} mm) P) xs
  ev[PolynomialTerm·Polynomial] mm [] xs = R‵.0RightAnnihilates _
  ev[PolynomialTerm·Polynomial] mm (x ∷ P) xs =
    cong (evPolynomialTerm mm xs ·`_) (evPolynomial∷ x P xs)
@@ -714,7 +714,7 @@ module SansReflection (crs : CommRingSolverConfig) where
 
   mbNeg‽ : (x : ⟨ R ⟩) → Maybe (Σ[ -x ∈ ⟨ R ⟩ ] - -x ≡ x)
   mbNeg‽ x = do y ← mbNeg?Scalar ; y x
-  
+
   PolynomialTermNormalize : ∀ {n} mm → Σ[ mm' ∈ _ ] ∀ xs →
        evPolynomialTerm {n} mm xs ≡ evPolynomialTerm {n} mm' xs
   PolynomialTermNormalize mm@(b , nothing , mms) = mm , λ _ → refl
@@ -734,8 +734,8 @@ module SansReflection (crs : CommRingSolverConfig) where
                          ∙ cong scalar` (-Idempotent -k)) refl
                  ∙∙ sym (fromJust-def-mb·`mb (map-Maybe scalar` (just -k)) (evMonomial mms xs))) )))
       (mbNeg‽ k)
-      
-  
+
+
   PolynomialTerm+hlp'' : ∀ {n} b k k' mn xs →
     evPolynomialTerm {n} (b , k , mn) xs +`
       evPolynomialTerm (b , k' , mn) xs
@@ -751,8 +751,8 @@ module SansReflection (crs : CommRingSolverConfig) where
         (cong₂ _+`_ (fromJust-def-scalar k) (fromJust-def-scalar k')
          ∙ sym (pres+ _ _))
         ∙ sym (fromJust-def-mb·`mb (map-Maybe scalar`
-          (just (fromJust-def 1r k + fromJust-def 1r k'))) (evMonomial mn xs)))) 
-  
+          (just (fromJust-def 1r k + fromJust-def 1r k'))) (evMonomial mn xs))))
+
   PolynomialTerm+hlp' : ∀ {n} → ∀ b k b' k' mn →
      Maybe ((Σ[ (b'' , k'') ∈ _ × _ ]
        (∀ xs → evPolynomialTerm {n} (b , k , mn) xs +` evPolynomialTerm {n} (b' , k' , mn) xs
@@ -799,8 +799,8 @@ module SansReflection (crs : CommRingSolverConfig) where
           -- (λ ((b'' , k'') , q) →
           -- {!let z = PolynomialTermNormalize (b'' , k''a!})
           (idfun _) $
-    fromJust-def (inl (PolynomialTerm+hlp''' b k b' k' mn)) 
-      (Mb.rec (PolynomialTerm+hlp' b k b' k' mn) (λ _≟_ → 
+    fromJust-def (inl (PolynomialTerm+hlp''' b k b' k' mn))
+      (Mb.rec (PolynomialTerm+hlp' b k b' k' mn) (λ _≟_ →
         decRec
           (λ p → just $ inr λ xs →
              cong₂ _+`_ (cong (-`[ b ])
@@ -815,8 +815,8 @@ module SansReflection (crs : CommRingSolverConfig) where
                  ∙ cong scalar` p) ∙ pres0))
           (λ _ → nothing)
          ((-[ b ] (Mb.fromJust-def 1r k) + -[ b' ] (Mb.fromJust-def 1r k')) ≟ 0r) ) mbDiscreteScalars)
-    
- 
+
+
   Term+Polynomial : ∀ {n} → (mm : PolynomialTerm n) (P : Polynomial n) →
          Σ[ mm+P ∈ Polynomial n ]
           (∀ xs → evPolynomial mm+P xs ≡
@@ -845,7 +845,7 @@ module SansReflection (crs : CommRingSolverConfig) where
        (λ _ →
          let mm+P , u = Term+Polynomial mm P
          in mm' ∷ mm+P , λ xs →
-               evPolynomial∷ mm' mm+P xs 
+               evPolynomial∷ mm' mm+P xs
            ∙∙  cong₂ _+`_ (u xs) refl
              ∙  sym (R`.+Assoc _ _ _)
            ∙∙ cong₂ _+`_ refl (sym (evPolynomial∷ mm' P xs)))
@@ -857,7 +857,7 @@ module SansReflection (crs : CommRingSolverConfig) where
             (evPolynomial P xs +` evPolynomial Q xs))
   Polynomial+ [] Q = Q , λ xs → sym (R`.+IdL _)
   Polynomial+ (mm ∷ P) Q =
-   let P+Q , v = Polynomial+ P Q       
+   let P+Q , v = Polynomial+ P Q
    in map-snd (λ u xs → u xs ∙∙ cong (evPolynomialTerm mm xs +`_) (v xs)
            ∙∙ (R`.+Assoc _ _ _ ∙
              cong₂ _+`_ (R`.+Comm _ _ ∙ sym (evPolynomial∷ mm P xs)) refl ))
@@ -870,16 +870,16 @@ module SansReflection (crs : CommRingSolverConfig) where
             (evPolynomial P xs ·` evPolynomial Q xs))
   Polynomial· [] Q = [] , λ _ → sym (R`.0LeftAnnihilates _)
   Polynomial· (mm ∷ P) Q =
-   let P·Q , v = Polynomial· P Q       
+   let P·Q , v = Polynomial· P Q
    in map-snd (λ u xs → u xs ∙∙
              cong₂ (_+`_) (v xs) (sym (ev[PolynomialTerm·Polynomial] mm Q xs))
              ∙∙ sym (R`.·DistL+ _ _ _) ∙
               cong₂ _·`_ (sym (evPolynomial∷ mm P xs)) refl)
         (Polynomial+ P·Q (L.map (PolynomialTerm· mm) Q))
-       
+
 
  module CommonMonomial (commonDenom : ∀ a b → CommonDenom a b) where
-  
+
   commonDenomPow : ∀ a b → Σ[ (a' , b' , c ) ∈ _ × _ × _ ]
                      (∀ x → x ^'' a ≡ ((x ^'' a') mb·`mb (x ^'' c)))
                       ×
@@ -893,7 +893,7 @@ module SansReflection (crs : CommRingSolverConfig) where
        , (λ x → cong (x ^''_) (sym (ℕ.≤-∸-+-cancel {c} {b} (ℕ.min-≤-right {a} {b}))) ∙ ^''-+ {x} b' c)
 
 
-  toMbKnown1 : ∀ x → Σ[ x' ∈ Maybe _ ] Mb.fromJust-def 1r x' ≡ x   
+  toMbKnown1 : ∀ x → Σ[ x' ∈ Maybe _ ] Mb.fromJust-def 1r x' ≡ x
   toMbKnown1 x = Mb.rec (just x , refl) (λ 1=x → nothing , 1=x) (mb≟ 1r x)
 
 
@@ -928,7 +928,7 @@ module SansReflection (crs : CommRingSolverConfig) where
                       cong (fromJust-def (CommRingStr.1r (snd (fst commAlg))))
                         (sym (mb·`mbIdR
                          (map-Maybe (fst (snd commAlg)) (just y))))))
-  
+
   commonDenomPolynomialTerm' (suc n) (k₀ , x₀ ∷ ms₀) (k₁ , x₁ ∷ ms₁) =
    let ((k₀' , ms₀') , (k₁' , ms₁') , (k₂' , ms₂')) , p , q =
          commonDenomPolynomialTerm' n (k₀ , ms₀) (k₁ , ms₁)
@@ -947,12 +947,12 @@ module SansReflection (crs : CommRingSolverConfig) where
                           (fromJust-def-mb·`mb (map-Maybe scalar` k₂') (evMonomial ms₂' xs)))
                    (cong (fromJust-def 1r`) (u x)
                     ∙ fromJust-def-mb·`mb (x ^'' x₀') _ )
-                ∙ R`.·CommAssocSwap _ _ _ _               
+                ∙ R`.·CommAssocSwap _ _ _ _
               ∙∙ cong₂ _·`_
                   (sym (R`.·Assoc _ _ _)
                    ∙∙ cong (fromJust-def 1r` (map-Maybe scalar` k₀') ·`_)
                      (sym (fromJust-def-mb·`mb (evMonomial ms₀' xs) (x ^'' x₀')))
-                    ∙∙ 
+                    ∙∙
                    (λ i → fromJust-def-mb·`mb (map-Maybe scalar` k₀')
                            (evMonomial∷ x₀' ms₀' x xs (~ i)) (~ i)))
                   (sym (R`.·Assoc _ _ _)
@@ -973,12 +973,12 @@ module SansReflection (crs : CommRingSolverConfig) where
                           (fromJust-def-mb·`mb (map-Maybe scalar` k₂') (evMonomial ms₂' xs)))
                    (cong (fromJust-def 1r`) (v x)
                     ∙ fromJust-def-mb·`mb (x ^'' x₁') _ )
-                ∙ R`.·CommAssocSwap _ _ _ _               
+                ∙ R`.·CommAssocSwap _ _ _ _
               ∙∙ cong₂ _·`_
                   (sym (R`.·Assoc _ _ _)
                    ∙∙ cong (fromJust-def 1r` (map-Maybe scalar` k₁') ·`_)
                      (sym (fromJust-def-mb·`mb (evMonomial ms₁' xs) (x ^'' x₁')))
-                    ∙∙ 
+                    ∙∙
                    (λ i → fromJust-def-mb·`mb (map-Maybe scalar` k₁')
                            (evMonomial∷ x₁' ms₁' x xs (~ i)) (~ i)))
                   (sym (R`.·Assoc _ _ _)
@@ -1008,8 +1008,8 @@ module SansReflection (crs : CommRingSolverConfig) where
         , (λ xs → cong -`[ b₁ ] (q xs) ∙ sym (-`[ b₁ ]· _ _))
 
   polynomialNeg  : ∀ {n} → Polynomial n → Polynomial n
-  polynomialNeg = L.map (map-fst not) 
-  
+  polynomialNeg = L.map (map-fst not)
+
   ev[polynomialNeg] :  ∀ {n} P xs →
        -` (evPolynomial {n} P xs)
      ≡ evPolynomial (polynomialNeg P) xs
@@ -1019,8 +1019,8 @@ module SansReflection (crs : CommRingSolverConfig) where
       ∙∙ sym (R`.-Dist _ _)
       ∙∙ (cong₂ _+`_ (ev[polynomialNeg] P xs)
           (-`[not] (fst x) _)
-        ∙ sym (evPolynomial∷ _ (polynomialNeg P) xs)) 
-  
+        ∙ sym (evPolynomial∷ _ (polynomialNeg P) xs))
+
 
   factorOutMonomial : ∀ {n} (P : Polynomial n) →
                          Σ[ (mm , P') ∈ PolynomialTerm n × Polynomial n ]
@@ -1046,7 +1046,7 @@ module SansReflection (crs : CommRingSolverConfig) where
           ∙∙ cong ( evPolynomialTerm c xs ·`_) (sym (evPolynomial∷ x' P'' xs))
 
 
- nicefyPolyTm×Poly : ∀ n → (mm : PolynomialTerm n) (P : Polynomial n) → 
+ nicefyPolyTm×Poly : ∀ n → (mm : PolynomialTerm n) (P : Polynomial n) →
                         Σ[ (mm' , P') ∈ Maybe (PolynomialTerm n) × Maybe (Polynomial n) ]
                           ((∀ x xs → ((map-Maybe (flip evPolynomialTerm xs) mm'
                              mb·`mb map-Maybe (flip evPolynomial xs) P')
@@ -1055,13 +1055,13 @@ module SansReflection (crs : CommRingSolverConfig) where
                                 (∀ xs → (fromJust-def 1r` (map-Maybe (flip evPolynomialTerm xs) mm'
                              mb·`mb map-Maybe (flip evPolynomial xs) P'))
                               ≡ ((evPolynomialTerm mm xs ·` evPolynomial P xs)))
-                         
- nicefyPolyTm×Poly n mm P = w (1PolynomialTerm? mm) (ww P) 
+
+ nicefyPolyTm×Poly n mm P = w (1PolynomialTerm? mm) (ww P)
   where
    ww : ∀ P → Dec (P ≡ [ 1PolynomialTerm {n} ])
    ww [] = no ¬nil≡cons
    ww P[ x ] = mapDec (cong (_∷ [])) (_∘ cong (flip (L.lookupAlways mm) ℕ.zero) ) (1PolynomialTerm? x)
-   ww (x ∷ x₁ ∷ P) = no (ℕ.snotz ∘ cong (ℕ.predℕ ∘ L.length)) 
+   ww (x ∷ x₁ ∷ P) = no (ℕ.snotz ∘ cong (ℕ.predℕ ∘ L.length))
 
    w : Dec (mm ≡ 1PolynomialTerm) → Dec (P ≡ [ 1PolynomialTerm ]) → _
    w (yes p) (yes p₁) = (nothing , nothing) ,
@@ -1089,10 +1089,10 @@ module SansReflection (crs : CommRingSolverConfig) where
         λ xs → (sym (R`.·IdR' _ _ (cong (flip evPolynomial xs) p
         ∙ ev1PolynomialTerm xs)))
    w (no ¬p) (no ¬p₁) = (just mm , just P) , (λ _ _ → refl) , λ _ → refl
-   
- Horner→Poly' : Maybe (Discrete ⟨ R ⟩) 
+
+ Horner→Poly' : Maybe (Discrete ⟨ R ⟩)
                   → ∀ {n} → (h : IteratedHornerForms n)
-                     → Σ (Polynomial n) λ pf → ∀ xs → evPolynomial pf xs ≡ eval h xs 
+                     → Σ (Polynomial n) λ pf → ∀ xs → evPolynomial pf xs ≡ eval h xs
  Horner→Poly' nothing (const x) = [ true , (just x) , [] ] , λ {[] → refl}
  Horner→Poly' (just _≟_) (const x) =
     hlp (x ≟ 0r) (x ≟ 1r) (Mb.rec nothing (_$ x) mbNeg?Scalar) (x ≟ (- 1r))
@@ -1106,7 +1106,7 @@ module SansReflection (crs : CommRingSolverConfig) where
       ∙ cong -`_ pres1) ∙ cong scalar` (sym x≡-1)}
   hlp _ (no ¬p) (just (-x , p)) _ = [ false , (just -x) , [] ] ,
     λ { [] → sym (pres- -x) ∙
-            cong scalar` p} 
+            cong scalar` p}
   hlp _ (no ¬p) _ (no ¬p₁) = [ true , (just x) , [] ] , λ {[] → refl}
 
  Horner→Poly' _  0H = [] , λ _ → refl
@@ -1120,9 +1120,9 @@ module SansReflection (crs : CommRingSolverConfig) where
           (evPolynomial↑ p₁ v vs ∙ q₁ vs)}
 
  Horner→Poly : ∀ {n} → (h : IteratedHornerForms n)
-                     → Σ (Polynomial n) λ pf → ∀ xs → evPolynomial pf xs ≡ eval h xs 
+                     → Σ (Polynomial n) λ pf → ∀ xs → evPolynomial pf xs ≡ eval h xs
  Horner→Poly = Horner→Poly' mbDiscreteScalars
-  
+
 
  module Decidable {requireDiscreteScalar : IsJust mbDiscreteScalars}
                   where
@@ -1135,8 +1135,8 @@ module SansReflection (crs : CommRingSolverConfig) where
     Σ[ pt' ∈ _ ] ((∀ xs →
      ((evPolynomialTerm pt xs ≡ evPolynomialTerm pt' xs)))
      )
-  prettyCoeffTerm (b , mbK , mm) =  
-   let (b' , mbK') , p = w b mbK 
+  prettyCoeffTerm (b , mbK , mm) =
+   let (b' , mbK') , p = w b mbK
    in (b' , mbK' , mm) , (λ xs →
        cong -`[ b ] (fromJust-def-mb·`mb (map-Maybe scalar` mbK) _)
           ∙ sym (-`[ b ]· _ _) ∙∙
@@ -1146,7 +1146,7 @@ module SansReflection (crs : CommRingSolverConfig) where
            ∙ cong -`[ b' ]
              (sym (fromJust-def-mb·`mb (map-Maybe scalar` mbK')
                (evMonomial mm xs)) )))
-    
+
    where
     w : ∀ (b : Bool) (mbK : Maybe ⟨ R ⟩) →
        Σ[ (b' , mbK') ∈ _ × _ ] ((
@@ -1161,13 +1161,13 @@ module SansReflection (crs : CommRingSolverConfig) where
     w false (just x) | _ | yes p | _ = (true , nothing) ,
       (sym (pres- _) ∙∙ cong scalar` (cong -_ p ∙ -Idempotent _ ) ∙∙ pres1 )
     w true (just x) | _ | yes p | _ = (false , nothing) ,
-      cong scalar` p ∙∙ pres- _ ∙∙ cong -`_ pres1 
+      cong scalar` p ∙∙ pres- _ ∙∙ cong -`_ pres1
     w false (just x) | _ | _ | just (just (-x , p)) = (true , just -x ) ,
        cong (-`_ ∘ scalar`) (sym p) ∙ sym (pres- _) ∙ cong scalar` (-Idempotent _)
     w true (just x) | _ | _ | just (just (-x , p)) = (false , just -x ) ,
       cong scalar` (sym p) ∙ pres- _
     ... | _ | _ | _ = (b , just x) , refl
-    
+
 
 
   prettyCoeff : ∀ {n} → (P : Polynomial n) →
@@ -1188,19 +1188,19 @@ module SansReflection (crs : CommRingSolverConfig) where
   -- poorFactor P = {!P!}
 
 
-  -- Horner→PolyFCD : ∀ {n} 
+  -- Horner→PolyFCD : ∀ {n}
   --                    → (h : IteratedHornerForms n)
-  --                    → Σ (Polynomial n) λ pf → ∀ xs → evPolynomial pf xs ≡ eval h xs 
+  --                    → Σ (Polynomial n) λ pf → ∀ xs → evPolynomial pf xs ≡ eval h xs
   -- Horner→PolyFCD = {!!}
 
 
-  HF-Maybe-prfₕ : {n : ℕ} (e₁ e₂ : IteratedHornerForms n) 
+  HF-Maybe-prfₕ : {n : ℕ} (e₁ e₂ : IteratedHornerForms n)
                    → Maybe [ fst (IHR? e₁ e₂) ]ᵗʸ
   HF-Maybe-prfₕ e₁ e₂ =
    sequenceP (mapOverIdfun (λ _ f → f _≟_) _ (snd (snd (IHR? e₁ e₂))))
 
 
-  HF-Maybe-prf : (n : ℕ) (e₁ e₂ : RExpr n) 
+  HF-Maybe-prf : (n : ℕ) (e₁ e₂ : RExpr n)
                    → Maybe [ fst (IHR? (normalize e₁) (normalize e₂)) ]ᵗʸ
   HF-Maybe-prf _ e₁ e₂ = HF-Maybe-prfₕ (normalize e₁) (normalize e₂)
 
@@ -1216,16 +1216,16 @@ module SansReflection (crs : CommRingSolverConfig) where
   mbFreeOfVar : ∀ {n} P k → Maybe (FreeOfVar {n} P k)
   mbFreeOfVar 0H k = just _
   mbFreeOfVar (P ·X+ Q) zero =
-   sequenceP (mapOverIdfun (λ _ f → f _≟_) _ (snd (snd (IHR?0 P)))) 
+   sequenceP (mapOverIdfun (λ _ f → f _≟_) _ (snd (snd (IHR?0 P))))
   mbFreeOfVar (P ·X+ Q) (suc k) =
     ⦇ (mbFreeOfVar P (suc k)) , (mbFreeOfVar Q k) ⦈
-  
+
 
   mbHeadVarOnlyInPow : {n : ℕ}
         → (P : IteratedHornerForms (suc n))
         → Maybe (Σ _ (HeadVarOnlyInPow P))
   mbHeadVarOnlyInPow 0H = just (0 , _)
-  mbHeadVarOnlyInPow P+Q@(P ·X+ Q) = 
+  mbHeadVarOnlyInPow P+Q@(P ·X+ Q) =
    Mb.rec (do
       v ← sequenceP (mapOverIdfun (λ _ f → f _≟_) _ (snd (snd (IHR?0 Q))))
       (m , u) ← mbHeadVarOnlyInPow P
@@ -1244,13 +1244,13 @@ module SansReflection (crs : CommRingSolverConfig) where
   -- mbIsolatedPowerVar (P ·X+ Q) zero = mbHeadVarOnlyInPow P
   -- mbIsolatedPowerVar (P ·X+ Q) (suc k) = do
   --      (m , u) ← mbIsolatedPowerVar P (suc k)
-  --      (m' , u') ← mbIsolatedPowerVar Q k 
+  --      (m' , u') ← mbIsolatedPowerVar Q k
   --      decRec
   --        (λ m≡m' →
   --          just (m , u , subst (IsolatedPowerVar Q k) (sym m≡m') u'))
   --         (λ _ → nothing)
   --        (ℕ.discreteℕ m m')
-  
+
   normalizeIHF' : ∀ {n} → (e : IteratedHornerForms n) → ((e ≑ 0ₕ) ⊎ Σ _ (e ≑_ ))
   normalizeIHF'  (const x) =
      decRec (λ x≡0 → inl λ xs i → eval (HornerForms.const (x≡0 i)) xs)
@@ -1267,12 +1267,12 @@ module SansReflection (crs : CommRingSolverConfig) where
       let (u₀ , y₀) = ⊎.rec (0ₕ ,_) (idfun _) x₀
           (u₁ , y₁) = ⊎.rec (0ₕ ,_) (idfun _) x₁
       in inr (u₀ ·X+ u₁ , λ { (v ∷ vs) i → y₀ (v ∷ vs) i ·` v +` y₁ vs i })
-    
+
 
   normalizeIHF : ∀ {n} → (e : IteratedHornerForms n) → Σ _ (e ≑_ )
   normalizeIHF = ⊎.rec (0ₕ ,_) (idfun _) ∘ normalizeIHF'
 
-  
+
   eval' : {n : ℕ} (P : IteratedHornerForms n)
          → (xs : Vec ⟨ R` ⟩ n) → Σ ⟨ R` ⟩ (_≡ eval P xs )
   eval' (const x) xs = _ , refl
@@ -1283,7 +1283,7 @@ module SansReflection (crs : CommRingSolverConfig) where
 
 
     ₕ·` : Σ ⟨ R` ⟩ (_≡ fst (eval' e₀ vvs) ·` v )
-    ₕ·` with HF-Maybe-prfₕ e₀ (1ₕ) | HF-Maybe-prfₕ e₀ (-ₕ 1ₕ) 
+    ₕ·` with HF-Maybe-prfₕ e₀ (1ₕ) | HF-Maybe-prfₕ e₀ (-ₕ 1ₕ)
     ... | nothing | nothing = _ , refl
     ... | just x | _ = v , sym (R`.·IdL' _ _
        ((snd (eval' e₀ vvs)) ∙∙ (fst (snd (IHR? e₀ (1ₕ))) x vvs) ∙∙
@@ -1292,13 +1292,13 @@ module SansReflection (crs : CommRingSolverConfig) where
        (cong -`_ (((snd (eval' e₀ vvs)) ∙∙ (fst (snd (IHR? e₀ (-ₕ 1ₕ))) x vvs) ∙∙
           (-EvalDist 1ₕ vvs ∙ cong -`_ (Eval1ₕ vvs))))
         ∙ R`.-Idempotent _))
-     ∙ R`.-Dist· _ _ 
+     ∙ R`.-Dist· _ _
 
-     
+
 
 
     h : ((e₀ ≑ 0ₕ) ⊎ Σ _ (e₀ ≑_ )) → ((e₁ ≑ 0ₕ) ⊎ Σ _ (e₁ ≑_ )) → Σ ⟨ R` ⟩ (_≡ eval P vvs )
-    h (inl x₀) (inl x₁) =  0r` , 
+    h (inl x₀) (inl x₁) =  0r` ,
             sym (R`.0LeftAnnihilates'  _ _  (x₀ vvs))
         ∙ sym (R`.+IdR' _ _ (x₁ vs ∙ Eval0H vs))
     h x₀@(inr _) (inl x₁) =  _ ,
@@ -1312,13 +1312,13 @@ module SansReflection (crs : CommRingSolverConfig) where
 
 
   normalizeByDec :
-    (n : ℕ) (e : RExpr n) (xs : Vec (fst R`) n) 
+    (n : ℕ) (e : RExpr n) (xs : Vec (fst R`) n)
     →  Σ _ (⟦ e ⟧ xs ≡_)
   normalizeByDec n e xs =
     let (P , =P) = Horner→Poly (fst (normalizeIHF (normalize e)))
         ((Smm , Sp) , P=) =  factorOutMonomial P
         (Sp' , =Sp') = prettyCoeff Sp
-        ((Smm* , Sp'*) , (_ , Smm*·Sp'*) ) = nicefyPolyTm×Poly n Smm Sp' 
+        ((Smm* , Sp'*) , (_ , Smm*·Sp'*) ) = nicefyPolyTm×Poly n Smm Sp'
     in _ ,
               sym (isEqualToNormalform e xs)
            ∙∙ snd (normalizeIHF (normalize e)) xs
@@ -1326,15 +1326,15 @@ module SansReflection (crs : CommRingSolverConfig) where
              ∙∙ P= xs
              ∙∙ cong₂ _·`_ refl (=Sp' xs)
               ∙ sym (Smm*·Sp'* xs)
-              
+
   tryElimForHead : {n : ℕ} (e₁ e₂ : RExpr (suc n)) →
     Maybe (Σ _ _)
-  tryElimForHead e₁ e₂ = 
+  tryElimForHead e₁ e₂ =
      do let (ihf , v) = normalizeIHF (normalize (e₁ +' -' e₂))
-        (m , u) ← mbIsolatedPowerVarHead ihf 
+        (m , u) ← mbIsolatedPowerVarHead ihf
         just (1+ m , toElimination ihf m u)
 
-  record PreElim {n} (e₁ e₂ : RExpr (suc n)) (xs : Vec (fst R`) (suc n)) : Type (ℓ-max ℓ ℓ`) where 
+  record PreElim {n} (e₁ e₂ : RExpr (suc n)) (xs : Vec (fst R`) (suc n)) : Type (ℓ-max ℓ ℓ`) where
    field
      Smm : PolynomialTerm n
      Sp : Polynomial n
@@ -1350,19 +1350,19 @@ module SansReflection (crs : CommRingSolverConfig) where
 
 
    solveForHead' : (Σ ((fst R`) × (fst R`)) λ (lhs , rhs) → lhs ≡ rhs)
-   solveForHead' = 
-         let (_ , (niceS , _)) = nicefyPolyTm×Poly _ Smm Sp             
+   solveForHead' =
+         let (_ , (niceS , _)) = nicefyPolyTm×Poly _ Smm Sp
              ((Qmm' , Qp') , (_ , niceQ)) = nicefyPolyTm×Poly _ Qmm Qp
          in (_
                , niceS _ (drop zero xs) ∙ ep ∙ sym (niceQ (drop zero xs)))
-     
+
 
   preElimHead : {n : ℕ} (e₁ e₂ : RExpr (suc n)) (xs : Vec (fst R`) (suc n))
-    → ⟦ e₁ ⟧ xs ≡ ⟦ e₂ ⟧ xs → 
-     Maybe (PreElim e₁ e₂ xs) 
+    → ⟦ e₁ ⟧ xs ≡ ⟦ e₂ ⟧ xs →
+     Maybe (PreElim e₁ e₂ xs)
   preElimHead e₁ e₂ xss@(x ∷ xs) e₁≡e₂ = do
          let (ihf , v) = normalizeIHF (normalize (e₁ +' -' e₂))
-         (m , u) ← mbIsolatedPowerVarHead ihf 
+         (m , u) ← mbIsolatedPowerVarHead ihf
          let p = toElimination ihf m u
              (ihfS , eqS) = normalizeIHF (S p)
              (polyS , polyS=) = Horner→Poly ihfS
@@ -1384,7 +1384,7 @@ module SansReflection (crs : CommRingSolverConfig) where
               ∙∙  (R`.equalByDifference _ _ p)
               ∙∙ QeqCFM xs })
     where open Elimination
-    
+
   solveForHead : (n : ℕ) (e₁ e₂ : RExpr (suc n)) (xs : Vec (fst R`) (suc n))
     → ⟦ e₁ ⟧ xs ≡ ⟦ e₂ ⟧ xs → Maybe (Σ ((fst R`) × (fst R`)) λ (lhs , rhs) → lhs ≡ rhs)
   solveForHead _ e₁ e₂ xs p = map-Maybe PreElim.solveForHead' (preElimHead e₁ e₂ xs p)
@@ -1393,16 +1393,16 @@ module SansReflection (crs : CommRingSolverConfig) where
              (·`lCancel : ∀ c m n → c ·` m ≡ c ·` n → (c ≡ 0r` → ⊥) → m ≡ n)
              (notZeroRing : 1r` ≡ 0r` → ⊥)
             where
-    
+
     intDom` = fst R`.·lCancel≃integralDomain ·`lCancel
 
     fromJust-def≡0 : ∀ x → fromJust-def 1r` x ≡ 0r` → x ≡ just 0r`
     fromJust-def≡0 nothing p = ⊥.rec (notZeroRing p)
     fromJust-def≡0 (just x) = cong just
 
-    PolyTerm≡0-Cases : ∀ {n} mm xs → Σ[ ys ∈ List (Type ℓ`) ] 
-       ([ ys ]ᵗʸ → (evMonomial {n} mm xs ≡ just 0r` → ⊥)) 
-          
+    PolyTerm≡0-Cases : ∀ {n} mm xs → Σ[ ys ∈ List (Type ℓ`) ]
+       ([ ys ]ᵗʸ → (evMonomial {n} mm xs ≡ just 0r` → ⊥))
+
     PolyTerm≡0-Cases [] xs = [] , λ _ → ¬nothing≡just
     PolyTerm≡0-Cases (zero ∷ mm) (x ∷ xs) =
        map-snd ((λ {a} x₁ x₂ p  →
@@ -1418,36 +1418,36 @@ module SansReflection (crs : CommRingSolverConfig) where
                let z =    cong₂ _·`_ (cong (fromJust-def 1r`) (sym (^''suc x m))) refl ∙ R`.·Comm _ _
                        ∙∙ sym (fromJust-def-mb·`mb (evMonomial mm xs) (x ^'' suc m))
                        ∙∙ cong (fromJust-def 1r`) (sym (evMonomial∷ (suc m) mm x xs) ∙ p)
-                   
+
                    w = intDom` (x ^ (suc m)) (fromJust-def 1r` (evMonomial mm xs))
                          z
                           (IntegralDomain.x≢0→x^sn≢0 intDom` x m x≢0)
                in u v (fromJust-def≡0 _ w) }
-    
-    PolyTerm·Poly≡0-Cases : ∀ {n} mm P xs 
-     → Maybe (Σ[ ys ∈ List (Type ℓ`) ] 
+
+    PolyTerm·Poly≡0-Cases : ∀ {n} mm P xs
+     → Maybe (Σ[ ys ∈ List (Type ℓ`) ]
        ((evPolynomialTerm mm xs ·` evPolynomial {n} P xs ≡ 0r`) →  [ ys ]ᵗʸ →
-         evPolynomial {n} P xs ≡ 0r`)) 
+         evPolynomial {n} P xs ≡ 0r`))
     PolyTerm·Poly≡0-Cases mmm@(b , nothing , mm) P xs =
           let u , v = PolyTerm≡0-Cases mm xs
           in just (u , λ p ys → intDom` (evPolynomialTerm mmm xs) _
                p (v ys ∘S (fromJust-def≡0 _) ∘S _∙ -`[ b ]0 ∘S -`[ b ]-flip≡ _ _))
-    
 
 
-    PolyTerm·Poly≡0-Cases mmm@(b , just k , mm) P xs = 
+
+    PolyTerm·Poly≡0-Cases mmm@(b , just k , mm) P xs =
       decRec (λ _ → nothing)
-        (λ ¬k≡0 →          
+        (λ ¬k≡0 →
           let u , v = PolyTerm≡0-Cases mm xs
           in Mb.rec
               (just (_ ∷ u , λ p → λ {(y ∷ ys) →
                 intDom` (evPolynomialTerm mmm xs) _
-               p (v ys ∘S (fromJust-def≡0 _) ∘S flip (intDom` _ _) (y)  
+               p (v ys ∘S (fromJust-def≡0 _) ∘S flip (intDom` _ _) (y)
                  ∘S sym (fromJust-def-mb·`mb (just (scalar` k)) (evMonomial mm xs))
                    ∙∙_∙∙ -`[ b ]0 ∘S  -`[ b ]-flip≡ _ _)}))
               (λ ≢0r→≢0r` →
               just (u , λ p ys → intDom` (evPolynomialTerm mmm xs) _
-               p (v ys ∘S (fromJust-def≡0 _) ∘S flip (intDom` _ _) (≢0r→≢0r` _ ¬k≡0)  
+               p (v ys ∘S (fromJust-def≡0 _) ∘S flip (intDom` _ _) (≢0r→≢0r` _ ¬k≡0)
                  ∘S sym (fromJust-def-mb·`mb (just (scalar` k)) (evMonomial mm xs))
                    ∙∙_∙∙ -`[ b ]0 ∘S  -`[ b ]-flip≡ _ _)))
                    mb≢0r→≢0r`) (k ≟ 0r)
@@ -1461,7 +1461,7 @@ module SansReflection (crs : CommRingSolverConfig) where
     let (peSmm* , pe'Smm* , c) , peSmm*·c≡peSmm , pe'Smm*·c≡pe'Smm
              = commonDenomPolynomialTerm _ (pe .Smm) (pe' .Smm)
     maybeToSum "unimplemented - solved var extractend with different powers"
-      (decToMaybe (ℕ.discreteℕ (pe .m) (pe' .m)) >>= 
+      (decToMaybe (ℕ.discreteℕ (pe .m) (pe' .m)) >>=
       λ m≡m' →  do
          let pe'Sp·peQp = Polynomial· (pe' .Sp) (pe .Qp)
              peSp·pe'Qp = Polynomial· (pe .Sp) (pe' .Qp)
@@ -1505,20 +1505,20 @@ module SansReflection (crs : CommRingSolverConfig) where
                 ∙∙ cong₂ _+`_ refl (sym (ev[polynomialNeg] polyRHS xs))
                 ∙∙ R`.differenceByEqual _ _ pp
          zzz ← pure {A = ℕ} 3
-         
+
          (do pt-cases ← (λ (a , y) → ((a , evPolynomial Sp xs) , y pp')) <$>_
                   <$> ((PolyTerm·Poly≡0-Cases <$> mb·`lCancel <*> mbNotZeroRing) <*'
-                                _ <* Smm <* Sp <* xs) 
-                      
+                                _ <* Smm <* Sp <* xs)
+
              pt-cases) <|> pure (([] , _) , λ _ → pp'))
 
-    
+
    where
     open PreElim
-    open SolveIntegalDomains  
+    open SolveIntegalDomains
   -- pickEliminations : {n : ℕ} (e₁ e₂ : RExpr (suc n)) (xs : Vec (fst R`) (suc n)) →
   --   Vec (Maybe ℕ) (suc n)
-  -- pickEliminations e₁ e₂ xs = 
+  -- pickEliminations e₁ e₂ xs =
   --   let (ihf , u) = normalizeIHF (normalize (e₁ +' -' e₂))
   --   in tabulate (λ k →
   --         map-Maybe (fst) (mbIsolatedPowerVar ihf k))
@@ -1528,7 +1528,7 @@ module SansReflection (crs : CommRingSolverConfig) where
      → fst (eval' (fst (normalizeIHF (normalize (e₁ +' -' e₂)))) xs) ≡ 0r`
      → ⟦ e₁ ⟧ xs ≡ ⟦ e₂ ⟧ xs
   solveByDifference e₁ e₂ xs ev=0 =
-      R`.equalByDifference _ _ $ 
+      R`.equalByDifference _ _ $
          cong₂ _+`_ (sym (isEqualToNormalform e₁ xs))
           (cong -`_ (sym (isEqualToNormalform e₂ xs)) ∙ sym (-EvalDist (normalize e₂) xs))
           ∙ sym (+Homeval (normalize e₁) (-ₕ (normalize e₂)) xs) ∙
@@ -1537,21 +1537,21 @@ module SansReflection (crs : CommRingSolverConfig) where
 
 
   solveByDifference' :  {n : ℕ} (e₁ e₂ : RExpr n) (xs : Vec (fst R`) n)
-     → evPolynomial (Horner→Poly 
+     → evPolynomial (Horner→Poly
       (fst (normalizeIHF (normalize (e₁ +' -' e₂)))) . fst) xs
        ≡ 0r` → ⟦ e₁ ⟧ xs ≡ ⟦ e₂ ⟧ xs
-  solveByDifference' e₁ e₂ xs ev=0 = 
-      R`.equalByDifference _ _ $ 
+  solveByDifference' e₁ e₂ xs ev=0 =
+      R`.equalByDifference _ _ $
          cong₂ _+`_ (sym (isEqualToNormalform e₁ xs))
           (cong -`_ (sym (isEqualToNormalform e₂ xs)) ∙ sym (-EvalDist (normalize e₂) xs))
           ∙ sym (+Homeval (normalize e₁) (-ₕ (normalize e₂)) xs) ∙
               (snd (normalizeIHF (normalize (e₁ +' -' e₂))) xs)
-             ∙ sym ((Horner→Poly 
+             ∙ sym ((Horner→Poly
               (fst (normalizeIHF (normalize (e₁ +' -' e₂)))) . snd) xs) ∙ ev=0
 
 
 
--- 
+--
 
  -- congSolve :
  --   {n : ℕ} (e₁ e₂ : RExpr n) → ∀ {xs xs' : Vec (fst R`) n} → xs ≡ xs'

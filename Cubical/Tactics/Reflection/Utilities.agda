@@ -435,15 +435,15 @@ HetListω→[Term] (x ω∷ xs) = ⦇ quoteTC x ∷ (HetListω→[Term] xs) ⦈
 
 module _ hlω where
  macro
-  quoteDefsfNames : Term → TC Unit 
+  quoteDefsfNames : Term → TC Unit
   quoteDefsfNames hole = do
     xx ← HetListω→[Term] hlω >>=
            mapM λ { (def nm []) → pure nm
                   ; tm → typeError
                     (strErr "only unaplied definitions can be quoted in `quoteDefNames` \n\n"
-                       ∷ [ termErr tm ]) } 
+                       ∷ [ termErr tm ]) }
     (quoteTC xx) >>= unify hole
-    
+
 atTargetLam : Term → (Term → TC Term) → TC Term
 atTargetLam (pi a@(arg (arg-info v _) _) (abs s b)) m =
   lam v ∘ abs s <$> extendContext s a (atTargetLam b m)
@@ -453,16 +453,16 @@ newHole : TC (Term × TypeTm)
 newHole = do
  newHole ← checkType unknown unknown
  newHoleType ← inferType newHole
- pure (newHole , newHoleType) 
+ pure (newHole , newHoleType)
 
-unquoteSigma : Term → TC (Term × Term) 
+unquoteSigma : Term → TC (Term × Term)
 unquoteSigma tm = do
   (x , _) ← newHole
   (y , _) ← newHole
   unify (con (quote _,_) (x v∷ v[ y ])) tm
   pure (x , y)
 
-unquoteSum : Term → TC (Term ⊎.⊎ Term) 
+unquoteSum : Term → TC (Term ⊎.⊎ Term)
 unquoteSum tm = (do
   (x , _) ← newHole
   unify (con (quote ⊎.inl) (v[ x ])) tm
@@ -472,7 +472,7 @@ unquoteSum tm = (do
   unify (con (quote ⊎.inr) (v[ x ])) tm
   pure (⊎.inr x)
   )
-  
+
 unquoteJust : Term → TC Term
 unquoteJust tm = do
  (x , _) ← newHole
@@ -481,24 +481,24 @@ unquoteJust tm = do
 
 matchList : Term → TC (List Term)
 matchList (con (quote []) _) = pure []
-matchList (con (quote _∷_) (_ h∷ _ h∷ x v∷ v[ xs ])) = (x ∷_) <$> matchList xs 
+matchList (con (quote _∷_) (_ h∷ _ h∷ x v∷ v[ xs ])) = (x ∷_) <$> matchList xs
 matchList (con (quote _∷_) (_ h∷ x v∷ v[ xs ])) = (x ∷_) <$> matchList xs
 matchList (con (quote _∷_) (x v∷ v[ xs ])) = (x ∷_) <$> matchList xs
 matchList _ = typeError [ strErr "failed to match list" ]
 
 data Q[_]≡_ {ℓ} {A : Type ℓ} : A → Term → Type ℓ where
- q[_]≡_ : ∀ a t → Q[ a ]≡ t 
+ q[_]≡_ : ∀ a t → Q[ a ]≡ t
 
 
 
 macro
- showQuoted : Term → Term → TC Unit 
+ showQuoted : Term → Term → TC Unit
  showQuoted tm hole = do
    qtm ← quoteTC tm
    unify hole (con (quote q[_]≡_) (tm v∷ v[ qtm ]))
 
 macro
- showQuotedN : Term → Term → TC Unit 
+ showQuotedN : Term → Term → TC Unit
  showQuotedN tm hole = withReduceDefs (false , []) do
-   qtm ← normalise tm >>= quoteTC 
+   qtm ← normalise tm >>= quoteTC
    unify hole (con (quote q[_]≡_) (tm v∷ v[ qtm ]))

@@ -5,8 +5,8 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Data.Sigma
 
 open import Cubical.Categories.Category
-open import Cubical.Categories.Constructions.Elements
-open import Cubical.Categories.Constructions.Lift
+open import Cubical.Categories.Instances.Elements
+open import Cubical.Categories.Instances.Lift
 open import Cubical.Categories.Functor
 open import Cubical.Categories.Instances.Sets
 open import Cubical.Categories.Isomorphism
@@ -48,7 +48,7 @@ module _ {C : Category ℓc ℓc'}{D : Category ℓd ℓd'}
   PshHom : Type (ℓ-max (ℓ-max (ℓ-max ℓc ℓc') ℓp) ℓq)
   PshHom =
     PresheafCategory C (ℓ-max ℓp ℓq)
-      [ LiftF {ℓp}{ℓq} ∘F P , LiftF {ℓq}{ℓp} ∘F Q ∘F (F ^opF) ]
+      [ LiftF ℓq ∘F P , LiftF ℓp ∘F Q ∘F (F ^opF) ]
 
   module _ (h : PshHom) where
     -- This should define a functor on the category of elements

@@ -225,4 +225,4 @@ Dec× _ (no ¬p) = no (¬p ∘ snd)
 Dec× (no ¬p) _ = no (¬p ∘ fst)
 
 decToMaybe : {A : Type ℓ} → Dec A → Maybe A
-decToMaybe = decRec just λ _ → nothing 
+decToMaybe = decRec just λ _ → nothing

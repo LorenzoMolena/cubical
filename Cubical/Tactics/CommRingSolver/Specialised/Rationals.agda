@@ -95,27 +95,27 @@ macro
     (normalise x >>= typeError ∘ [_]ₑ))
 
 
--- _ : _ 
+-- _ : _
 -- _ = wrTest (1+ ((ℕ.suc 3) ℕ.+ 12))
 
 ℚmatcher : RingReflectionMatcher
-ℚmatcher .RingReflectionMatcher.mkMatchTermTC _ _ =  pure matchTerm 
+ℚmatcher .RingReflectionMatcher.mkMatchTermTC _ _ =  pure matchTerm
 
    where
 
    module _ (be : (Term → TC (Template × Vars))) where
     open BE q[ ℚCommRing ] be
 
-    matchTerm : Term → TC (Maybe (Template × Vars))    
+    matchTerm : Term → TC (Maybe (Template × Vars))
     matchTerm t@(def (quote -_) xs) = just <$> `-_` xs
     matchTerm t@(def (quote _+_) xs) = just <$> `_+_` xs
     matchTerm t@(def (quote _·_) xs) = just <$> `_·_` xs
     matchTerm t = map-Maybe (λ t' → (λ _ → con (quote K) v[ t' ]) , []) <$> mbConcreteℚ t
-    
+
 
 open Discrete ℚCommRing discreteℚ ℚCommRingIsNotZeroRing
               nothing nothing nothing
-              
+
               (quoteDefsfNames ( _·_ ω∷ _+_ ω∷ (-_) ω∷ ω[] ))
               ℚmatcher
                renaming (solve! to ℚ!!) public
@@ -210,7 +210,7 @@ module _ (dbg : Bool) where
       let lrhs₀ = def (quote _,ℚ_) (lhs v∷ v[ rhs ])
 
       (sigℚ , lrhs) ← abstractℚandℚ₊ lrhs₀
-      
+
       wrdℚ $ debugPrint' "ratSolver" 20 [ lrhs ]ₑ
 
       sigTm ← quoteTC (map snd sigℚ)
@@ -264,6 +264,6 @@ macro
 
 
 -- module ℚ!!-tests where
- 
+
 --  test1 : 1 + 0 ≡ 1
 --  test1  = ℚ!!

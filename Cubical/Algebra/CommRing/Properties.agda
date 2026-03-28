@@ -145,7 +145,7 @@ module Units (R' : CommRing ℓ) where
                                   ∙ sym (·Assoc _ _ _)
                                   ∙ congR _·_ (·-rinv _)
                                   ∙ ·IdR _
- 
+
 -- some convenient notation
 _ˣ : (R' : CommRing ℓ) → ℙ (R' .fst)
 R' ˣ = Units.Rˣ R'
@@ -230,7 +230,7 @@ module Exponentiation (R' : CommRing ℓ) where
  _^_ : R → ℕ → R
  f ^ zero = 1r
  f ^ suc n = f · (f ^ n)
- 
+
  infix 9 _^_
 
  -- and prove some laws
@@ -261,9 +261,9 @@ module Exponentiation (R' : CommRing ℓ) where
                         ∙∙ cong (f ^ m ·_) (^-rdist-·ℕ f n m)
                         ∙∙ sym  (^-ldist-· f (f ^ n) m)
 
- 0^ˢⁿ≡0 : ∀ n → 0r ^ (suc n) ≡ 0r 
+ 0^ˢⁿ≡0 : ∀ n → 0r ^ (suc n) ≡ 0r
  0^ˢⁿ≡0 _ = 0LeftAnnihilates _
- 
+
  -- interaction of exponentiation and units
  open Units R'
 
@@ -273,12 +273,12 @@ module Exponentiation (R' : CommRing ℓ) where
 
  module IntegralDomain (isIntDom : (c m : R) → c · m ≡ 0r → (c ≡ 0r → ⊥) → m ≡ 0r) where
 
-  x≢0→x^sn≢0 : ∀ x n → (x ≡ 0r → ⊥) → (x ^ (suc n) ≡ 0r → ⊥) 
+  x≢0→x^sn≢0 : ∀ x n → (x ≡ 0r → ⊥) → (x ^ (suc n) ≡ 0r → ⊥)
   x≢0→x^sn≢0 x zero x≢0 p = x≢0 (sym (·IdR x) ∙ p )
   x≢0→x^sn≢0 x (suc n) x≢0 p =
     x≢0→x^sn≢0 x n x≢0 (isIntDom x (x ^ (suc n)) p x≢0)
 
-  x≢0≃x^sn≢0 : ∀ x n → (x ≡ 0r → ⊥) ≃ (x ^ (suc n) ≡ 0r → ⊥) 
+  x≢0≃x^sn≢0 : ∀ x n → (x ≡ 0r → ⊥) ≃ (x ^ (suc n) ≡ 0r → ⊥)
   x≢0≃x^sn≢0 x n = propBiimpl→Equiv (isPropΠ λ _ → isProp⊥) (isPropΠ λ _ → isProp⊥)
     (x≢0→x^sn≢0 x n) (_∘ λ x≡0 → cong (_^ (suc n)) x≡0 ∙ 0^ˢⁿ≡0 n)
 

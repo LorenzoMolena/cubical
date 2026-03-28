@@ -68,7 +68,7 @@ private
 --   open SolveOverℤ.Generic R
 
 --   relTrans : BinaryRelation.isTrans {A = ((fst R) × (Σ[ b ∈ (fst R) ] (b ≡ 0r → ⊥)))}
---                λ  (a , (b , _)) (c , (d , _)) → a · d ≡ c · b 
+--                λ  (a , (b , _)) (c , (d , _)) → a · d ≡ c · b
 --   relTrans (a , (b , _)) (a' , (b' , b'≢0)) (a'' , (b'' , _)) p q =
 --     {!!}
 --    where
@@ -81,12 +81,12 @@ module Test0intDom (R : CommRing ℓ) (isIntDom : _) where
   open RingTheory (CommRing→Ring R) renaming (fromℤ to scalar)
 
   open SolveOverℤ.Reasonable R isIntDom
-  
+
   relTrans : BinaryRelation.isTrans {A = ((fst R) × (Σ[ b ∈ (fst R) ] (b ≡ 0r → ⊥)))}
-               λ  (a , (b , _)) (c , (d , _)) → a · d ≡ c · b 
-  relTrans (a , (b , _)) (a' , (b' , b'≢0)) (a'' , (b'' , _)) p q = 
+               λ  (a , (b , _)) (c , (d , _)) → a · d ≡ c · b
+  relTrans (a , (b , _)) (a' , (b' , b'≢0)) (a'' , (b'' , _)) p q =
     sym (equalByDifference _ _ (solve! ∙ eliminate! a' p q P[ b'≢0 ]))
-    
+
 module Test (R : CommRing ℓ) (x y z w v : fst R) where
   open CommRingStr (snd R)
   open RingTheory (CommRing→Ring R) using () renaming (fromℤ to scalar ; fromℕ to ⟨_⟩ₙ)
@@ -131,11 +131,11 @@ module Test (R : CommRing ℓ) (x y z w v : fst R) where
   ex6 = solve! R
 
   -- module RelTest where
-  --  relTest :  (fst R) × (fst R) → (fst R) × (fst R) → Type ℓ 
+  --  relTest :  (fst R) × (fst R) → (fst R) × (fst R) → Type ℓ
   --  relTest (a , b) (c , d) = a · d ≡ c · b
 
   --  relTrans : BinaryRelation.isTrans relTest
-  --  relTrans (a , b) (a' , b') (a'' , b'') p q = 
+  --  relTrans (a , b) (a' , b') (a'' , b'') p q =
   --    {!!}
   --   where
   --    u : b' · (- (a · b'') + b · a'') ≡ 0r
@@ -150,9 +150,9 @@ module Test (R : CommRing ℓ) (x y z w v : fst R) where
   module _ (p : _)
            (p1 : _) where
    ex7' : v + z · x + y + w · x + (- w) + v ≡ (scalar 2 · v) + x + y + x + scalar 2
-   ex7' = 
-    ring! R (v ∷ y ∷ x ∷ []) 
-       (p ∷ P[ p1 ])    
+   ex7' =
+    ring! R (v ∷ y ∷ x ∷ [])
+       (p ∷ P[ p1 ])
 
   exNorm0 : (x + y + y + x - y  + scalar 5  -  x + (- scalar 1)) · x · (scalar 3) ≡
             (⟨ 3 ⟩ₙ · x · (⟨ 4 ⟩ₙ + y + x))
@@ -170,7 +170,7 @@ module Test (R : CommRing ℓ) (x y z w v : fst R) where
 
 
   exNorm3 : - (y + z) + ( - y - z)  - x - x · ⟨ 3 ⟩ₙ ≡
-               (- ⟨ 2 ⟩ₙ · (y + z + ⟨ 2 ⟩ₙ · x)) 
+               (- ⟨ 2 ⟩ₙ · (y + z + ⟨ 2 ⟩ₙ · x))
   exNorm3 = normalize! R
 
 

@@ -96,7 +96,7 @@ floor-lemma p q = eq/ _ _
         ℤ.+ ℤ.pos (ℕ.remainder p / (suc q)) ℤ.· ℤ.pos 1)}
           (ℤ._· (ℕ₊₁→ℤ (1+ q))) (ℤ! ∙ cong ℤ.pos (ℕ.≡remainder+quotient (suc q) p))
        ∙ ℤ!)
-  
+
 
 
 record Floor (x : ℚ) : Type₀ where
@@ -104,7 +104,7 @@ record Floor (x : ℚ) : Type₀ where
  field
   integralPart : ℤ
   fractionalPart : ℚ
-  x≡ip+fp : x ≡ [ integralPart / 1 ] + fractionalPart  
+  x≡ip+fp : x ≡ [ integralPart / 1 ] + fractionalPart
   0≤fp : 0 ≤ fractionalPart
   fp<1 : fractionalPart < 1
 
@@ -119,12 +119,12 @@ record Floor (x : ℚ) : Type₀ where
  f' .x≡ip+fp = sym p ∙ F.x≡ip+fp
  f' .0≤fp = F.0≤fp
  f' .fp<1 = F.fp<1
- 
+
 pqFloor₊ : ∀ p q → Floor [ pos p / q ]
 pqFloor₊ p (1+ q) = rf
  where
  open Floor
- 
+
  rf : _
  rf .integralPart = pos (ℕ.quotient p / (suc q))
  rf .fractionalPart = [ ℤ.pos (ℕ.remainder p / (suc q)) / 1+ q ]
@@ -143,34 +143,34 @@ pqFloor (negsuc n) q = rf (discreteℚ _ _)
 
   rf : Dec (0 ≡ F₊.fractionalPart) → Floor [ negsuc n / q ]
   rf (yes p) .integralPart = ℤ.- F₊.integralPart
-  rf (yes p) .fractionalPart = 0 
-  rf (yes p) .x≡ip+fp = 
+  rf (yes p) .fractionalPart = 0
+  rf (yes p) .x≡ip+fp =
      ℚ! ∙∙ cong -_ (F₊.x≡ip+fp
           ∙ cong ([ F₊.integralPart / 1 ] +_) (sym p))
      ∙∙ ℚ!
-     
+
   rf (yes p) .0≤fp = inj (ℤ.pos≤pos tt)
   rf (yes p) .fp<1 = inj (ℤ.pos<pos tt)
-  
-  rf (no ¬p) .integralPart = ℤ.- (1 ℤ.+ F₊.integralPart) 
+
+  rf (no ¬p) .integralPart = ℤ.- (1 ℤ.+ F₊.integralPart)
   rf (no ¬p) .fractionalPart = - (F₊.fractionalPart - 1)
-  rf (no ¬p) .x≡ip+fp = 
+  rf (no ¬p) .x≡ip+fp =
          ℚ!
      ∙∙ cong -_ (F₊.x≡ip+fp)
      ∙∙ ℚ!
 
   rf (no ¬p) .0≤fp = subst (0 ≤_) ℚ!!
     (<Weaken≤ _ _ (-< _ _ F₊.fp<1))
-  rf (no ¬p) .fp<1 = 
+  rf (no ¬p) .fp<1 =
    subst2 _<_ ℚ!! refl
      (<-+o _ _ 1
-       (minus-< _ F₊.fractionalPart (⊎.rec (⊥.rec ∘ ¬p) (λ x → x) (≤→≡⊎< _ _ F₊.0≤fp)))) 
-  
-floorℚ : ∀ x → Floor x 
+       (minus-< _ F₊.fractionalPart (⊎.rec (⊥.rec ∘ ¬p) (λ x → x) (≤→≡⊎< _ _ F₊.0≤fp))))
+
+floorℚ : ∀ x → Floor x
 floorℚ x =
  let (p , q) , (_ , v) = reduced x
  in ∙floor v (pqFloor p q)
- 
+
 floor-fracℚ₊ : ∀ (x : ℚ₊) → Σ (ℕ × ℚ) λ (k , q) →
                        (fromNat k + q ≡ fst x ) × ((0 ≤ q)  × (q < 1))
 floor-fracℚ₊ (x , 0<x) =
@@ -183,7 +183,7 @@ floor-fracℚ₊ (x , 0<x) =
  where
   open Floor
   lem : (f : Floor x) → x ≡ [ integralPart f / 1+ 0 ] + fractionalPart f
-           →  Σ[ k ∈ ℕ ] pos k ≡ f .integralPart 
+           →  Σ[ k ∈ ℕ ] pos k ≡ f .integralPart
   lem f p with f .integralPart
   ... | pos n = _ , refl
   ... | negsuc n = ⊥.rec (isAsym< _ _
@@ -594,11 +594,11 @@ invℚ₊ = uncurry (Elim.go invℚ₊E)
   h : {x₀ : 0< eq/ r r' p i0}
       {x₁ : 0< eq/ r r' p i1}
       (p₁ : PathP (λ z → 0< eq/ r r' p z) x₀ x₁) → _
-  h {inj z} {inj z'} pp =  
+  h {inj z} {inj z'} pp =
     ℚ₊≡ (eq/ _ _ ((λ i → ℤ.·Comm (ℕ₊₁→ℤ y) ( (snd (ℤ.0<→ℕ₊₁ x' (subst (0 ℤ.<_) ℤ! z'))) (~ i)) i)
       ∙∙ sym p ∙∙
       λ i → ℤ.·Comm  ( (snd (ℤ.0<→ℕ₊₁ x (subst (0 ℤ.<_) ℤ! z))) i) (ℕ₊₁→ℤ y') i))
-     
+
 
 
 /2₊ : ℚ₊ → ℚ₊
@@ -697,7 +697,7 @@ weak0<' q ε δ x =
           0< ((fst q - fst q') )
            → 0< ((fst q - fst (q' ℚ₊· ([ 1 / (suc₊₁ k) ] , inj (ℤ.pos<pos tt)))) )
 0</k q q' kk x =
-   subst 0<_ ℚ! (+0< (fst q - fst q') _ 
+   subst 0<_ ℚ! (+0< (fst q - fst q') _
     x ((snd (([ pos (ℕ₊₁→ℕ kk)  / suc₊₁ kk ] , inj (ℤ.pos<pos tt)) ℚ₊· q'))) )
 
 
@@ -1096,6 +1096,7 @@ getPosRatio L₁ L₂ =
 invℚ : ∀ q → 0 # q → ℚ
 invℚ q p = sign q · fst (invℚ₊ (0#→ℚ₊ q p))
 
+
 invℚ₊≡invℚ : ∀ q p → invℚ (fst q) p ≡ fst (invℚ₊ q)
 invℚ₊≡invℚ q p = cong₂ _·_ (fst (<→sign (fst q)) (0<ℚ₊ q)
     ) (cong (fst ∘ invℚ₊) (ℚ₊≡ (sym (abs'≡abs (fst q)) ∙
@@ -1176,6 +1177,17 @@ q ／ℚ[ r , 0＃r ] = q · (invℚ r 0＃r)
   ∙ cong (_· fst (invℚ₊ (0#→ℚ₊ r y))) (abs'≡abs r)
    ∙ x·invℚ₊[x] (0#→ℚ₊ r y)
 
+
+#≃≢ : ∀ x y → (x # y) ≃ (¬ (x ≡ y))
+#≃≢ x y = propBiimpl→Equiv (isProp# x y) (isProp¬ _)
+  (⊎.rec (λ x<y x≡y → isIrrefl< y (subst (_< y) x≡y x<y))
+    (λ y<x x≡y → isIrrefl< y (subst (y <_) x≡y y<x)))
+     λ ¬x≡y → ⊎.rec (⊥.rec ∘ ¬x≡y) (idfun _) (≡⊎# x y)
+
+hasInverseℚ  : (x : ℚ) → ¬ x ≡ 0 → Σ[ y ∈ ℚ ] x · y ≡ 1
+hasInverseℚ x ¬x≡0 = invℚ x (isSym# _ _ (invEq (#≃≢ x 0) ¬x≡0)) , ℚ-y/y x _
+
+
 ℚ-[x·y]/y : ∀ x r → (0＃r : 0 # r) → ((x · r) ／ℚ[ r , 0＃r ]) ≡ x
 ℚ-[x·y]/y x r 0#r = sym (·Assoc x r (invℚ r 0#r)) ∙∙
   cong (x ·_) (ℚ-y/y r 0#r) ∙∙ ·IdR x
@@ -1249,7 +1261,7 @@ x<y·z→x·invℚ₊y<z x q r  p =
 
 
 
-ℚ-x/y<z→x/z<y : ∀ (x q r : ℚ₊)   
+ℚ-x/y<z→x/z<y : ∀ (x q r : ℚ₊)
                → ((fst x) ／ℚ[ (fst r) , inl (snd r) ]) < fst q
                → ((fst x) ／ℚ[ (fst q) , inl (snd q) ]) < fst r
 ℚ-x/y<z→x/z<y x q r p =
@@ -1366,7 +1378,7 @@ invℚ₊-<-invℚ₊ (q , 0<q) (r , 0<r) = ElimProp2.go w q r 0<q 0<r
      = propBiimpl→Equiv (isProp< _ _)  (isProp< _ _)
                       (inj ∘S subst2 ℤ._<_ ℤ! ℤ! ∘S _<_.prf)
                       (inj ∘S subst2 ℤ._<_ ℤ! ℤ! ∘S _<_.prf)
-  
+
 invℚ₊-≤-invℚ₊ : ∀ q r → ((fst q) ≤ (fst r))
              ≃ (fst (invℚ₊ r) ≤ fst (invℚ₊ q))
 invℚ₊-≤-invℚ₊ q r =

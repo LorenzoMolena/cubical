@@ -60,7 +60,7 @@ module HornerEval (R@(⟨R⟩ , _) : CommRing ℓ)
   _≑_ : ∀ {n} → A n → A n → Type ℓ'
   P ≑ Q = ∀ xs → evalInVecR P xs ≡ evalInVecR Q xs
 
-  isProp≑ : ∀ {n} P Q → isProp (_≑_ {n} P Q) 
+  isProp≑ : ∀ {n} P Q → isProp (_≑_ {n} P Q)
   isProp≑ P Q  = isPropΠ λ _ → R‵.is-set _ _
 
   module ≑Rel {n} where
@@ -73,8 +73,8 @@ module HornerEval (R@(⟨R⟩ , _) : CommRing ℓ)
 
    open isEquivRel isEquivRel≑
      public using () renaming (symmetric to sym ; reflexive to refl ; _equivRel∙_ to _∙∶_)
-   
-   
+
+
  open EvalInVecR ⦃...⦄ public
 
  instance

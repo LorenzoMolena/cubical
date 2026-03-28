@@ -24,12 +24,12 @@ private
 
 module _ {ℓA ℓB} {A : Type ℓA} {B : A → Type ℓB} where
 
- filterOutDone : ∀ {xs} →  ListP (Maybe ∘ B) xs → List A 
+ filterOutDone : ∀ {xs} →  ListP (Maybe ∘ B) xs → List A
  filterOutDone {[]} _ = []
  filterOutDone {x ∷ _} (nothing ∷ xs) = x ∷ filterOutDone xs
- filterOutDone {x ∷ _} (just _ ∷ xs) = filterOutDone xs 
- 
- satisfySome : ∀ {xs} → (mbXS : ListP (Maybe ∘ B) xs) → ListP B (filterOutDone mbXS) → ListP B xs 
+ filterOutDone {x ∷ _} (just _ ∷ xs) = filterOutDone xs
+
+ satisfySome : ∀ {xs} → (mbXS : ListP (Maybe ∘ B) xs) → ListP B (filterOutDone mbXS) → ListP B xs
  satisfySome [] _ = []
  satisfySome (nothing ∷ _) (y ∷ x) = y ∷ satisfySome _ x
  satisfySome (just x ∷ _) xs = x ∷ satisfySome _ xs
@@ -68,7 +68,7 @@ satisfySomeTC tactic' hole = do
   go 100000 maybeSolved
   refineListPHole stillMissing
   pure stillMissing
-  
+
  where
   go : ℕ → Term → TC (Maybe Term)
   go 0 _ = typeError [ "no more fuel in satisfySomeTC , Cubical.Tactics.Reflection.Goals" ]ₑ
@@ -88,12 +88,12 @@ macro
  testSatisfySomeTC' lemHole hole = do
    lemHole' ← satisfySomeTC
      (λ h _ → pure false)
-     hole 
+     hole
    unify lemHole' lemHole
-   
 
 
-zzz' : ListP (idfun _) ((2 ≡ 2) ∷ (1 ≡ 1) ∷ (3 ≡ 3) ∷ []) 
+
+zzz' : ListP (idfun _) ((2 ≡ 2) ∷ (1 ≡ 1) ∷ (3 ≡ 3) ∷ [])
 zzz' = testSatisfySomeTC' (refl ∷ refl ∷ P[ refl ])
 
 macro
@@ -101,10 +101,10 @@ macro
  testSatisfySomeTC lemHole hole = do
    lemHole' ← satisfySomeTC
      (λ h _ → sucesfullM? (unify h (def (quote refl) [])))
-     hole 
+     hole
    unify lemHole' lemHole
-   
+
 
 module _ (p : _) (q : _) where
- zzz : ListP (idfun _) ((2 ≡ 3) ∷ (1 ≡ 1) ∷ (1 ≡ 3) ∷ []) 
+ zzz : ListP (idfun _) ((2 ≡ 3) ∷ (1 ≡ 1) ∷ (1 ≡ 3) ∷ [])
  zzz = testSatisfySomeTC (p ∷ q ∷ [])

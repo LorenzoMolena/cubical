@@ -2,7 +2,7 @@
 module Cubical.Categories.Presheaf.Properties where
 
 open import Cubical.Categories.Category renaming (isIso to isIsoC)
-open import Cubical.Categories.Constructions.Lift
+open import Cubical.Categories.Instances.Lift
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Instances.Sets
 open import Cubical.Categories.Instances.Functors
@@ -18,8 +18,8 @@ open import Cubical.Data.Sigma
 open import Cubical.HITs.PropositionalTruncation using (∣_∣₁)
 
 import Cubical.Categories.Morphism as Morphism
-import Cubical.Categories.Constructions.Slice as Slice
-import Cubical.Categories.Constructions.Elements as Elements
+import Cubical.Categories.Instances.Slice as Slice
+import Cubical.Categories.Instances.Elements as Elements
 import Cubical.Functions.Fibration as Fibration
 
 private
@@ -394,5 +394,5 @@ module _ {ℓS : Level} (C : Category ℓ ℓ') (F : Functor (C ^op) (SET ℓS))
 
 -- Isomorphism between presheaves of different levels
 PshIso : (C : Category ℓ ℓ') (P : Presheaf C ℓS) (Q : Presheaf C ℓS') → Type _
-PshIso {ℓS = ℓS}{ℓS' = ℓS'} C P Q =
-  NatIso (LiftF {ℓ = ℓS}{ℓ' = ℓS'} ∘F P) (LiftF {ℓ = ℓS'}{ℓ' = ℓS} ∘F Q)
+PshIso {ℓS = ℓS} {ℓS' = ℓS'} C P Q =
+  NatIso (LiftF ℓS' ∘F P) (LiftF ℓS ∘F Q)

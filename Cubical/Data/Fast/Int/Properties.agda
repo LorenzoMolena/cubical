@@ -20,6 +20,7 @@ open import Cubical.Data.Nat as ℕ hiding (
   renaming (_·_ to _·ℕ_; _+_ to _+ℕ_)
 open import Cubical.Data.Nat.Order as ℕ using ()
 open import Cubical.Data.Sum
+
 open import Cubical.Data.Sigma
 open import Cubical.Data.Fin.Base
 open import Cubical.Data.Fin.Properties
@@ -1177,7 +1178,6 @@ sumFinℤHom : {n : ℕ} (f g : Fin n → ℤ)
   → sumFinℤ {n = n} (λ x → f x + g x) ≡ sumFinℤ {n = n} f + sumFinℤ {n = n} g
 sumFinℤHom {n = n} = sumFinGenHom _+_ 0 +IdR +Comm +Assoc n
 
-
 -- TODO : generalise to Vec and BigOp
 sing×[pos]Decompose : (x y : ℤ) → Σ[ (x' , y') ∈ (ℕ × ℕ) ] ((x · y ≡ pos (x' ℕ.· y')) ⊎ (x · y ≡ - pos (x' ℕ.· y')))
 sing×[pos]Decompose (pos n) (pos m) = (n , m) , inl refl
@@ -1188,7 +1188,7 @@ sing×[pos]Decompose (negsuc n) (negsuc m) = (suc n , suc m) , inl (negsuc·negs
 gcdℤ : (a b : ℤ) → Σ[ (a' , b' , c ) ∈ _ × _ × _ ]
                 (a ≡ a' · pos c) × (b ≡ b' · pos c)
 gcdℤ a b =
-  let ((a' , p) , (b' , q)) = map-× ∣-untrunc ∣-untrunc (gcdIsGCD (abs a) (abs b) .fst) 
+  let ((a' , p) , (b' , q)) = map-× ∣-untrunc ∣-untrunc (gcdIsGCD (abs a) (abs b) .fst)
   in (sign a · pos a' , sign b · pos b' , (gcd (abs a) (abs b))) ,
        (sym (sign·abs a)
         ∙∙ cong (sign a ·_) (cong pos (sym p))

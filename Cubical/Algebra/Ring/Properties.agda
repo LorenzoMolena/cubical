@@ -68,7 +68,7 @@ module RingTheory (R' : Ring ℓ) where
   differenceByEqual : (x y : R)
                       → x ≡ y
                       → x - y ≡ 0r
-                      
+
   differenceByEqual x y p = cong (_- y) p ∙ +InvR y
 
 
@@ -134,7 +134,7 @@ module RingTheory (R' : Ring ℓ) where
 
   -Dist· : (x y : R) → (- x) · (- y) ≡ (x · y)
   -Dist· _ _ = -Swap· _ _ ∙ cong (_ ·_) (-Idempotent _)
-  
+
   -Dist : (x y : R) → (- x) + (- y) ≡ - (x + y)
   -Dist x y =
     implicitInverse _ _
@@ -223,13 +223,13 @@ module RingTheory (R' : Ring ℓ) where
   fromℤ (ℤ.negsuc n) = - (fromℕ (ℕ.suc n))
 
   ·lCancel≃integralDomain : ((c m n : R) → c · m ≡ c · n → (c ≡ 0r → ⊥) → m ≡ n)
-                               ≃ ((c m : R) → c · m ≡ 0r → (c ≡ 0r → ⊥) → m ≡ 0r) 
+                               ≃ ((c m : R) → c · m ≡ 0r → (c ≡ 0r → ⊥) → m ≡ 0r)
   ·lCancel≃integralDomain = propBiimpl→Equiv
     (isPropΠ5 λ _ _ _ _ _ → is-set _ _ ) (isPropΠ4 λ _ _ _ _ → is-set _ _ )
      (λ lc → λ c m n w → lc c m 0r (n ∙ sym (0RightAnnihilates _)) w)
      λ iD → λ x y z w v → equalByDifference _ _ (iD x (y - z)
         (·DistR- x y z ∙ differenceByEqual (x · y) (x · z) w) v)
-   
+
   module zeroRing (1≡0 : 1r ≡ 0r) where
    isContrR : isContr R
    isContrR = 0r , λ x → sym (0RightAnnihilates x) ∙∙ cong (x ·_) (sym (1≡0)) ∙∙ ·IdR x
@@ -390,5 +390,3 @@ recPT→Ring 𝓕 σ compCoh = rec→Gpd isGroupoidRing 𝓕
                           λ x y z → sym (  cong uaRing (compCoh x y z)
                                          ∙ uaCompRingEquiv (σ x y) (σ y z)))
 
-
- 
