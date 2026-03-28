@@ -902,6 +902,7 @@ module FastℤPlusRingSolver where
 
  open CommRingSolver config hiding (solve!-lemma-macro) public
 
+open FastℤPlusRingSolver public using () renaming (solve! to ℤ+!)
 
 --  private
 --   module ETNF =  EqualityToNormalform Fastℤ'.ℤCommRing ring

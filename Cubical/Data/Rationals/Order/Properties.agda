@@ -41,10 +41,12 @@ open import Cubical.Data.Rationals.Order
 open import Cubical.Algebra.CommRing.Instances.Rationals
 open import Cubical.Tactics.CommRingSolver
 open import Cubical.Tactics.CommRingSolver.Specialised.Rationals
--- open import Cubical.Tactics.CommRingSolverFast.RationalsReflection
--- open import Cubical.Tactics.CommRingSolverFast.FastRationalsReflectionPre
-
 open import Cubical.Foundations.Powerset
+
+
+
+x+x≡2x : ∀ x → x + x ≡ 2 · x
+x+x≡2x x = ℚ!!
 
 
 <- : ∀ q r  → 0 < r - q → q < r
@@ -90,20 +92,11 @@ floor-lemma : ∀ p q → fromNat (ℕ.quotient p / (suc q))
                    + [ ℤ.pos (ℕ.remainder p / (suc q)) / 1+ q ]
                    ≡ [ ℤ.pos p / 1+ q ]
 floor-lemma p q = eq/ _ _
-     (cong (ℤ._· q') w ∙ cong (ℤ.pos p ℤ.·_)
-     (cong ℕ₊₁→ℤ (sym (·₊₁-identityˡ (1+ q)))))
-
- where
-  q' = ℕ₊₁→ℤ (1+ q)
-  w : (ℤ.pos (ℕ.quotient p / (suc q)) ℤ.· q'
-        ℤ.+ ℤ.pos (ℕ.remainder p / (suc q)) ℤ.· ℤ.pos 1)
-           ≡ ℤ.pos p
-  w = cong₂ (ℤ._+_) (ℤ.·Comm (pos (quotient p / suc q)) (pos (suc q))
-     ∙ sym (ℤ.pos·pos (suc q) (quotient p / suc q))) (ℤ.·IdR (pos (remainder p / suc q)))
-       ∙ sym (ℤ.pos+ (suc q ℕ.· (quotient p / suc q)) (remainder p / suc q)) ∙ cong ℤ.pos
-          (ℕ.+-comm (suc q ℕ.· (quotient p / suc q)) (remainder p / suc q)
-           ∙ ℕ.≡remainder+quotient (suc q) p)
-
+     (cong {x = (ℤ.pos (ℕ.quotient p / (suc q)) ℤ.· (ℕ₊₁→ℤ (1+ q))
+        ℤ.+ ℤ.pos (ℕ.remainder p / (suc q)) ℤ.· ℤ.pos 1)}
+          (ℤ._· (ℕ₊₁→ℤ (1+ q))) (ℤ! ∙ cong ℤ.pos (ℕ.≡remainder+quotient (suc q) p))
+       ∙ ℤ!)
+  
 
 
 record Floor (x : ℚ) : Type₀ where
@@ -197,111 +190,6 @@ floor-fracℚ₊ (x , 0<x) =
      (isTrans<≤ _ _ _ (<-o+ _ _ [ negsuc _ / 1 ] (f .fp<1))
        (≤minus→≤ _ _ (subst {x = [ pos n / 1 ]} (0 ≤_) ℚ!  (inj (ℤ.pos≤pos tt)))))
      (subst (0 <_) p 0<x))
-
--- floor-fracℚ₊≤ : (x : ℚ₊) → fromNat (fst (fst (floor-fracℚ₊ x))) ≤ fst x
--- floor-fracℚ₊≤ x =
---   let ((N , q) , (e , (0≤q , _))) = floor-fracℚ₊ x
---       zz = ≡Weaken≤ _ _ e
---       uu = subst (_≤ (fst x + q))
---                 (+IdR _) $ ≤Monotone+ _ _ 0 _ zz 0≤q
---   in ≤-+o-cancel (fromNat N) _ _ uu
-
--- ≤floor-fracℚ₊ : (x : ℚ₊) → fst x < fromNat (suc (fst (fst (floor-fracℚ₊ x))))
--- ≤floor-fracℚ₊ x =
---   let ((N , q) , (e , (_ , q<1))) = floor-fracℚ₊ x
---   in subst (fst x <_) (ℕ+→ℚ+ N 1 ∙ cong (λ x → [ pos x / 1 ])
---              (ℕ.+-comm N 1))
---            $ isTrans≤< (fst x) (fromNat (fst (fst (floor-fracℚ₊ x))) + q) ((fromNat N) + 1)
---               (≡Weaken≤ (fst x) (fromNat (fst (fst (floor-fracℚ₊ x))) + q) (sym e))
---                  (<-o+ q 1 (fromNat N) q<1)
-
-
--- ceil-[1-frac]ℚ₊ : ∀ (x : ℚ₊) → Σ (ℕ × ℚ) λ (k , q) →
---                        (fst x + q ≡ fromNat k) × ((0 ≤ q)  × (q < 1))
--- ceil-[1-frac]ℚ₊ x =
---  let ((fl , fr) , e , (e' , e'')) = floor-fracℚ₊ x
-
---  in decRec
---       (λ p → (fl , 0) ,
---         (+IdR _ ∙ sym e ∙ cong  ((fromNat fl) +_) (sym p) ∙ (+IdR _)) ,
---           (isRefl≤ 0 , decℚ<?))
---       (λ p → (suc fl , (1 - fr)) ,
---           (cong₂ (_+_) (sym e) (+Comm [ ℤ.pos 1 / 1+ 0 ] (- fr)) ∙
---             sym (+Assoc (fromNat (fst (fst (floor-fracℚ₊ x)))) fr (- fr + 1)) ∙
---               cong  ((fromNat fl) +_)
---                 (+Assoc fr (- fr) 1
---                   ∙∙ cong (_+ 1) (+InvR fr) ∙∙ +IdL 1)
---                ∙ +Comm ([ pos fl / 1 ]) 1 ∙ ℕ+→ℚ+ 1 fl) ,
---                <Weaken≤ 0 _ (-< fr 1 e'') ,
---                  (<-o+ _ _ 1 (
---                    (⊎.rec (⊥.rec ∘ p) (minus-< 0 fr) (≤→≡⊎< 0 fr e')))))
---      (discreteℚ 0 fr)
-
-
--- {-
--- floor-frac : ∀ (x : ℚ) → Σ (ℤ × ℚ) λ (k , q) →
---                        ([ k , 1 ] + q ≡ x) × ((0 ≤ q)  × (q < 1))
--- floor-frac x with 0 ≟ x
--- ... | lt x₁ =
---   let ((c , fr') , e ) = floor-fracℚ₊ (x , <→0< _ x₁)
---   in (ℤ.pos c , fr') , e
-
--- ... | eq x₁ = (0 , 0) , (x₁ , isRefl≤ 0 , decℚ<? )
--- ... | gt x₁ =
---   let ((c , fr') , e , e') = ceil-[1-frac]ℚ₊
---           (- x , <→0< (- x) (minus-< x 0 x₁))
---       fl = (ℤ.- ℤ.pos c)
---       p : [ fl , 1 ] + fr' ≡ x
---       p = (sym (-Invol _)
---              ∙ cong (-_) (-Distr _ _
---                  ∙ cong (_- fr')
---                     (cong [_/ 1 ] (ℤ.-Involutive _) )))
---               ∙ sym (cong -_ (+CancelL- _ _ _ e)) ∙ -Invol _
---   in (fl , fr') ,
---         p , e'
--- -}
-
--- ceilℚ₊ : (q : ℚ₊) → Σ[ k ∈ ℕ₊₁ ] (fst q) < fromNat (ℕ₊₁→ℕ k)
--- ceilℚ₊ q = 1+ (fst (fst (floor-fracℚ₊ q))) ,
---    subst2 (_<_) --  (fromNat (suc (fst (fst (floor-fracℚ₊ q)))))
---       (+Comm (floor-fracℚ₊ q .fst .snd) (fromNat (fst (fst (floor-fracℚ₊ q)))) ∙
---        fst (snd (floor-fracℚ₊ q)))
---       (ℕ+→ℚ+ 1 (fst (fst (floor-fracℚ₊ q))))
---        (<-+o (floor-fracℚ₊ q .fst .snd) (1) (fromNat (fst (fst (floor-fracℚ₊ q))))
---          (snd (snd (snd (floor-fracℚ₊ q)))))
-
-
-
-
-
-sign : ℚ → ℚ
-sign = Rec.go w
- where
- w : Rec _
- w .Rec.isSetB = isSetℚ
- w .Rec.f (p , _) = [ ℤ.sign p / 1 ]
- w .Rec.f∼ (ℤ.pos zero , (1+ nn)) (ℤ.pos zero , snd₂) x = refl
- w .Rec.f∼ (ℤ.pos zero , (1+ nn)) (ℤ.pos (suc n₁) , snd₂) x =
-    ⊥.rec $ znots $
-     ℤ.injPos (x ∙ sym (ℤ.pos·pos (suc n₁) (suc nn)))
- w .Rec.f∼ (ℤ.pos (suc n₁) , snd₁) (ℤ.pos zero , (1+ nn)) x =
-   ⊥.rec $ znots $
-     ℤ.injPos (sym x ∙ sym (ℤ.pos·pos (suc n₁) (suc nn)))
- w .Rec.f∼ (ℤ.pos (suc n) , snd₁) (ℤ.pos (suc n₁) , snd₂) x = refl
- w .Rec.f∼ (ℤ.pos n₁ , snd₂) (ℤ.negsuc n , snd₁) x =
-    ⊥.rec (
-     𝟚.toWitnessFalse
-      {Q = (ℤ.discreteℤ _ _)}
-       tt ((cong (ℤ.-_) (ℤ.pos·pos (suc n) (ℕ₊₁→ℕ snd₂))
-        ∙ sym (ℤ.negsuc·pos n _)) ∙∙ (sym x) ∙∙ sym (ℤ.pos·pos n₁ _) ))
- w .Rec.f∼ (ℤ.negsuc n , snd₁) (ℤ.pos n₁ , snd₂) x =
-   ⊥.rec (
-     𝟚.toWitnessFalse
-      {Q = (ℤ.discreteℤ _ _)}
-       tt ((cong (ℤ.-_) (ℤ.pos·pos (suc n) (ℕ₊₁→ℕ snd₂))
-        ∙ sym (ℤ.negsuc·pos n (ℕ₊₁→ℕ snd₂))) ∙∙ x ∙∙ sym (ℤ.pos·pos n₁ _) ))
- w .Rec.f∼ (ℤ.negsuc n , snd₁) (ℤ.negsuc n₁ , snd₂) x = refl
-
 
 
 
@@ -800,27 +688,17 @@ weak0<' : ∀ q (ε δ : ℚ₊)
              → - (fst ε - fst δ) < q
              → - (fst ε) < q
 weak0<' q ε δ x =
-  let z = <Monotone+ (- (fst ε - fst δ)) q (- fst δ) 0 x
+  subst2 _<_ ℚ!! ℚ!! $ <Monotone+ (- (fst ε - fst δ)) q (- fst δ) 0 x
            (minus-< 0 (fst δ) ((0<→< (fst δ) (snd δ))))
-  in (subst2 _<_ ℚ!! ℚ!! z)
 
 
 
 0</k : ∀ (q q' : ℚ₊) (k : ℕ₊₁) →
           0< ((fst q - fst q') )
            → 0< ((fst q - fst (q' ℚ₊· ([ 1 / (suc₊₁ k) ] , inj (ℤ.pos<pos tt)))) )
-0</k q q' (1+ k) x =
-   subst 0<_
-     ( sym (+Assoc (fst q) (- fst q') (fst (([ pos (suc k) / 2+ k ] , inj (ℤ.pos<pos tt)) ℚ₊· q'))) ∙ cong (fst q +_)
-     (sym (·DistR+ (-1) [ pos (suc k) / 1+ (suc k) ] (fst q')) ∙
-        (cong (_· (fst q'))
-           (sym (-Distr' 1 ([ pos (ℕ₊₁→ℕ (1+ k)) / suc₊₁ (1+ k) ]))
-              ∙ sym (cong (-_) $ +CancelL- [ 1 / suc₊₁ (1+ k) ] [ pos (ℕ₊₁→ℕ (1+ k)) / suc₊₁ (1+ k) ] _ (1/[k+1]+k/[k+1] (1+ k))))
-          ∙∙ sym (·Assoc -1 [ pos 1 / 2+ k ] (fst q') )
-         ∙∙ (cong (-_) (·Comm  [ pos 1 / 2+ k ]  (fst q')) ) ))
-       ) (+0< (fst q - fst q')
-    (fst (([ pos (suc k)  / (1+ (suc k)) ] , inj (ℤ.pos<pos tt)) ℚ₊· q')) x
-     ((snd (([ pos (suc k)  / (1+ (suc k)) ] , inj (ℤ.pos<pos tt)) ℚ₊· q'))) )
+0</k q q' kk x =
+   subst 0<_ ℚ! (+0< (fst q - fst q') _ 
+    x ((snd (([ pos (ℕ₊₁→ℕ kk)  / suc₊₁ kk ] , inj (ℤ.pos<pos tt)) ℚ₊· q'))) )
 
 
 
