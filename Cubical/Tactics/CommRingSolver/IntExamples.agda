@@ -11,6 +11,7 @@ open import Cubical.Algebra.CommRing.Instances.Fast.Int
 open import Cubical.Algebra.CommAlgebra
 
 open import Cubical.Tactics.CommRingSolver.Reflection
+open import Cubical.Tactics.CommRingSolver.Specialised.FastIntPlus
 
 
 private

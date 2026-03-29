@@ -44,18 +44,20 @@ open import Cubical.Tactics.CommRingSolver.GenericCommRing
 open import Cubical.Data.NatPlusOne
 import Cubical.HITs.SetQuotients as SetQuotient
 
+open import Cubical.Tactics.CommRingSolver.Specialised.FastIntPlus
+
 open EqElims
 
 _ : Q[ ℕ.suc 3 ℕ.+ 12 ]≡ lit (nat 16)
-_ = showQuotedN ((ℕ.suc 3) ℕ.+ 12)
+_ = showQuotedN [] ((ℕ.suc 3) ℕ.+ 12)
 
 _ : Q[ ℤ.pos (ℕ.suc 3 ℕ.+ 12) ℤ.- 40 ]≡
      con (quote ℤ.negsuc) v[ lit (nat 23) ]
-_ = showQuotedN (ℤ.pos ((ℕ.suc 3) ℕ.+ 12) ℤ.- 40)
+_ = showQuotedN [] (ℤ.pos ((ℕ.suc 3) ℕ.+ 12) ℤ.- 40)
 
 
 _ : Q[ 1+ (ℕ.suc 3 ℕ.+ 12) ]≡ con (quote 1+_) v[ lit (nat 16) ]
-_ = showQuotedN (1+ ((ℕ.suc 3) ℕ.+ 12))
+_ = showQuotedN [] (1+ ((ℕ.suc 3) ℕ.+ 12))
 
 
 -- someℚ : ℚ
@@ -186,10 +188,11 @@ module _ (dbg : Bool) where
 
 
   wrdℚ : ∀ {a} {A : Type a} → TC A → TC A
-  wrdℚ = withReduceDefs
-     (false , ((quote ℚ._+_) ∷ (quote (ℚ.-_)) ∷ (quote ℚ._·_)
-       -- ∷ []))
-      ∷ (quote _+₁_) ∷ (quote _·₊₁_) ∷ (quote ℕ₊₁→ℕ) ∷ (quote ℤ.ℕ₊₁→ℤ) ∷ doNotUnfoldsℚ))
+  wrdℚ = withReduceDefs ( false , ((quoteDefsfNames
+      (ℚ._+_ ω∷ ℚ.-_ ω∷ _·_ ω∷ ℕ._·_ ω∷ ℕ._+_ ω∷ ℤ._+_ ω∷ (ℤ.-_)
+      ω∷ ℤ._·_ ω∷ _ℕ-_ ω∷ _+₁_ ω∷ _·₊₁_ ω∷ ℕ₊₁→ℕ ω∷ ℤ.ℕ₊₁→ℤ
+       ω∷ ℤ.0<→ℕ₊₁-fst ω∷ ω[])) ++ doNotUnfoldsℚ))
+
 
 
   solve!!-macro : Term → TC Unit
@@ -199,8 +202,6 @@ module _ (dbg : Bool) where
 
       goal ← wrdℚ $ inferType hole >>= normalise
 
-      -- when dbg
-      --   (typeError [ "xxx" ]ₑ)
       wrdℚ $ Wait.wait-for-type (debugPrint' "ratSolver" 20) goal
       just (lhs , rhs) ← wrdℚ $ PathTypesReflection.get-boundary (debugPrint' "ratSolver" 20) goal
         where

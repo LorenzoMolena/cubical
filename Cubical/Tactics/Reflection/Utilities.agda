@@ -497,8 +497,9 @@ macro
    qtm ← quoteTC tm
    unify hole (con (quote q[_]≡_) (tm v∷ v[ qtm ]))
 
-macro
- showQuotedN : Term → Term → TC Unit
- showQuotedN tm hole = withReduceDefs (false , []) do
-   qtm ← normalise tm >>= quoteTC
-   unify hole (con (quote q[_]≡_) (tm v∷ v[ qtm ]))
+module _ (doNotReduce : _) where
+ macro
+  showQuotedN : Term → Term → TC Unit
+  showQuotedN tm hole = withReduceDefs (false , doNotReduce) do
+    qtm ← normalise tm >>= quoteTC
+    unify hole (con (quote q[_]≡_) (tm v∷ v[ qtm ]))
