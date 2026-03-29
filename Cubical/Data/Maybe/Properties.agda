@@ -10,7 +10,7 @@ open import Cubical.Foundations.Structure using (⟨_⟩)
 
 open import Cubical.Functions.Embedding using (isEmbedding)
 
-open import Cubical.Data.Empty as ⊥ using (⊥; isProp⊥)
+open import Cubical.Data.Empty as ⊥ using (⊥; ⊥*; isProp⊥*)
 open import Cubical.Data.Unit
 open import Cubical.Data.Nat using (suc)
 open import Cubical.Data.Sum using (_⊎_; inl; inr)
@@ -44,9 +44,9 @@ map-Maybe-id (just _) = refl
 -- Path space of Maybe type
 module MaybePath {ℓ} {A : Type ℓ} where
   Cover : Maybe A → Maybe A → Type ℓ
-  Cover nothing  nothing   = Lift Unit
-  Cover nothing  (just _)  = Lift ⊥
-  Cover (just _) nothing   = Lift ⊥
+  Cover nothing  nothing   = Unit*
+  Cover nothing  (just _)  = ⊥*
+  Cover (just _) nothing   = ⊥*
   Cover (just a) (just a') = a ≡ a'
 
   reflCode : (c : Maybe A) → Cover c c
@@ -88,9 +88,9 @@ module MaybePath {ℓ} {A : Type ℓ} where
   isOfHLevelCover : (n : HLevel)
     → isOfHLevel (suc (suc n)) A
     → ∀ c c' → isOfHLevel (suc n) (Cover c c')
-  isOfHLevelCover n p nothing  nothing   = isOfHLevelLift (suc n) (isOfHLevelUnit (suc n))
-  isOfHLevelCover n p nothing  (just a') = isOfHLevelLift (suc n) (isProp→isOfHLevelSuc n isProp⊥)
-  isOfHLevelCover n p (just a) nothing   = isOfHLevelLift (suc n) (isProp→isOfHLevelSuc n isProp⊥)
+  isOfHLevelCover n p nothing  nothing   = isOfHLevelUnit* (suc n)
+  isOfHLevelCover n p nothing  (just a') = isProp→isOfHLevelSuc n isProp⊥*
+  isOfHLevelCover n p (just a) nothing   = isProp→isOfHLevelSuc n isProp⊥*
   isOfHLevelCover n p (just a) (just a') = p a a'
 
 isOfHLevelMaybe : ∀ {ℓ} (n : HLevel) {A : Type ℓ}
@@ -113,16 +113,16 @@ fromJust-def a nothing = a
 fromJust-def _ (just a) = a
 
 just-inj : (x y : A) → just x ≡ just y → x ≡ y
-just-inj x _ eq = cong (fromJust-def x) eq
+just-inj x y = MaybePath.encode _ _
 
 isEmbedding-just : isEmbedding (just {A = A})
 isEmbedding-just  w z = MaybePath.Cover≃Path (just w) (just z) .snd
 
 ¬nothing≡just : ∀ {x : A} → ¬ (nothing ≡ just x)
-¬nothing≡just {A = A} {x = x} p = lower (subst (caseMaybe (Maybe A) (Lift ⊥)) p (just x))
+¬nothing≡just p = lower (MaybePath.encode _ _ p)
 
 ¬just≡nothing : ∀ {x : A} → ¬ (just x ≡ nothing)
-¬just≡nothing {A = A} {x = x} p = lower (subst (caseMaybe (Lift ⊥) (Maybe A)) p (just x))
+¬just≡nothing p = lower (MaybePath.encode _ _ p)
 
 isProp-x≡nothing : (x : Maybe A) → isProp (x ≡ nothing)
 isProp-x≡nothing nothing x w =
@@ -162,6 +162,9 @@ module SumUnit where
   SumUnit→Maybe→SumUnit (inl _) = refl
   SumUnit→Maybe→SumUnit (inr _) = refl
 
+maybeToSum : ∀ {ℓ ℓ'} {A : Type ℓ} {B : Type ℓ'} → B → Maybe A → B ⊎ A
+maybeToSum b = rec (inl b) inr
+
 Maybe≡SumUnit : Maybe A ≡ Unit ⊎ A
 Maybe≡SumUnit = isoToPath (iso Maybe→SumUnit SumUnit→Maybe SumUnit→Maybe→SumUnit Maybe→SumUnit→Maybe)
   where open SumUnit
@@ -178,3 +181,38 @@ congMaybeEquiv e = isoToEquiv isom
   isom .sec (just b) = cong just (secEq e b)
   isom .ret nothing = refl
   isom .ret (just a) = cong just (retEq e a)
+
+infixl 20 _⁇→_
+
+_⁇→_ : ∀ {ℓ'} → Type ℓ → Type ℓ' → Type (ℓ-max ℓ ℓ')
+A ⁇→ B = (mbA : Maybe A) → caseMaybe Unit* B mbA
+
+⁇λ_ : ∀ {ℓ'} {A : Type ℓ} {B : Type ℓ'} → (A → B) → A ⁇→ B
+⁇λ_ f nothing = tt*
+⁇λ_ f (just a) = f a
+
+∘rec : ∀ {ℓ' ℓ''} {A : Type ℓ} {B : Type ℓ'} {C : Type ℓ''} (f : B → C) n j
+           (x : Maybe A) → f (Maybe.rec n j x) ≡ Maybe.rec (f n) (f ∘ j) x
+∘rec f n j nothing = refl
+∘rec f n j (just x) = refl
+
+∘fromJust-def : ∀ {ℓ'} {A : Type ℓ} {B : Type ℓ'} (f : A → B) n
+           (x : Maybe A) → f (fromJust-def n x) ≡ fromJust-def (f n) (map-Maybe f x)
+∘fromJust-def f n nothing = refl
+∘fromJust-def f n (just x) = refl
+
+FromMaybeΣ : ∀ {ℓ ℓ' A B} → Maybe (Σ {ℓ} {ℓ'} A B) → Type ℓ'
+FromMaybeΣ nothing = Unit*
+FromMaybeΣ {B = B} (just (a , _)) = B a
+
+fromMaybeΣ : ∀ {ℓ ℓ' A B} a,b → FromMaybeΣ {ℓ} {ℓ'} {A = A} {B = B} a,b
+fromMaybeΣ nothing = tt*
+fromMaybeΣ (just (_ , x)) = x
+
+
+IsJust : ∀ {ℓ} {A : Type ℓ} → Maybe A → Type
+IsJust nothing = ⊥
+IsJust (just _) = Unit
+
+fromIsJust : ∀ {ℓ} {A : Type ℓ} → {mbA : Maybe A} → (IsJust mbA) → A
+fromIsJust {mbA = just a} _ = a
