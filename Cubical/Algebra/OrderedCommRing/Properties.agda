@@ -19,11 +19,13 @@ open import Cubical.Data.Nat as ℕ renaming (
   _+_ to _+ℕ_ ; _·_ to _·ℕ_ ; _∸_ to _∸ℕ_ ; _^_ to _^ℕ_)
 open import Cubical.Data.Nat.Order as ℕ renaming (
   _≤_ to _≤ℕ_ ; _<_ to _<ℕ_)
+open import Cubical.Data.Nat.Order.Inductive as ℕ using (_<ᵗ_ ; _≤ᵗ_)
 
 open import Cubical.Data.Int.Fast as ℤ using (ℤ ; pos ; negsuc ; _ℕ-_) renaming (
   _+_ to _+ℤ_ ; _·_ to _·ℤ_ ; _-_ to _-ℤ_ ; -_ to -ℤ_)
 open import Cubical.Data.Int.Fast.Order as ℤ renaming (
-  _≤_ to _≤ℤ_ ; _<_ to _<ℤ_ )
+  _≤_ to _≤ℤ_ ; _<_ to _<ℤ_ ) hiding (
+    0≤→abs≡id ; 0<→abs≡id ; ≤→0≤Δ ; <→0<Δ ; 0≤Δ→≤ ; 0<Δ→<)
 
 open import Cubical.Data.Empty as ⊥
 
@@ -36,6 +38,7 @@ open import Cubical.Algebra.Semiring.BigOps
 open import Cubical.Algebra.CommSemiring
 open import Cubical.Algebra.Ring
 open import Cubical.Algebra.CommRing
+open import Cubical.Algebra.CommRing.Instances.Int.Fast
 open import Cubical.Algebra.OrderedCommRing.Base
 open import Cubical.Algebra.OrderedCommRing.Instances.Int.Fast
 
@@ -75,10 +78,9 @@ OrderedCommRing→Apartness : OrderedCommRing ℓ ℓ' → Apartness ℓ ℓ'
 OrderedCommRing→Apartness = StrictOrder→Apartness ∘ OrderedCommRing→StrictOrder
 
 module OrderedCommRingReasoning (R' : OrderedCommRing ℓ ℓ') where
-  private R = fst R'
   open OrderedCommRingStr (snd R')
   open <-≤-Reasoning
-    R
+    (fst R')
     (str (OrderedCommRing→Poset  R'))
     (str (OrderedCommRing→Quoset R'))
     (λ x {y} {z} → <-≤-trans x y z)
@@ -90,14 +92,16 @@ module OrderedCommRingReasoning (R' : OrderedCommRing ℓ ℓ') where
   open ≤-syntax public
   open ≡-syntax public
 
+
 module _ (R' : OrderedCommRing ℓ ℓ') where
   private
     R = fst R'
     RCR = OrderedCommRing→CommRing R'
+    open module R = RingTheory (OrderedCommRing→Ring R')
   open OrderedCommRingStr (snd R')
-  open RingTheory (OrderedCommRing→Ring R')
-  open JoinProperties (OrderedCommRing→PseudoLattice R') renaming (
-    L≤∨ to L≤⊔ ; R≤∨ to R≤⊔ ; ∨Comm to ⊔Comm ; ∨Idem to ⊔Idem ; ∨LUB to ⊔LUB)
+  open PseudolatticeTheory (OrderedCommRing→PseudoLattice R') renaming (
+      L≤∨ to L≤⊔ ; R≤∨ to R≤⊔ ; ∨Comm to ⊔Comm ; ∨Idem to ⊔Idem ; ∨LUB to ⊔LUB
+    ; ∧≤L to ⊓≤L ; ∧≤R to ⊓≤R ; ∧Comm to ⊓Comm ; ∧Idem to ⊓Idem ; ∧GLB to ⊓GLB)
 
   open OrderedCommRingReasoning R'
 
@@ -106,6 +110,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     open BinaryRelation
 
     open ApartnessStr (str (OrderedCommRing→Apartness R')) using (_#_) public
+
+    0≤1 : 0r ≤ 1r
+    0≤1 = <-≤-weaken 0r 1r 0<1
 
     ≤→¬> : ∀ x y → x ≤ y → ¬ (y < x)
     ≤→¬> x y = equivFun (≤≃¬> x y)
@@ -148,8 +155,65 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     ·CancelR≤ : ∀ x y z → 0r < z → x · z ≤ y · z → x ≤ y
     ·CancelR≤ x y z 0<z zx≤zy = ¬<→≥ y x $ ≤→¬> _ _ zx≤zy ∘ ·MonoR< _ _ z 0<z
 
-    ·CancelL< : ∀ x y z → 0r < z → z · x < z · y → x < y
-    ·CancelL< x y z 0<z = ·CancelR< x y z 0<z ∘ subst2 _<_ (·Comm _ _) (·Comm _ _)
+    -- NOTE:
+    -- These properties don't seems like to be derivable.
+    -- However we can prove their double negations, so they are classically valid
+    -- Moreover, in a Ordered Heyting Field (where elements are invertible iff they
+    -- are apart form zero) we can prove them by multiplying by z⁻¹
+    --
+    -- ·CancelL< : ∀ x y z → 0r < z → z · x < z · y → x < y
+    -- ·CancelL< = ?
+    --
+    -- ·CancelR< : ∀ x y z → 0r < z → x · z < y · z → x < y
+    -- ·CancelR< = ?
+
+    -- These are intended to be used in the order reasoning
+    [_]+<_ : ∀ {x y} z → x < y → z + x < z + y
+    [_]+<_ z x<y = +MonoL< _ _ z x<y
+
+    _<+[_] : ∀ {x y} → x < y → ∀ z → x + z < y + z
+    _<+[_] x<y z = +MonoR< _ _ z x<y
+
+    [_]+≤_ : ∀ {x y} z → x ≤ y → z + x ≤ z + y
+    [_]+≤_ z x≤y = +MonoL≤ _ _ z x≤y
+
+    _≤+[_] : ∀ {x y} → x ≤ y → ∀ z → x + z ≤ y + z
+    _≤+[_] x≤y z = +MonoR≤ _ _ z x≤y
+
+    [_,_]·<_ : ∀ {x y} z → 0r < z → x < y → z · x < z · y
+    [_,_]·<_ z 0<z x<y = ·MonoL< _ _ z 0<z x<y
+
+    _<·[_,_] : ∀ {x y} → x < y → ∀ z → 0r < z → x · z < y · z
+    _<·[_,_] x<y z 0<z = ·MonoR< _ _ z 0<z x<y
+
+    [_,_]·≤_ : ∀ {x y} z → 0r ≤ z → x ≤ y → z · x ≤ z · y
+    [_,_]·≤_ z 0≤z x≤y = ·MonoL≤ _ _ z 0≤z x≤y
+
+    _≤·[_,_] : ∀ {x y} → x ≤ y → ∀ z → 0r ≤ z → x · z ≤ y · z
+    _≤·[_,_] x≤y z 0≤z = ·MonoR≤ _ _ z 0≤z x≤y
+
+    private
+      example : ∀ a b c d e f g
+              → (0r < f) → a < (b + c) → b ≤ d → (d + c) < (e · f) → e < g
+              → a < (g · f)
+      example a b c d e f g 0<f a<b+c b≤d d+c<e·f e<g = begin<
+        a     <⟨ a<b+c ⟩
+        b + c ≤⟨ b≤d ≤+[ c ] ⟩
+        d + c <⟨ d+c<e·f ⟩
+        e · f <⟨ e<g <·[ f , 0<f ] ⟩
+        g · f ◾
+
+    <SumLeftPos : ∀ x y → 0r < y → x < x + y
+    <SumLeftPos x y 0<y = begin< x ≡→≤⟨ sym (+IdR x) ⟩ x + 0r <⟨ [ x ]+< 0<y ⟩ x + y ◾
+
+    <SumRightPos : ∀ x y → 0r < y → x < y + x
+    <SumRightPos x y 0<y = begin< x ≡→≤⟨ sym (+IdL x) ⟩ 0r + x <⟨ 0<y <+[ x ] ⟩ y + x ◾
+
+    ≤SumLeftNonNeg : ∀ x y → 0r ≤ y → x ≤ x + y
+    ≤SumLeftNonNeg x y 0≤y = begin≤ x ≡→≤⟨ sym (+IdR x) ⟩ x + 0r ≤⟨ [ x ]+≤ 0≤y ⟩ x + y ◾
+
+    ≤SumRightNonNeg : ∀ x y → 0r ≤ y → x ≤ y + x
+    ≤SumRightNonNeg x y 0≤y = begin≤ x ≡→≤⟨ sym (+IdL x) ⟩ 0r + x ≤⟨ 0≤y ≤+[ x ] ⟩ y + x ◾
 
     -Flip< : ∀ x y → x < y → - y < - x
     -Flip< x y x<y = begin<
@@ -177,17 +241,17 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     ≤0→0≤- : ∀ x → x ≤ 0r → 0r ≤ - x
     ≤0→0≤- x = subst (_≤ - x) (solve! RCR) ∘ -Flip≤ x 0r
 
-    <→0<- : ∀ x y → x < y → 0r < y - x
-    <→0<- x y x<y = begin< 0r ≡→≤⟨ solve! RCR ⟩ x - x <⟨ +MonoR< _ _ _ x<y ⟩ y - x ◾
+    <→0<Δ : ∀ x y → x < y → 0r < y - x
+    <→0<Δ x y x<y = begin< 0r ≡→≤⟨ solve! RCR ⟩ x - x <⟨ +MonoR< _ _ _ x<y ⟩ y - x ◾
 
-    ≤→0≤- : ∀ x y → x ≤ y → 0r ≤ y - x
-    ≤→0≤- x y x≤y = begin≤ 0r ≡→≤⟨ solve! RCR ⟩ x - x ≤⟨ +MonoR≤ _ _ _ x≤y ⟩ y - x ◾
+    ≤→0≤Δ : ∀ x y → x ≤ y → 0r ≤ y - x
+    ≤→0≤Δ x y x≤y = begin≤ 0r ≡→≤⟨ solve! RCR ⟩ x - x ≤⟨ +MonoR≤ _ _ _ x≤y ⟩ y - x ◾
 
-    0<-→< : ∀ x y → 0r < y - x → x < y
-    0<-→< x y 0<y-x = subst2 _<_ (solve! RCR) (solve! RCR) (+MonoR< _ _ x 0<y-x)
+    0<Δ→< : ∀ x y → 0r < y - x → x < y
+    0<Δ→< x y 0<y-x = subst2 _<_ (solve! RCR) (solve! RCR) (+MonoR< _ _ x 0<y-x)
 
-    0≤-→≤ : ∀ x y → 0r ≤ y - x → x ≤ y
-    0≤-→≤ x y 0≤y-x = subst2 _≤_ (solve! RCR) (solve! RCR) (+MonoR≤ _ _ x 0≤y-x)
+    0≤Δ→≤ : ∀ x y → 0r ≤ y - x → x ≤ y
+    0≤Δ→≤ x y 0≤y-x = subst2 _≤_ (solve! RCR) (solve! RCR) (+MonoR≤ _ _ x 0≤y-x)
 
     0≤² : ∀ x → 0r ≤ x · x
     0≤² x = ≥Using< (x · x) 0r λ x²<0 →
@@ -283,12 +347,15 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
             x · x           <⟨ x²<∣x∣² ⟩
             abs x · abs x ≡→≤⟨ cong (∘diag _·_) (0≤→abs≡id x 0≤x) ⟩
             x · x           ◾))
-      (0≤-→≤ (x · x) (abs x · abs x) (begin≤
+      (0≤Δ→≤ (x · x) (abs x · abs x) (begin≤
         0r                          ≡→≤⟨ solve! RCR ⟩
-        0r · (abs x - - x)            ≤⟨ ·MonoR≤ 0r _ _ (≤→0≤- _ _ (-≤abs x))
-                                                        (≤→0≤- _ _ (≤abs x)) ⟩
+        0r · (abs x - - x)            ≤⟨ ·MonoR≤ 0r _ _ (≤→0≤Δ _ _ (-≤abs x))
+                                                        (≤→0≤Δ _ _ (≤abs x)) ⟩
         (abs x - x) · (abs x - - x) ≡→≤⟨ solve! RCR ⟩
         abs x · abs x - x · x         ◾))
+
+    abs²≡²' : ∀ x → abs(x · x) ≡ x · x
+    abs²≡²' x = 0≤→abs≡id (x · x) (0≤² x)
 
     triangularInequality : ∀ x y → abs (x + y) ≤ abs x + abs y
     triangularInequality x y = ⊔LUB
@@ -315,163 +382,102 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       abs (y - x)             ∎
 
     abs0 : abs 0r ≡ 0r
-    abs0 = cong (0r ⊔_) (solve! RCR) ∙ ⊔Idem
+    abs0 = 0≤→abs≡id 0r (is-refl 0r)
 
+    abs1 : abs 1r ≡ 1r
+    abs1 = 0≤→abs≡id 1r 0≤1
+
+  -- TO DO:
+  -- - Move the definitions and basic properties of Hom/Mono to a "Mappings" module
+  -- - Move the module below to a separate file (either "Mappings" or "Mappings.Properties")
   module CanonicalEmbeddings where
     open OrderedCommRingTheory
+    open CanonicalHomFromℤ RCR using (isHomFromℤ ; isContrHom[ℤCR,-])
 
-    ℕ→⟨R⟩ : ℕ → R
-    ℕ→⟨R⟩ zero          = 0r
-    ℕ→⟨R⟩ one           = 1r
-    ℕ→⟨R⟩ (suc (suc n)) = 1r + ℕ→⟨R⟩ (suc n)
+    1≤fromℕsuc : ∀ n → 1r ≤ R.fromℕ (suc n)
+    1≤fromℕsuc zero    = is-refl 1r
+    1≤fromℕsuc (suc n) = begin≤
+      1r                   ≡→≤⟨ sym (+IdL 1r) ⟩
+      0r + 1r                ≤⟨ +Mono≤ _ _ _ _ 0≤1 (1≤fromℕsuc n) ⟩
+      1r + R.fromℕ (suc n)  ◾
 
-    ℤ→⟨R⟩ : ℤ → R
-    ℤ→⟨R⟩ (pos n)    = ℕ→⟨R⟩ n
-    ℤ→⟨R⟩ (negsuc n) = - ℕ→⟨R⟩ (suc n)
+    0<fromℕsuc : ∀ n → 0r < R.fromℕ (suc n)
+    0<fromℕsuc n = <-≤-trans _ _ _ 0<1 (1≤fromℕsuc n)
 
-    private
-      ℕ→⟨R⟩suc : ∀ x → ℕ→⟨R⟩ (suc x) ≡ 1r + ℕ→⟨R⟩ x
-      ℕ→⟨R⟩suc zero    = solve! RCR
-      ℕ→⟨R⟩suc (suc x) = refl
+    0≤fromℕ : ∀ n → 0r ≤ R.fromℕ n
+    0≤fromℕ zero    = is-refl 0r
+    0≤fromℕ (suc n) = <-≤-weaken _ _ (0<fromℕsuc n)
 
-      ℕ→⟨R⟩pres+ : ∀ x y → ℕ→⟨R⟩ (x +ℕ y) ≡ ℕ→⟨R⟩ x + ℕ→⟨R⟩ y
-      ℕ→⟨R⟩pres+ zero          n       = solve! RCR
-      ℕ→⟨R⟩pres+ one           zero    = solve! RCR
-      ℕ→⟨R⟩pres+ one           (suc n) = refl
-      ℕ→⟨R⟩pres+ (suc (suc m)) n       = cong (1r +_) (ℕ→⟨R⟩pres+ (suc m) n) ∙ solve! RCR
+    fromℕ-pres≤ᵗ : ∀ m n → m ℕ.≤ᵗ n → R.fromℕ m ≤ R.fromℕ n
+    fromℕ-pres≤ᵗ zero          n             t = 0≤fromℕ n
+    fromℕ-pres≤ᵗ one           (suc n)       t = 1≤fromℕsuc n
+    fromℕ-pres≤ᵗ (suc (suc m)) (suc (suc n)) t =
+      +MonoL≤ _ _ _ (fromℕ-pres≤ᵗ (suc m) (suc n) t)
 
-      ℕ→⟨R⟩pres· : ∀ x y → ℕ→⟨R⟩ (x ·ℕ y) ≡ ℕ→⟨R⟩ x · ℕ→⟨R⟩ y
-      ℕ→⟨R⟩pres· zero          n = solve! RCR
-      ℕ→⟨R⟩pres· one           n = cong ℕ→⟨R⟩ (ℕ.+-zero n) ∙ solve! RCR
-      ℕ→⟨R⟩pres· (suc (suc m)) n =
-        ℕ→⟨R⟩ (n +ℕ (n +ℕ m ·ℕ n))         ≡⟨ ℕ→⟨R⟩pres+ n (n +ℕ m ·ℕ n) ⟩
-        ℕ→⟨R⟩ n + ℕ→⟨R⟩ (n +ℕ m ·ℕ n)       ≡⟨ cong (ℕ→⟨R⟩ n +_) $ ℕ→⟨R⟩pres+ n (m ·ℕ n) ⟩
-        ℕ→⟨R⟩ n + (ℕ→⟨R⟩ n + ℕ→⟨R⟩ (m ·ℕ n)) ≡⟨ solve! RCR ⟩
-        ℕ→⟨R⟩ n + ℕ→⟨R⟩ n + ℕ→⟨R⟩ (m ·ℕ n)   ≡⟨ cong (_ +_) $ ℕ→⟨R⟩pres· m n ⟩
-        ℕ→⟨R⟩ n + ℕ→⟨R⟩ n + ℕ→⟨R⟩ m · ℕ→⟨R⟩ n ≡⟨ solve! RCR ⟩
-        (1r + (1r + ℕ→⟨R⟩ m)) · ℕ→⟨R⟩ n      ≡⟨ sym $ cong ((_· ℕ→⟨R⟩ n) ∘ (1r +_)) (ℕ→⟨R⟩suc m) ⟩
-        ℕ→⟨R⟩ (suc (suc m)) · ℕ→⟨R⟩ n        ∎
+    fromℕ-pres≤ : ∀ m n → m ≤ℕ n → R.fromℕ m ≤ R.fromℕ n
+    fromℕ-pres≤ m n = fromℕ-pres≤ᵗ m n ∘ ℕ.≤→≤ᵇ
 
-      0<ℕ→⟨R⟩∘suc : ∀ n → 0r < ℕ→⟨R⟩ (suc n)
-      0<ℕ→⟨R⟩∘suc zero    = 0<1
-      0<ℕ→⟨R⟩∘suc (suc n) = begin<
-        0r               ≡→≤⟨ solve! RCR ⟩
-        0r + 0r            <⟨ +MonoR< _ _ _ 0<1 ⟩
-        1r + 0r            <⟨ +MonoL< _ _ _ (0<ℕ→⟨R⟩∘suc n) ⟩
-        1r + ℕ→⟨R⟩ (suc n) ◾
+    fromℕ-pres<ᵗ : ∀ m n → m ℕ.<ᵗ n → R.fromℕ m < R.fromℕ n
+    fromℕ-pres<ᵗ zero          (suc n)       t = 0<fromℕsuc n
+    fromℕ-pres<ᵗ one           (suc (suc n)) t = <SumLeftPos 1r _ (0<fromℕsuc n)
+    fromℕ-pres<ᵗ (suc (suc m)) (suc (suc n)) t =
+      +MonoL< _ _ _ (fromℕ-pres<ᵗ (suc m) (suc n) t)
 
-      0≤ℕ→⟨R⟩ : ∀ n → 0r ≤ ℕ→⟨R⟩ n
-      0≤ℕ→⟨R⟩ zero    = is-refl 0r
-      0≤ℕ→⟨R⟩ (suc n) = <-≤-weaken _ _ (0<ℕ→⟨R⟩∘suc n)
+    fromℕ-pres< : ∀ m n → m <ℕ n → R.fromℕ m < R.fromℕ n
+    fromℕ-pres< m n = fromℕ-pres<ᵗ m n ∘ ℕ.<→<ᵇ
 
-      ℤ→⟨R⟩presℕ- : ∀ x y → ℤ→⟨R⟩ (x ℕ- y) ≡ ℕ→⟨R⟩ x - ℕ→⟨R⟩ y
-      ℤ→⟨R⟩presℕ- zero          zero          = solve! RCR
-      ℤ→⟨R⟩presℕ- zero          (suc y)       = solve! RCR
-      ℤ→⟨R⟩presℕ- (suc x)       zero          = solve! RCR
-      ℤ→⟨R⟩presℕ- one           one           = solve! RCR
-      ℤ→⟨R⟩presℕ- one           (suc (suc y)) = solve! RCR
-      ℤ→⟨R⟩presℕ- (suc (suc x)) one           = solve! RCR
-      ℤ→⟨R⟩presℕ- (suc (suc x)) (suc (suc y)) =
-        ℤ→⟨R⟩ (suc x ℕ- suc y)                    ≡⟨ ℤ→⟨R⟩presℕ- (suc x) (suc y) ⟩
-        ℕ→⟨R⟩ (suc x) - ℕ→⟨R⟩ (suc y)             ≡⟨ solve! RCR ⟩
-        1r + ℕ→⟨R⟩ (suc x) - (1r + ℕ→⟨R⟩ (suc y)) ∎
+    fromℤ-pres≤ : ∀ m n → m ℤ.≤ n → R.fromℤ m ≤ R.fromℤ n
+    fromℤ-pres≤ (pos m)    (pos n)    (pos≤pos p)       = fromℕ-pres≤ᵗ m n p
+    fromℤ-pres≤ (negsuc m) (pos n)    negsuc≤pos        = begin≤
+      - R.fromℕ (suc m) ≤⟨ 0≤→-≤0 _ (0≤fromℕ (suc m)) ⟩
+      0r                ≤⟨ 0≤fromℕ n ⟩
+      R.fromℕ n         ◾
+    fromℤ-pres≤ (negsuc m) (negsuc n) (negsuc≤negsuc p) =
+      -Flip≤ _ _ (fromℕ-pres≤ᵗ (suc n) (suc m) p)
 
-      ℤ→⟨R⟩pres+ : ∀ x y → ℤ→⟨R⟩ (x +ℤ y) ≡ ℤ→⟨R⟩ x + ℤ→⟨R⟩ y
-      ℤ→⟨R⟩pres+ (pos m)    (pos n)          = ℕ→⟨R⟩pres+ m n
-      ℤ→⟨R⟩pres+ (pos m)    (negsuc n)       = ℤ→⟨R⟩presℕ- m (suc n)
-      ℤ→⟨R⟩pres+ (negsuc m) (pos n)          = ℤ→⟨R⟩presℕ- n (suc m) ∙ solve! RCR
-      ℤ→⟨R⟩pres+ (negsuc m) (negsuc zero)    =
-        - (1r + ℕ→⟨R⟩ (suc (m +ℕ 0))) ≡⟨ cong (-_ ∘ (1r +_) ∘ ℕ→⟨R⟩) $ ℕ.+-zero (suc m) ⟩
-        - (1r + ℕ→⟨R⟩ (suc m))        ≡⟨ solve! RCR ⟩
-        - ℕ→⟨R⟩ (suc m) - 1r          ∎
-      ℤ→⟨R⟩pres+ (negsuc m) (negsuc (suc n)) =
-        - (1r + ℕ→⟨R⟩ (suc m +ℕ suc n))         ≡⟨ cong (-_ ∘ (1r +_)) $ ℕ→⟨R⟩pres+ (suc m) _ ⟩
-        - (1r + (ℕ→⟨R⟩ (suc m) + ℕ→⟨R⟩ (suc n))) ≡⟨ solve! RCR ⟩
-        - ℕ→⟨R⟩ (suc m) - (1r + ℕ→⟨R⟩ (suc n))   ∎
+    fromℤ-pres< : ∀ m n → m ℤ.< n → R.fromℤ m < R.fromℤ n
+    fromℤ-pres< (pos m)    (pos n)    (pos<pos p)       = fromℕ-pres<ᵗ m n p
+    fromℤ-pres< (negsuc m) (pos n)    negsuc<pos        = begin<
+      - R.fromℕ (suc m) <⟨ 0<→-<0 _ (0<fromℕsuc m) ⟩
+      0r                ≤⟨ 0≤fromℕ n ⟩
+      R.fromℕ n         ◾
+    fromℤ-pres< (negsuc m) (negsuc n) (negsuc<negsuc p) =
+      -Flip< _ _ (fromℕ-pres<ᵗ (suc n) (suc m) p)
 
-      ℤ→⟨R⟩pres· : ∀ x y → ℤ→⟨R⟩ (x ·ℤ y) ≡ ℤ→⟨R⟩ x · ℤ→⟨R⟩ y
-      ℤ→⟨R⟩pres· (pos m)    (pos n)       = ℕ→⟨R⟩pres· m n
-      ℤ→⟨R⟩pres· (pos zero) (negsuc n)    = solve! RCR
-      ℤ→⟨R⟩pres· (pos (suc m)) (negsuc n) =
-        - ℕ→⟨R⟩ (suc m ·ℕ suc n)         ≡⟨ cong -_ (ℕ→⟨R⟩pres· (suc m) (suc n)) ⟩
-        - (ℕ→⟨R⟩ (suc m) · ℕ→⟨R⟩ (suc n)) ≡⟨ solve! RCR ⟩
-        ℕ→⟨R⟩ (suc m) · - ℕ→⟨R⟩ (suc n)   ∎
-      ℤ→⟨R⟩pres· (negsuc m) (pos zero)    = solve! RCR
-      ℤ→⟨R⟩pres· (negsuc m) (pos (suc n)) =
-        - ℕ→⟨R⟩ (suc m ·ℕ suc n)         ≡⟨ cong -_ (ℕ→⟨R⟩pres· (suc m) (suc n)) ⟩
-        - (ℕ→⟨R⟩ (suc m) · ℕ→⟨R⟩ (suc n)) ≡⟨ solve! RCR ⟩
-        - ℕ→⟨R⟩ (suc m) · ℕ→⟨R⟩ (suc n)   ∎
-      ℤ→⟨R⟩pres· (negsuc m) (negsuc n)    =
-        ℕ→⟨R⟩ (suc m ·ℕ suc n)           ≡⟨ ℕ→⟨R⟩pres· (suc m) (suc n) ⟩
-        ℕ→⟨R⟩ (suc m) · ℕ→⟨R⟩ (suc n)     ≡⟨ solve! RCR ⟩
-        - ℕ→⟨R⟩ (suc m) · - ℕ→⟨R⟩ (suc n) ∎
+    fromℤ-reflect< : ∀ m n → R.fromℤ m < R.fromℤ n → m ℤ.< n
+    fromℤ-reflect< m n fm<fn with m ℤ.≟ n
+    ... | lt m<n = m<n
+    ... | eq m≡n = ⊥.rec (is-irrefl _ (subst (_< _) (cong R.fromℤ m≡n) fm<fn))
+    ... | gt m>n = ⊥.rec (is-asym _ _ fm<fn (fromℤ-pres< n m m>n))
 
-      ℤ→⟨R⟩pres< : ∀ x y → x <ℤ y → ℤ→⟨R⟩ x < ℤ→⟨R⟩ y
-      ℤ→⟨R⟩pres< x y (k , p) = begin<
-        ℤ→⟨R⟩ x                      ≡→≤⟨ solve! RCR ⟩
-        ℤ→⟨R⟩ x + 0r                   <⟨ +MonoL< _ _ _ (0<ℕ→⟨R⟩∘suc k) ⟩
-        ℤ→⟨R⟩ x + ℤ→⟨R⟩ (pos (suc k)) ≡→≤⟨ _ ≡⟨ sym (ℤ→⟨R⟩pres+ x (pos (suc k))) ⟩
-        ℤ→⟨R⟩ (x +ℤ pos (suc k))       ≡⟨ sym $ cong ℤ→⟨R⟩ (ℤ.+sucℤ x (pos k)) ⟩
-        ℤ→⟨R⟩ (ℤ.sucℤ (x +ℤ pos k))    ≡⟨ cong ℤ→⟨R⟩ (ℤ.sucℤ+ x (pos k)) ⟩
-        ℤ→⟨R⟩ (ℤ.sucℤ x +ℤ pos k)      ≡⟨ cong ℤ→⟨R⟩ p ⟩ refl ⟩
-        ℤ→⟨R⟩ y                        ◾
+    isOCRHomFromℤ : IsOrderedCommRingHom (str ℤOrderedCommRing) R.fromℤ (str R')
+    isOCRHomFromℤ .IsOrderedCommRingHom.isCommRingHom = isHomFromℤ
+    isOCRHomFromℤ .IsOrderedCommRingHom.pres≤         = fromℤ-pres≤
+    isOCRHomFromℤ .IsOrderedCommRingHom.reflect<      = fromℤ-reflect<
 
-      ℤ→⟨R⟩pres≤ : ∀ x y → x ≤ℤ y → ℤ→⟨R⟩ x ≤ ℤ→⟨R⟩ y
-      ℤ→⟨R⟩pres≤ x y (k , p) = begin≤
-        ℤ→⟨R⟩ x                ≡→≤⟨ solve! RCR ⟩
-        ℤ→⟨R⟩ x + 0r             ≤⟨ +MonoL≤ _ _ _ (0≤ℕ→⟨R⟩ k) ⟩
-        ℤ→⟨R⟩ x + ℤ→⟨R⟩ (pos k) ≡→≤⟨ sym (ℤ→⟨R⟩pres+ x (pos k)) ∙ cong ℤ→⟨R⟩ p ⟩
-        ℤ→⟨R⟩ y                  ◾
-
-      ℤ→⟨R⟩reflect< : ∀ x y → ℤ→⟨R⟩ x < ℤ→⟨R⟩ y → x <ℤ y
-      ℤ→⟨R⟩reflect< x y ιx<ιy with x ℤ.≟ y
-      ... | lt x<y = x<y
-      ... | eq x≡y = ⊥.rec (is-irrefl _ $ subst (_< ℤ→⟨R⟩ y) (cong ℤ→⟨R⟩ x≡y) ιx<ιy)
-      ... | gt x>y = ⊥.rec (is-asym _ _ ιx<ιy (ℤ→⟨R⟩pres< y x x>y))
-
-    ℤ→⟨R⟩Hom : IsOrderedCommRingHom (str ℤOrderedCommRing) ℤ→⟨R⟩ (str R')
-    ℤ→⟨R⟩Hom = makeIsOrderedCommRingHom
-      refl ℤ→⟨R⟩pres+ ℤ→⟨R⟩pres· ℤ→⟨R⟩pres≤ ℤ→⟨R⟩reflect<
-
-    ℤ→⟨R⟩Mono : IsOrderedCommRingMono (str ℤOrderedCommRing) ℤ→⟨R⟩ (str R')
-    ℤ→⟨R⟩Mono = makeIsOrderedCommRingMono
-      refl ℤ→⟨R⟩pres+ ℤ→⟨R⟩pres· ℤ→⟨R⟩pres≤ ℤ→⟨R⟩pres< ℤ→⟨R⟩reflect<
+    isOCRMonoFromℤ : IsOrderedCommRingMono (str ℤOrderedCommRing) R.fromℤ (str R')
+    isOCRMonoFromℤ .IsOrderedCommRingMono.isOrderedCommRingHom = isOCRHomFromℤ
+    isOCRMonoFromℤ .IsOrderedCommRingMono.pres<                = fromℤ-pres<
 
     ℤOCR→R : OrderedCommRingHom ℤOrderedCommRing R'
-    fst ℤOCR→R = ℤ→⟨R⟩
-    snd ℤOCR→R = ℤ→⟨R⟩Hom
+    fst ℤOCR→R = R.fromℤ
+    snd ℤOCR→R = isOCRHomFromℤ
 
     ℤOCR↣R : OrderedCommRingMono ℤOrderedCommRing R'
-    fst ℤOCR↣R = ℤ→⟨R⟩
-    snd ℤOCR↣R = ℤ→⟨R⟩Mono
+    fst ℤOCR↣R = R.fromℤ
+    snd ℤOCR↣R = isOCRMonoFromℤ
 
-    isContrHom[ℤ,OCR] : isContr (OrderedCommRingHom ℤOrderedCommRing R')
-    fst isContrHom[ℤ,OCR] = ℤOCR→R
-    snd isContrHom[ℤ,OCR] (φ , φocrhom) = OrderedCommRingHom≡ λ i n → ℤ→⟨R⟩≡⟨φ⟩ n i
-      where
-        open IsOrderedCommRingHom φocrhom
+    isContrHom[ℤOCR,-] : isContr (OrderedCommRingHom ℤOrderedCommRing R')
+    fst isContrHom[ℤOCR,-]   = ℤOCR→R
+    snd isContrHom[ℤOCR,-] φ = OrderedCommRingHom≡ $
+      cong fst (snd isContrHom[ℤCR,-] (fst φ , isCommRingHom))
+      where open IsOrderedCommRingHom (snd φ)
 
-        ℕ→⟨R⟩≡⟨φ⟩ : ∀ n → ℕ→⟨R⟩ n ≡ φ (pos n)
-        ℕ→⟨R⟩≡⟨φ⟩ zero          = sym pres0
-        ℕ→⟨R⟩≡⟨φ⟩ one           = sym pres1
-        ℕ→⟨R⟩≡⟨φ⟩ (suc (suc n)) =
-          1r  + ℕ→⟨R⟩ (suc n)   ≡⟨ cong (1r +_) (ℕ→⟨R⟩≡⟨φ⟩ (suc n)) ⟩
-          1r  + φ (pos (suc n)) ≡⟨ sym $ cong (_+ φ (pos (suc n))) pres1 ⟩
-          φ 1 + φ (pos (suc n)) ≡⟨ sym $ pres+ 1 (pos (suc n)) ⟩
-          φ (pos (suc (suc n))) ∎
-
-        ℤ→⟨R⟩≡⟨φ⟩ : ∀ n → ℤ→⟨R⟩ n ≡ φ n
-        ℤ→⟨R⟩≡⟨φ⟩ (pos n)    = ℕ→⟨R⟩≡⟨φ⟩ n
-        ℤ→⟨R⟩≡⟨φ⟩ (negsuc n) = cong -_ (ℕ→⟨R⟩≡⟨φ⟩ (suc n)) ∙ sym (pres- (pos (suc n)))
-
-    isContrℤ↣OCR : isContr (ℤOrderedCommRing ↣ R')
-    fst isContrℤ↣OCR = ℤOCR↣R
-    snd isContrℤ↣OCR (φ , φocrmono) =
-      let
-        φocrhom = isOrderedCommRingMono→isOrderedCommRingHom φocrmono
-        ℤ→⟨R⟩≡φ = cong fst $ snd isContrHom[ℤ,OCR] (φ , φocrhom)
-      in
-        OrderedCommRingMono≡ ℤ→⟨R⟩≡φ
+    isContrMono[ℤOCR,-] : isContr (OrderedCommRingMono ℤOrderedCommRing R')
+    fst isContrMono[ℤOCR,-]   = ℤOCR↣R
+    snd isContrMono[ℤOCR,-] φ = OrderedCommRingMono≡ $
+      cong fst (snd isContrHom[ℤCR,-] (fst φ , isCommRingHom))
+      where open IsOrderedCommRingMono (snd φ)
 
   module SumTheory where
     open OrderedCommRingTheory
@@ -547,7 +553,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       where
         lemma : ∀ p → (1r - p) + p ≡ 1r
         lemma p = solve! RCR
-
+{-
   module AdditiveSubType
     (P : R → hProp ℓ'')
     (+Closed : (x y : R) → ⟨ P x ⟩ → ⟨ P y ⟩ → ⟨ P (x + y) ⟩)
@@ -574,103 +580,6 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     (·Closed : (x y : R) → ⟨ P x ⟩ → ⟨ P y ⟩ → ⟨ P (x · y) ⟩)
     where
     open AdditiveSubType P +Closed public
-
-  module Positive where
-    open OrderedCommRingTheory
-    private
-      0<ₚ_ : R → hProp ℓ'
-      0<ₚ x = (0r < x) , is-prop-valued< 0r x
-
-    0<+Closed : ∀ x y → 0r < x → 0r < y → 0r < x + y
-    0<+Closed x y 0<x 0<y = begin<
-      0r       <⟨ 0<x ⟩
-      x      ≡→≤⟨ solve! RCR ⟩
-      x + 0r   <⟨ +MonoL< 0r y x 0<y ⟩
-      x + y    ◾
-
-    0<·Closed : ∀ x y → 0r < x → 0r < y → 0r < x · y
-    0<·Closed x y 0<x 0<y = begin<
-      0r      ≡→≤⟨ solve! RCR ⟩
-      0r · y   <⟨ ·MonoR< 0r x y 0<y 0<x ⟩
-      x · y     ◾
-    open AdditiveAndMultiplicativeSubType 0<ₚ_ 0<+Closed 0<·Closed renaming (
-        subtype to R₊ ; ι to ⟨_⟩₊
-      ; _-subtype_ to _-₊_ ; _≤subtype_ to _≤₊_ ; _<subtype_ to _<₊_) public
-
-    R₊≡ = Σ≡Prop (is-prop-valued< 0r)
-
-    _⊔₊_ : R₊ → R₊ → R₊
-    (x ⊔₊ y) .fst = ⟨ x ⟩₊ ⊔ ⟨ y ⟩₊
-    (x ⊔₊ y) .snd = begin< 0r <⟨ snd x ⟩ ⟨ x ⟩₊ ≤⟨ L≤⊔ ⟩ ⟨ x ⟩₊ ⊔ ⟨ y ⟩₊ ◾
-
-    R₊AdditiveSemigroup : Semigroup _
-    fst R₊AdditiveSemigroup = R₊
-    SemigroupStr._·_ (snd R₊AdditiveSemigroup) = _+₊_ where
-      _+₊_ : R₊ → R₊ → R₊
-      (x +₊ y) .fst = fst x + fst y
-      (x +₊ y) .snd = 0<+Closed (fst x) (fst y) (snd x) (snd y)
-    SemigroupStr.isSemigroup (snd R₊AdditiveSemigroup) = isSG
-      where
-        isSG : IsSemigroup _
-        isSG .IsSemigroup.is-set = isSetΣSndProp is-set (is-prop-valued< 0r)
-        isSG .IsSemigroup.·Assoc = λ _ _ _ → R₊≡ (+Assoc _ _ _)
-
-    open SemigroupStr (snd R₊AdditiveSemigroup) using () renaming (_·_ to _+₊_) public
-
-    R₊MultiplicativeCommMonoid : CommMonoid _
-    fst R₊MultiplicativeCommMonoid = R₊
-    CommMonoidStr.ε (snd R₊MultiplicativeCommMonoid) = 1r , 0<1
-    CommMonoidStr._·_ (snd R₊MultiplicativeCommMonoid) = _·₊_ where
-      _·₊_ : R₊ → R₊ → R₊
-      (x ·₊ y) .fst = fst x · fst y
-      (x ·₊ y) .snd = 0<·Closed (fst x) (fst y) (snd x) (snd y)
-    CommMonoidStr.isCommMonoid (snd R₊MultiplicativeCommMonoid) =
-      makeIsCommMonoid
-        (isSetΣSndProp is-set (is-prop-valued< 0r))
-        (λ _ _ _ → R₊≡ (·Assoc _ _ _))
-        (λ _     → R₊≡ (·IdR _))
-        (λ _ _   → R₊≡ (·Comm _ _))
-
-    open CommMonoidStr (snd R₊MultiplicativeCommMonoid) using () renaming (
-      ε to 1₊ ; _·_ to _·₊_) public
-
-    selfSeparated : ∀ (x y : R) → (∀ (z : R₊) → abs(x - y) < ⟨ z ⟩₊) → x ≡ y
-    selfSeparated x y ∀[•]∣x-y∣<• =
-      let
-        ∣x-y∣≤0 : abs(x - y) ≤ 0r
-        ∣x-y∣≤0 = ¬<→≥ 0r (abs(x - y)) λ 0<∣x-y∣ → is-irrefl (abs(x - y)) $ begin<
-          abs(x - y) <⟨ ∀[•]∣x-y∣<• (abs(x - y) , 0<∣x-y∣) ⟩
-          abs(x - y) ◾
-
-        x-y≡0 : x - y ≡ 0r
-        x-y≡0 = abs≤0→≡0 (x - y) ∣x-y∣≤0
-      in
-        equalByDifference x y x-y≡0
-
-    plusMinus₊ : ∀ x y → (x +₊ y) -₊ y ≡ ⟨ x ⟩₊
-    plusMinus₊ (x , _) (y , _) = solve! RCR
-
-    minusPlus₊ : ∀ x y → (x -₊ y) + ⟨ y ⟩₊ ≡ ⟨ x ⟩₊
-    minusPlus₊ (x , _) (y , _) = solve! RCR
-
-    ≡₊→0< : ∀ {x} y → x ≡ ⟨ y ⟩₊ → 0r < x
-    ≡₊→0< y p = subst (0r <_) (sym p) (snd y)
-
-    [_-₊_]⟨_⟩ : ∀ x y → y <₊ x → R₊
-    [_-₊_]⟨_⟩ x y y<x = (x -₊ y) , (<→0<- ⟨ y ⟩₊ ⟨ x ⟩₊ y<x)
-
-    <₊SumLeft : ∀ x y → x <₊ (x +₊ y)
-    <₊SumLeft (x , _) (y , 0<y) = begin<
-      x ≡→≤⟨ solve! RCR ⟩ x + 0r <⟨ +MonoL< _ _ _ 0<y ⟩ x + y ◾
-
-    <₊SumRight : ∀ x y → x <₊ (y +₊ x)
-    <₊SumRight (x , _) (y , 0<y) = begin<
-      x ≡→≤⟨ solve! RCR ⟩ 0r + x <⟨ +MonoR< _ _ _ 0<y ⟩ y + x ◾
-
-    Δ<₊ : ∀ x y → (x -₊ y) < ⟨ x ⟩₊
-    Δ<₊ (x , _) (y , 0<y) = begin<
-      x - y <⟨ +MonoL< _ _ _ (-Flip< 0r y 0<y) ⟩ x - 0r ≡→≤⟨ solve! RCR ⟩ x ◾
-
 
   -- this module can be used to form the positive cone,
   -- using an alternative implementation of the comparison wit 0.
@@ -742,42 +651,166 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       (λ (X : R → Type _) → (((z : Σ R X) → abs(x - y) < (fst z)) → x ≡ y))
       (λ i x → 0<≡0<ᵗ x i)
       (selfSeparated' x y)
-
-  module NonNegative where
+-}
+  module AdditiveSubType
+    (P : R → Type ℓ'')
+    (P-prop : ∀ x → isProp (P x))
+    (+Closed : (x y : R) → P x → P y → P (x + y))
+    where
     open OrderedCommRingTheory
-    private
-      0≤ₚ_ : R → hProp ℓ'
-      0≤ₚ x = (0r ≤ x) , is-prop-valued≤ 0r x
 
-      0≤+Closed : ∀ x y → 0r ≤ x → 0r ≤ y → 0r ≤ x + y
-      0≤+Closed x y 0≤x 0≤y = begin≤
-        0r       ≤⟨ 0≤x ⟩
-        x      ≡→≤⟨ solve! RCR ⟩
-        x + 0r   ≤⟨ +MonoL≤ 0r y x 0≤y ⟩
-        x + y    ◾
+    subtype = Σ[ x ∈ R ] P x
 
-      0≤·Closed : ∀ x y → 0r ≤ x → 0r ≤ y → 0r ≤ x · y
-      0≤·Closed x y 0≤x 0≤y = begin≤
-        0r      ≡→≤⟨ solve! RCR ⟩
-        0r · y    ≤⟨ ·MonoR≤ 0r x y 0≤y 0≤x ⟩
-        x · y     ◾
-    open AdditiveAndMultiplicativeSubType 0≤ₚ_ 0≤+Closed 0≤·Closed renaming (
-        subtype to R₀₊ ; ι to ⟨_⟩₀₊
-      ; _-subtype_ to _-₀₊_ ; _≤subtype_ to _≤₀₊_ ; _<subtype_ to _<₀₊_) public
+    isSetSubtype : isSet subtype
+    isSetSubtype = isSetΣSndProp is-set P-prop
 
-    R₀₊≡ = Σ≡Prop (is-prop-valued≤ 0r)
+    ι : subtype → R
+    ι = fst
+
+    subtype≡ : ∀ {x y} → ι x ≡ ι y → x ≡ y
+    subtype≡ = Σ≡Prop P-prop
+
+    _+subtype_ : subtype → subtype → subtype
+    (x +subtype y) .fst = fst x + fst y
+    (x +subtype y) .snd = +Closed (fst x) (fst y) (snd x) (snd y)
+
+    _-subtype_ : subtype → subtype → R
+    _-subtype_ x y = ι x - ι y
+
+    _<subtype_ : subtype → subtype → Type ℓ'
+    _<subtype_ x y = ι x < ι y
+
+    _≤subtype_ : subtype → subtype → Type ℓ'
+    _≤subtype_ x y = ι x ≤ ι y
+
+    infixl 6 _+subtype_ _-subtype_
+    infix  4 _<subtype_ _≤subtype_
+
+  module AdditiveAndMultiplicativeSubType
+    (P : R → Type ℓ'')
+    (P-prop : ∀ x → isProp (P x))
+    (+Closed : (x y : R) → P x → P y → P (x + y))
+    (·Closed : (x y : R) → P x → P y → P (x · y))
+    where
+    open AdditiveSubType P P-prop +Closed public
+
+    _·subtype_ : subtype → subtype → subtype
+    (x ·subtype y) .fst = fst x · fst y
+    (x ·subtype y) .snd = ·Closed (fst x) (fst y) (snd x) (snd y)
+
+    infixl 7 _·subtype_
+
+  -- Of course +Closed and ·Closed are derivable, but for concrete instances
+  -- (like the rationals) it's more efficient to use alternative proofs
+  module Positive
+    (0<+Closed : (x y : R) → 0r < x → 0r < y → 0r < x + y)
+    (0<·Closed : (x y : R) → 0r < x → 0r < y → 0r < x · y)
+    where
+
+    open AdditiveAndMultiplicativeSubType
+      (0r <_) (is-prop-valued< 0r) 0<+Closed 0<·Closed public renaming (
+        subtype to R₊ ; isSetSubtype to isSetR₊ ; ι to ⟨_⟩₊ ; subtype≡ to R₊≡
+      ; _+subtype_ to _+₊_ ; _·subtype_ to _·₊_ ; _-subtype_ to _-₊_
+      ; _≤subtype_ to _≤₊_ ; _<subtype_ to _<₊_)
+
+    open OrderedCommRingTheory
+
+    R₊AdditiveSemigroup : Semigroup _
+    fst R₊AdditiveSemigroup = R₊
+    SemigroupStr._·_ (snd R₊AdditiveSemigroup) = _+₊_
+    SemigroupStr.isSemigroup (snd R₊AdditiveSemigroup) = isSG
+      where
+        isSG : IsSemigroup _
+        isSG .IsSemigroup.is-set = isSetR₊
+        isSG .IsSemigroup.·Assoc = λ _ _ _ → R₊≡ (+Assoc _ _ _)
+
+    open SemigroupStr (snd R₊AdditiveSemigroup) public hiding (_·_) renaming (
+      ·Assoc to +₊Assoc)
+
+    R₊MultiplicativeCommMonoid : CommMonoid _
+    fst R₊MultiplicativeCommMonoid = R₊
+    CommMonoidStr.ε   (snd R₊MultiplicativeCommMonoid) = 1r , 0<1
+    CommMonoidStr._·_ (snd R₊MultiplicativeCommMonoid) = _·₊_
+    CommMonoidStr.isCommMonoid (snd R₊MultiplicativeCommMonoid) =
+      makeIsCommMonoid
+        isSetR₊
+        (λ _ _ _ → R₊≡ (·Assoc _ _ _))
+        (λ _     → R₊≡ (·IdR _))
+        (λ _ _   → R₊≡ (·Comm _ _))
+
+    open CommMonoidStr (snd R₊MultiplicativeCommMonoid) public hiding (_·_) renaming (
+      ε to 1₊ ; ·Assoc to ·₊Assoc ; ·IdR to ·₊IdR ; ·Comm to ·₊Comm)
+
+    selfSeparated : ∀ (x y : R) → (∀ (z : R₊) → abs(x - y) < ⟨ z ⟩₊) → x ≡ y
+    selfSeparated x y ∀[•]∣x-y∣<• =
+      let
+        ∣x-y∣≤0 : abs(x - y) ≤ 0r
+        ∣x-y∣≤0 = ¬<→≥ 0r (abs(x - y)) λ 0<∣x-y∣ → is-irrefl (abs(x - y)) $ begin<
+          abs(x - y) <⟨ ∀[•]∣x-y∣<• (abs(x - y) , 0<∣x-y∣) ⟩
+          abs(x - y) ◾
+
+        x-y≡0 : x - y ≡ 0r
+        x-y≡0 = abs≤0→≡0 (x - y) ∣x-y∣≤0
+      in
+        equalByDifference x y x-y≡0
+
+    _⊔₊_ : R₊ → R₊ → R₊
+    (x ⊔₊ y) .fst = ⟨ x ⟩₊ ⊔ ⟨ y ⟩₊
+    (x ⊔₊ y) .snd = begin< 0r <⟨ snd x ⟩ ⟨ x ⟩₊ ≤⟨ L≤⊔ ⟩ ⟨ x ⟩₊ ⊔ ⟨ y ⟩₊ ◾
+
+    plusMinus₊ : ∀ x y → (x +₊ y) -₊ y ≡ ⟨ x ⟩₊
+    plusMinus₊ (x , _) (y , _) = solve! RCR
+
+    minusPlus₊ : ∀ x y → x -₊ y + ⟨ y ⟩₊ ≡ ⟨ x ⟩₊
+    minusPlus₊ (x , _) (y , _) = solve! RCR
+
+    ≡₊→0< : ∀ {x} y → x ≡ ⟨ y ⟩₊ → 0r < x
+    ≡₊→0< y p = subst (0r <_) (sym p) (snd y)
+
+    infixl 6 -₊<
+    -₊< : ∀ x y → y <₊ x → R₊
+    -₊< x y y<x .fst = x -₊ y
+    -₊< x y y<x .snd = <→0<Δ ⟨ y ⟩₊ ⟨ x ⟩₊ y<x
+
+    syntax -₊< x y y<x = x -₊[ y<x ] y
+
+    [_-₊_]⟨_⟩ : ∀ x y → y <₊ x → R₊
+    [_-₊_]⟨_⟩ = -₊<
+
+    <₊SumLeft : ∀ x y → x <₊ x +₊ y
+    <₊SumLeft (x , _) (y , 0<y) = begin<
+      x ≡→≤⟨ solve! RCR ⟩ x + 0r <⟨ +MonoL< _ _ _ 0<y ⟩ x + y ◾
+
+    <₊SumRight : ∀ x y → x <₊ y +₊ x
+    <₊SumRight (x , _) (y , 0<y) = begin<
+      x ≡→≤⟨ solve! RCR ⟩ 0r + x <⟨ +MonoR< _ _ _ 0<y ⟩ y + x ◾
+
+    Δ<₊ : ∀ x y → x -₊ y < ⟨ x ⟩₊
+    Δ<₊ (x , _) (y , 0<y) = begin<
+      x - y <⟨ +MonoL< _ _ _ (-Flip< 0r y 0<y) ⟩ x - 0r ≡→≤⟨ solve! RCR ⟩ x ◾
+
+  module NonNegative
+    (0≤+Closed : (x y : R) → 0r ≤ x → 0r ≤ y → 0r ≤ x + y)
+    (0≤·Closed : (x y : R) → 0r ≤ x → 0r ≤ y → 0r ≤ x · y)
+    where
+
+    open AdditiveAndMultiplicativeSubType
+      (0r ≤_) (is-prop-valued≤ 0r) 0≤+Closed 0≤·Closed public renaming (
+        subtype to R₀₊ ; isSetSubtype to isSetR₀₊ ; ι to ⟨_⟩₀₊ ; subtype≡ to R₀₊≡
+      ; _+subtype_ to _+₀₊_ ; _·subtype_ to _·₀₊_ ; _-subtype_ to _-₀₊_
+      ; _≤subtype_ to _≤₀₊_ ; _<subtype_ to _<₀₊_)
+
+    open OrderedCommRingTheory
 
     R₀₊CommSemiring : CommSemiring _
     fst R₀₊CommSemiring = R₀₊
-    CommSemiringStr.0r (snd R₀₊CommSemiring) = 0r , is-refl _
-    CommSemiringStr.1r (snd R₀₊CommSemiring) = 1r , <-≤-weaken _ _ 0<1
-    CommSemiringStr._+_ (snd R₀₊CommSemiring) (x , 0≤x) (y , 0≤y) =
-      (x + y , 0≤+Closed x y 0≤x 0≤y)
-    CommSemiringStr._·_ (snd R₀₊CommSemiring) (x , 0≤x) (y , 0≤y) =
-      (x · y , 0≤·Closed x y 0≤x 0≤y)
+    CommSemiringStr.0r  (snd R₀₊CommSemiring) = 0r , is-refl _
+    CommSemiringStr.1r  (snd R₀₊CommSemiring) = 1r , <-≤-weaken _ _ 0<1
+    CommSemiringStr._+_ (snd R₀₊CommSemiring) = _+₀₊_
+    CommSemiringStr._·_ (snd R₀₊CommSemiring) = _·₀₊_
     CommSemiringStr.isCommSemiring (snd R₀₊CommSemiring) =
       makeIsCommSemiring
-        (isSetΣSndProp is-set (is-prop-valued≤ 0r))
+        isSetR₀₊
         (λ _ _ _ → R₀₊≡ (+Assoc _ _ _))
         (λ _     → R₀₊≡ (+IdR _))
         (λ _ _   → R₀₊≡ (+Comm _ _))
@@ -787,23 +820,53 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         (λ _     → R₀₊≡ (0LeftAnnihilates _))
         (λ _ _   → R₀₊≡ (·Comm _ _))
 
-    open CommSemiringStr (snd R₀₊CommSemiring) using () renaming (
-      0r to 0₀₊ ; 1r to 1₀₊ ; _+_ to _+₀₊_ ; _·_ to _·₀₊_) public
+    open CommSemiringStr (snd R₀₊CommSemiring) public hiding (_+_ ; _·_)
+      renaming (
+        0r to 0₀₊ ; 1r to 1₀₊
+      ; +Assoc to +₀₊Assoc ; +IdL to +₀₊IdL ; +IdR to +₀₊IdR ; +Comm to +₀₊Comm
+      ; ·Assoc to ·₀₊Assoc ; ·IdL to ·₀₊IdL ; ·IdR to ·₀₊IdR ; ·Comm to ·₀₊Comm
+      ; ·DistL+ to ·₀₊DistL+₀₊ ; ·DistR+ to ·₀₊DistR+₀₊
+      ; AnnihilL to AnnihilL₀₊ ; AnnihilR to AnnihilR₀₊)
 
-    R₀₊MultiplicativeCommMonoid : CommMonoid _
-    fst R₀₊MultiplicativeCommMonoid = R₀₊
-    CommMonoidStr.ε (snd R₀₊MultiplicativeCommMonoid) = 1r , <-≤-weaken _ _ 0<1
-    CommMonoidStr._·_ (snd R₀₊MultiplicativeCommMonoid) (x , 0≤x) (y , 0≤y) =
-      (x · y , 0≤·Closed x y 0≤x 0≤y)
-    CommMonoidStr.isCommMonoid (snd R₀₊MultiplicativeCommMonoid) =
-      makeIsCommMonoid
-        (isSetΣSndProp is-set (is-prop-valued≤ 0r))
-        (λ _ _ _ → R₀₊≡ (·Assoc _ _ _))
-        (λ _     → R₀₊≡ (·IdR _))
-        (λ _ _   → R₀₊≡ (·Comm _ _))
+    _⊔₀₊_ : R₀₊ → R₀₊ → R₀₊
+    (x ⊔₀₊ y) .fst = ⟨ x ⟩₀₊ ⊔ ⟨ y ⟩₀₊
+    (x ⊔₀₊ y) .snd = begin≤ 0r ≤⟨ snd x ⟩ ⟨ x ⟩₀₊ ≤⟨ L≤⊔ ⟩ ⟨ x ⟩₀₊ ⊔ ⟨ y ⟩₀₊ ◾
 
-    open CommMonoidStr (snd R₀₊MultiplicativeCommMonoid) using () renaming (
-      ε to 1₀₊ ; _·_ to _·₀₊_) public
+    _⊓₀₊_ : R₀₊ → R₀₊ → R₀₊
+    (x ⊓₀₊ y) .fst = ⟨ x ⟩₀₊ ⊓ ⟨ y ⟩₀₊
+    (x ⊓₀₊ y) .snd = ⊓GLB (snd x) (snd y)
+
+    plusMinus₀₊ : ∀ x y → (x +₀₊ y) -₀₊ y ≡ ⟨ x ⟩₀₊
+    plusMinus₀₊ (x , _) (y , _) = solve! RCR
+
+    minusPlus₀₊ : ∀ x y → x -₀₊ y + ⟨ y ⟩₀₊ ≡ ⟨ x ⟩₀₊
+    minusPlus₀₊ (x , _) (y , _) = solve! RCR
+
+    ≡₀₊→0≤ : ∀ {x} y → x ≡ ⟨ y ⟩₀₊ → 0r ≤ x
+    ≡₀₊→0≤ y p = subst (0r ≤_) (sym p) (snd y)
+
+    infixl 6 -₀₊≤
+    -₀₊≤ : ∀ x y → y ≤₀₊ x → R₀₊
+    -₀₊≤ x y y≤x .fst = x -₀₊ y
+    -₀₊≤ x y y≤x .snd = ≤→0≤Δ ⟨ y ⟩₀₊ ⟨ x ⟩₀₊ y≤x
+
+    syntax -₀₊≤ x y y≤x = x -₀₊[ y≤x ] y
+
+    [_-₀₊_]⟨_⟩ : ∀ x y → y ≤₀₊ x → R₀₊
+    [_-₀₊_]⟨_⟩ = -₀₊≤
+
+
+    ≤₀₊SumLeft : ∀ x y → x ≤₀₊ x +₀₊ y
+    ≤₀₊SumLeft (x , _) (y , 0≤y) = begin≤
+      x ≡→≤⟨ solve! RCR ⟩ x + 0r ≤⟨ +MonoL≤ _ _ _ 0≤y ⟩ x + y ◾
+
+    ≤₀₊SumRight : ∀ x y → x ≤₀₊ y +₀₊ x
+    ≤₀₊SumRight (x , _) (y , 0≤y) = begin≤
+      x ≡→≤⟨ solve! RCR ⟩ 0r + x ≤⟨ +MonoR≤ _ _ _ 0≤y ⟩ y + x ◾
+
+    Δ≤₀₊ : ∀ x y → x -₀₊ y ≤ ⟨ x ⟩₀₊
+    Δ≤₀₊ (x , _) (y , 0≤y) = begin≤
+      x - y ≤⟨ +MonoL≤ _ _ _ (-Flip≤ 0r y 0≤y) ⟩ x - 0r ≡→≤⟨ solve! RCR ⟩ x ◾
 
   private
     2r = 1r + 1r
@@ -855,14 +918,6 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       (y + y) · 1/2 ≡→≤⟨ meanIdem y ⟩
       y               ◾
 
-    -- alternative proof of 0≤abs without using ¬<→≥ , but assuming charcateristic ≠ 2
-    0≤abs' : ∀ z → 0r ≤ abs z
-    0≤abs' z = begin≤
-      0r                    ≡→≤⟨ solve! RCR ⟩
-      (z - z) · 1/2           ≤⟨ ·MonoR≤ _ _ _ 0≤1/2 $ +Mono≤ _ _ _ _ (≤abs z) (-≤abs z) ⟩
-      (abs z + abs z) · 1/2 ≡→≤⟨ meanIdem (abs z) ⟩
-      abs z                   ◾
-
     /2+/2≡id : ∀ x → x /2 + x /2 ≡ x
     /2+/2≡id x = solve! RCR ∙ meanIdem x
 
@@ -882,7 +937,16 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     id-[/4+/4]≡/2 : ∀ x → x - (x /4 + x /4) ≡ x /2
     id-[/4+/4]≡/2 x = cong (_-_ x) (/4+/4≡/2 x) ∙ id-/2≡/2 x
 
-    open Positive
+  module PositiveHalves
+    (1/2 : R)
+    (1/2≡2⁻¹ : 1/2 · 2r ≡ 1r)
+    (0<+Closed : (x y : R) → 0r < x → 0r < y → 0r < x + y)
+    (0<·Closed : (x y : R) → 0r < x → 0r < y → 0r < x · y)
+    where
+
+    open Characteristic≠2 1/2 1/2≡2⁻¹
+    open Positive 0<+Closed 0<·Closed
+    open OrderedCommRingTheory
 
     _/2₊ : R₊ → R₊
     _/2₊ = _·₊ (1/2 , 0<1/2)

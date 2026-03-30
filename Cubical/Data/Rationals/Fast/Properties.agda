@@ -126,10 +126,11 @@ module Reduce where
 
 open Reduce public
 
--- useful functions for defining operations on ℚ
+reduceFrac : ℚ → ℤ × ℕ₊₁
+reduceFrac = fst ∘ reduced
 
 reduce : ℚ → ℚ
-reduce = [_] ∘ fst ∘  reduced
+reduce = [_] ∘ fst ∘ reduced
 
 reduce≡id : ∀ x → reduce x ≡ x
 reduce≡id = snd ∘ snd ∘ reduced
@@ -585,3 +586,6 @@ x - y = x + (- y)
 
 +CancelR : ∀ x y z → x + y ≡ z + y → x ≡ z
 +CancelR x y z p = +CancelL y x z (+Comm y x ∙ p ∙ +Comm z y)
+
+numerator0→0 : (u : ℤ × ℕ₊₁) → u .fst ≡ 0 → [ u ] ≡ 0
+numerator0→0 (a , b) p = eq/ (a , b) (0 , 1) (ℤ.·IdR _ ∙ p)

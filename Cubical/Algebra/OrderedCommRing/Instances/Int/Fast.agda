@@ -26,9 +26,6 @@ open import Cubical.Relation.Binary.Order.StrictOrder.Instances.Int.Fast
 open import Cubical.Relation.Binary.Order.Pseudolattice
 open import Cubical.Relation.Binary.Order.Pseudolattice.Instances.Int.Fast
 
-open import Cubical.Relation.Binary
-open BinaryRelation
-
 open CommRingStr
 open OrderedCommRingStr
 open PseudolatticeStr
@@ -51,20 +48,16 @@ isOrderedCommRing (snd ℤOrderedCommRing) = isOrderedCommRingℤ
     isOrderedCommRingℤ .isCommRing      = ℤCommRing .snd .isCommRing
     isOrderedCommRingℤ .isPseudolattice = ℤ≤Pseudolattice .snd .is-pseudolattice
     isOrderedCommRingℤ .isStrictOrder   = ℤ<StrictOrder .snd .isStrictOrder
-    isOrderedCommRingℤ .<-≤-weaken      = λ x y → <-weaken {x} {y}
+    isOrderedCommRingℤ .<-≤-weaken      = λ _ _ → <-weaken
     isOrderedCommRingℤ .≤≃¬>            = λ x y →
-      propBiimpl→Equiv (isProp≤ {x} {y}) (isProp¬ (y <ℤ x))
-        (λ x≤y y<x → isIrrefl< (≤<-trans {x} {y} x≤y y<x))
-        (λ ¬y<x → case x ≟ y return (λ _ → x ≤ℤ y) of λ {
-          (lt x<y) → <-weaken {x} {y} x<y ;
-          (eq x≡y) → subst (x ≤ℤ_) x≡y isRefl≤ ;
-          (gt y<z) → ⊥.rec (¬y<x y<z) })
-    isOrderedCommRingℤ .+MonoR≤         = λ x y z → ≤-+o {x} {y} {z}
-    isOrderedCommRingℤ .+MonoR<         = λ x y z → <-+o {x} {y} {z}
+      propBiimpl→Equiv isProp≤ (isProp¬ (y <ℤ x))
+        (λ x≤y y<x → isIrrefl< (≤<-trans x≤y y<x))
+        isAsym'<
+    isOrderedCommRingℤ .+MonoR≤         = λ _ _ _ → ≤-+o
+    isOrderedCommRingℤ .+MonoR<         = λ _ _ _ → <-+o
     isOrderedCommRingℤ .posSum→pos∨pos  = λ _ _ → ∣_∣₁ ∘ 0<+ _ _
-    isOrderedCommRingℤ .<-≤-trans       = λ x y z → <≤-trans {x} {y} {z}
-    isOrderedCommRingℤ .≤-<-trans       = λ x y z → ≤<-trans {x} {y} {z}
-    isOrderedCommRingℤ .·MonoR≤         = λ x y z → 0≤o→≤-·o {z} {x} {y}
-    isOrderedCommRingℤ .·MonoR<         = λ x y z → 0<o→<-·o {z} {x} {y}
-    isOrderedCommRingℤ .·CancelR<       = λ x y z → 0<o→<-·o-cancel {z} {x} {y}
-    isOrderedCommRingℤ .0<1             = isRefl≤
+    isOrderedCommRingℤ .<-≤-trans       = λ _ _ _ → <≤-trans
+    isOrderedCommRingℤ .≤-<-trans       = λ _ _ _ → ≤<-trans
+    isOrderedCommRingℤ .·MonoR≤         = λ _ _ _ → 0≤o→≤-·o
+    isOrderedCommRingℤ .·MonoR<         = λ _ _ _ → 0<o→<-·o
+    isOrderedCommRingℤ .0<1             = pos<pos tt

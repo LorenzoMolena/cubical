@@ -37,57 +37,15 @@ open import Cubical.Reflection.StrictEquiv
 
 open import Cubical.Relation.Premetric.Base
 
+open OrderedCommRingTheory ℚOrderedCommRing
+open 1/2∈ℚ
+open PositiveRationals
+open PositiveHalvesℚ
+open ℚ₊Inverse
+
 private
   variable
     ℓ ℓ' ℓM ℓM' ℓN ℓN' : Level
-
-module ℚ₊Inverse where
-
-  private
-    ℚOCR = ℚOrderedCommRing
-    ℚCR  = OrderedCommRing→CommRing ℚOCR
-  open Units ℚCR
-  open CommRingTheory ℚCR
-
-  Σinverseℚ₊ : ((ε , 0<ε) : ℚ₊) → Σ[ δ ∈ ℚ ] (ε ℚ.· δ ≡ 1)
-  Σinverseℚ₊ = uncurry $ SQ.elimProp (λ ε → isPropΠ λ _ → inverseUniqueness ε) λ
-    { (pos zero    , 1+ d) p → ⊥.rec (ℤ.isIrrefl< p)
-    ; (pos (suc n) , (1+ d)) p .fst → [ pos (suc d) / 1+ n ]
-    ; (pos (suc n) , (1+ d)) p .snd →
-      let 1+n = pos (suc n) ; 1+d = pos (suc d) ; 1+n·1+d = 1+ d ·₊₁ 1+ n
-      in
-      [ 1+n ℤ.· 1+d / 1+n·1+d ]  ≡⟨ cong [_/ 1+n·1+d ] (ℤ.·Comm 1+n 1+d) ⟩
-      [ 1+d ℤ.· 1+n / 1+n·1+d ]  ≡⟨ ℚ.·CancelR (1+ n) ⟩
-      [ 1+d / 1+ d ]             ≡⟨ sym $ cong₂ [_/_] (ℤ.·IdL 1+d) (·₊₁-identityˡ (1+ d))⟩
-      [ 1 ℤ.· 1+d / 1 ·₊₁ 1+ d ] ≡⟨ ℚ.·CancelR (1+ d) ⟩
-      [ 1 / 1 ]                         ∎
-    ; (negsuc n    , 1+ d) p → ⊥.rec (ℤ.¬pos≤negsuc p) }
-
-  infixl 7 _⁻¹₊
-
-  _⁻¹₊ : ℚ₊ → ℚ₊
-  fst (ε ⁻¹₊) = fst (Σinverseℚ₊ ε)
-  snd (ε ⁻¹₊) = uncurry
-    (SQ.elimProp
-      (λ ε → isPropΠ λ p → ℚ.isProp< 0 (fst (Σinverseℚ₊ (ε , p))) )
-      λ { (pos zero    , 1+ d) p → ⊥.rec (ℤ.isIrrefl< p)
-        ; (pos (suc n) , 1+ d) p → ℤ.zero-<possuc
-        ; (negsuc n    , 1+ d) p → ⊥.rec (ℤ.¬pos≤negsuc p) })
-    ε
-
-  _/_ : ℚ₊ → ℚ₊ → ℚ₊
-  ε / L = ε ·₊ (L ⁻¹₊)
-
-  ⁻¹inverse : ∀ ε → ⟨ ε / ε ⟩₊ ≡ 1
-  ⁻¹inverse = snd ∘ Σinverseℚ₊
-
-  ·/ : ∀ L ε → ⟨ L ·₊ (ε / L) ⟩₊ ≡ ⟨ ε ⟩₊
-  ·/ L ε =
-    ⟨ L ·₊ (ε ·₊ (L ⁻¹₊)) ⟩₊ ≡⟨ ·CommAssocl ⟨ L ⟩₊ ⟨ ε ⟩₊ ⟨ L ⁻¹₊ ⟩₊ ⟩
-    ⟨ ε ·₊ (L ·₊ (L ⁻¹₊)) ⟩₊ ≡⟨ cong (⟨ ε ⟩₊ ℚ.·_) (⁻¹inverse L) ⟩
-    ⟨ ε ⟩₊ ℚ.· 1             ≡⟨ ℚ.·IdR ⟨ ε ⟩₊ ⟩
-    ⟨ ε ⟩₊                   ∎
-
 
 module _
   {A : Type ℓM} {B : Type ℓN}

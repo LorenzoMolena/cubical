@@ -13,19 +13,19 @@ private
   variable
     ℓR ℓR' : Level
 
-module _ (R' : OrderedCommRing ℓR ℓR') where
+module _ (R' : OrderedCommRing ℓR ℓR') (0<+Closed : _) (0<·Closed : _) where
   private
     R = fst R'
     RCR = OrderedCommRing→CommRing R'
 
-  open import Cubical.Relation.Premetric.PremetricOver.Base R'
+  open import Cubical.Relation.Premetric.PremetricOver.Base R' 0<+Closed 0<·Closed
   open OrderedCommRingReasoning R'
-  open OrderedCommRingStr (snd R')
+  open OrderedCommRingStr (snd R') renaming (is-set to isSetR)
   open OrderedCommRingTheory R'
-  open Positive R'
+  open Positive R' 0<+Closed 0<·Closed
 
   module _ (1/2 : R) (p : 1/2 · (1r + 1r) ≡ 1r) where
-    open Charactersitic≠2 R' 1/2 p
+    open Characteristic≠2 R' 1/2 p
     open R-PremetricStr
 
     RegularPremetricSpace : R-PremetricSpace ℓR ℓR'
@@ -36,7 +36,7 @@ module _ (R' : OrderedCommRing ℓR ℓR') where
         open IsPremetricOver
 
         isPMR : IsPremetricOver _
-        isPMR .isSetM        = is-set
+        isPMR .isSetM        = isSetR
         isPMR .isProp≈       = λ _ _ _ → is-prop-valued< _ _
         isPMR .isRefl≈       = λ x r → begin<
           abs(x - x) ≡→≤⟨ cong abs (solve! RCR) ∙ abs0 ⟩

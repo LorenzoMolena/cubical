@@ -16,7 +16,7 @@ open import Cubical.Data.Int.Order
 open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.CommRing.Instances.Int
 
-open import Cubical.Algebra.OrderedCommRing
+open import Cubical.Algebra.OrderedCommRing.Base
 
 open import Cubical.Relation.Nullary
 

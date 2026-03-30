@@ -9,6 +9,8 @@ open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.SIP
 
+import Cubical.Functions.Logic as L
+
 open import Cubical.Data.Sigma
 
 open import Cubical.Displayed.Base
@@ -16,26 +18,20 @@ open import Cubical.Displayed.Auto
 open import Cubical.Displayed.Record
 open import Cubical.Displayed.Universe
 
-import Cubical.Functions.Logic as L
-
-open import Cubical.HITs.PropositionalTruncation as PT
-
-open import Cubical.Relation.Nullary.Base
-
 open import Cubical.Algebra.CommRing.Base
 
-open import Cubical.Relation.Nullary
-
-open import Cubical.Tactics.CommRingSolver
+open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Cubical.Relation.Binary.Base
 open import Cubical.Relation.Binary.Order.Poset hiding (
   isPseudolattice ; isPropIsPseudolattice)
 open import Cubical.Relation.Binary.Order.StrictOrder
-
 open import Cubical.Relation.Binary.Order.Pseudolattice
+open import Cubical.Relation.Nullary
 
 open import Cubical.Reflection.RecordEquiv
+
+open import Cubical.Tactics.CommRingSolver
 
 open BinaryRelation
 
@@ -63,7 +59,6 @@ record IsOrderedCommRing
     ≤-<-trans       : ∀ x y z → x ≤ y → y < z → x < z
     ·MonoR≤         : ∀ x y z → 0r ≤ z → x ≤ y → (x · z) ≤ (y · z)
     ·MonoR<         : ∀ x y z → 0r < z → x < y → (x · z) < (y · z)
-    ·CancelR<       : ∀ x y z → 0r < z → (x · z) < (y · z) → x < y
     0<1             : 0r < 1r
 
   open IsCommRing isCommRing public
@@ -126,7 +121,6 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
   (≤-<-trans : ∀ x y z → x ≤ y → y < z → x < z)
   (·MonoR≤ : ∀ x y z → 0r ≤ z → x ≤ y → (x · z) ≤ (y · z))
   (·MonoR< : ∀ x y z → 0r < z → x < y → (x · z) < (y · z))
-  (·CancelR< : ∀ x y z → 0r < z → (x · z) < (y · z) → x < y)
   (0<1 : 0r < 1r) where
   makeIsOrderedCommRing : IsOrderedCommRing 0r 1r _+_ _·_ -_ _<_ _≤_
   makeIsOrderedCommRing = OCR where
@@ -147,7 +141,6 @@ module _ {R : Type ℓ} {0r 1r : R} {_+_ _·_ : R → R → R} { -_ : R → R }
     IsOrderedCommRing.≤-<-trans OCR = ≤-<-trans
     IsOrderedCommRing.·MonoR≤ OCR = ·MonoR≤
     IsOrderedCommRing.·MonoR< OCR = ·MonoR<
-    IsOrderedCommRing.·CancelR< OCR = ·CancelR<
     IsOrderedCommRing.0<1 OCR = 0<1
 
 OrderedCommRing→PseudoLattice : OrderedCommRing ℓ ℓ' → Pseudolattice ℓ ℓ'
@@ -170,15 +163,15 @@ record IsOrderedCommRingHom {ℓ<≤} {ℓ<≤'} {A : Type ℓ} {B : Type ℓ'}
   private
     module R = OrderedCommRingStr R
     module S = OrderedCommRingStr S
+    Rcring = str (OrderedCommRing→CommRing (_ , R))
+    Scring = str (OrderedCommRing→CommRing (_ , S))
 
   field
-    pres0    : f R.0r ≡ S.0r
-    pres1    : f R.1r ≡ S.1r
-    pres+    : (x y : A) → f (x R.+ y) ≡ f x S.+ f y
-    pres·    : (x y : A) → f (x R.· y) ≡ f x S.· f y
-    pres-    : (x : A) → f (R.- x) ≡ S.- (f x)
-    pres≤    : (x y : A) → x R.≤ y → f x S.≤ f y
-    reflect< : (x y : A) → f x S.< f y → x R.< y
+    isCommRingHom : IsCommRingHom Rcring f Scring
+    pres≤         : ∀ x y → x R.≤ y → f x S.≤ f y
+    reflect<      : ∀ x y → f x S.< f y → x R.< y
+
+  open IsCommRingHom isCommRingHom public
 
 unquoteDecl IsOrderedCommRingHomIsoΣ = declareRecordIsoΣ IsOrderedCommRingHomIsoΣ (quote IsOrderedCommRingHom)
 
@@ -228,7 +221,6 @@ isPropIsOrderedCommRing 0r 1r _+_ _·_ -_ _<_ _≤_ = isOfHLevelRetractFromIso 1
     isProp× (isPropΠ5 λ _ _ _ _ _ → isSO .IsStrictOrder.is-prop-valued _ _) $
     isProp× (isPropΠ5 λ _ _ _ _ _ → isSO .IsStrictOrder.is-prop-valued _ _) $
     isProp× (isPropΠ5 λ _ _ _ _ _ → isPL .IsPseudolattice.is-prop-valued _ _) $
-    isProp× (isPropΠ5 λ _ _ _ _ _ → isSO .IsStrictOrder.is-prop-valued _ _) $
     isProp× (isPropΠ5 λ _ _ _ _ _ → isSO .IsStrictOrder.is-prop-valued _ _)
             (isSO .IsStrictOrder.is-prop-valued _ _)
 
@@ -238,13 +230,9 @@ isPropIsOrderedCommRingHom : ∀ {ℓ<≤} {ℓ<≤'} {A : Type ℓ} {B : Type �
                            → (S : OrderedCommRingStr ℓ<≤' B)
                            → isProp (IsOrderedCommRingHom R f S)
 isPropIsOrderedCommRingHom R f S = isOfHLevelRetractFromIso 1 IsOrderedCommRingHomIsoΣ $
-  isProp× (S.is-set _ _) $
-  isProp× (S.is-set _ _) $
-  isProp× (isPropΠ2 λ _ _ → S.is-set _ _) $
-  isProp× (isPropΠ2 λ _ _ → S.is-set _ _) $
-  isProp× (isPropΠ  λ _ → S.is-set _ _) $
-  isProp× (isPropΠ3 λ _ _ _ → S.is-prop-valued≤ _ _) $
-          (isPropΠ3 λ _ _ _ → R.is-prop-valued< _ _)
+  isProp×2 (isPropIsCommRingHom _ f _)
+           (isPropΠ2 λ _ _ → isProp→ (S.is-prop-valued≤ _ _))
+           (isPropΠ2 λ _ _ → isProp→ (R.is-prop-valued< _ _))
   where
     open module R = OrderedCommRingStr R
     open module S = OrderedCommRingStr S
@@ -276,17 +264,16 @@ module _
     SCR = OrderedCommRing→CommRing S
 
   module _
-    (p1 : f R.1r ≡ S.1r)
-    (p+ : (x y : ⟨ R ⟩) → f (x R.+ y) ≡ f x S.+ f y)
-    (p· : (x y : ⟨ R ⟩) → f (x R.· y) ≡ f x S.· f y)
-    (p≤ : (x y : ⟨ R ⟩) → x R.≤ y → f x S.≤ f y)
-    (p<⁻ : (x y : ⟨ R ⟩) → f x S.< f y → x R.< y)
+    (p1  : f R.1r ≡ S.1r)
+    (p+  : ∀ x y → f (x R.+ y) ≡ f x S.+ f y)
+    (p·  : ∀ x y → f (x R.· y) ≡ f x S.· f y)
+    (p<⁻ : ∀ x y → f x S.< f y → x R.< y)
     where
 
     open IsOrderedCommRingHom
 
     private
-      fpres0 : _
+      fpres0 : f R.0r ≡ S.0r
       fpres0 =
         f R.0r ≡⟨ solve! SCR ⟩
         f R.0r S.+ f R.0r S.- f R.0r ≡⟨ sym $ cong (S._- f R.0r) (p+ R.0r R.0r) ⟩
@@ -294,20 +281,19 @@ module _
         f R.0r S.- f R.0r            ≡⟨ solve! SCR ⟩
         S.0r                         ∎
 
+      p≤ : ∀ x y → x R.≤ y → f x S.≤ f y
+      p≤ x y = invEq (S.≤≃¬> (f x) (f y)) ∘ (_∘ p<⁻ y x) ∘ equivFun (R.≤≃¬> x y)
+
     makeIsOrderedCommRingHom : IsOrderedCommRingHom (str R) f (str S)
-    makeIsOrderedCommRingHom .pres0    = fpres0
-    makeIsOrderedCommRingHom .pres1    = p1
-    makeIsOrderedCommRingHom .pres+    = p+
-    makeIsOrderedCommRingHom .pres·    = p·
-    makeIsOrderedCommRingHom .pres-    = λ x →
-      f (R.- x)                 ≡⟨ solve! SCR ⟩
-      f (R.- x) S.+ f x S.- f x ≡⟨ sym $ cong (S._- f x) (p+ (R.- x) x) ⟩
-      f (R.- x R.+ x) S.- f x   ≡⟨ cong ((S._- f x) ∘ f) (solve! RCR) ⟩
-      f R.0r S.- f x            ≡⟨ cong (S._- (f x)) fpres0 ⟩
-      S.0r S.- f x              ≡⟨ solve! SCR ⟩
-      S.- f x                   ∎
-    makeIsOrderedCommRingHom .pres≤    = p≤
-    makeIsOrderedCommRingHom .reflect< = p<⁻
+    makeIsOrderedCommRingHom .isCommRingHom = makeIsCommRingHom p1 p+ p·
+    makeIsOrderedCommRingHom .pres≤         = p≤
+    makeIsOrderedCommRingHom .reflect<      = p<⁻
+
+  module _ (isHomf : IsOrderedCommRingHom (str R) f (str S)) where
+
+    IsOrderedCommRingHom→IsCommRingHom : IsCommRingHom (str RCR) f (str SCR)
+    IsOrderedCommRingHom→IsCommRingHom = isCommRingHom
+      where open IsOrderedCommRingHom isHomf
 
 _$ocr_ : {R : OrderedCommRing ℓ ℓ<≤} {S : OrderedCommRing ℓ' ℓ<≤'}
        → (φ : OrderedCommRingHom R S) → (x : ⟨ R ⟩) → ⟨ S ⟩
@@ -329,7 +315,7 @@ opaque
   OrderedCommRingHomPathP R S T p φ ψ q = ΣPathP (q , isProp→PathP (λ _ →
     isPropIsOrderedCommRingHom _ _ _) _ _)
 
-record IsOrderedCommRingMono {A : Type ℓ} {B : Type ℓ'}
+record IsOrderedCommRingMono {ℓ<≤} {ℓ<≤'} {A : Type ℓ} {B : Type ℓ'}
   (R : OrderedCommRingStr ℓ<≤ A)
   (f : A → B)
   (S : OrderedCommRingStr ℓ<≤' B)
@@ -341,23 +327,35 @@ record IsOrderedCommRingMono {A : Type ℓ} {B : Type ℓ'}
     module S = OrderedCommRingStr S
 
   field
-    pres0    : f R.0r ≡ S.0r
-    pres1    : f R.1r ≡ S.1r
-    pres+    : (x y : A) → f (x R.+ y) ≡ f x S.+ f y
-    pres·    : (x y : A) → f (x R.· y) ≡ f x S.· f y
-    pres-    : (x : A) → f (R.- x) ≡ S.- (f x)
-    pres≤    : (x y : A) → x R.≤ y → f x S.≤ f y
-    pres<    : (x y : A) → x R.< y → f x S.< f y
-    reflect< : (x y : A) → f x S.< f y → x R.< y
+    isOrderedCommRingHom : IsOrderedCommRingHom R f S
+    pres<                : (x y : A) → x R.< y → f x S.< f y
+
+  open IsOrderedCommRingHom isOrderedCommRingHom public
 
 unquoteDecl IsOrderedCommRingMonoIsoΣ = declareRecordIsoΣ IsOrderedCommRingMonoIsoΣ (quote IsOrderedCommRingMono)
 
-OrderedCommRingMono _↣_ : ∀ {ℓ<≤} {ℓ<≤'}
-                        → (R : OrderedCommRing ℓ ℓ<≤)
-                        → (S : OrderedCommRing ℓ' ℓ<≤')
-                        → Type _
+OrderedCommRingMono : ∀ {ℓ<≤} {ℓ<≤'}
+                     → (R : OrderedCommRing ℓ ℓ<≤)
+                     → (S : OrderedCommRing ℓ' ℓ<≤')
+                     → Type _
 OrderedCommRingMono R S = Σ[ f ∈ (⟨ R ⟩ → ⟨ S ⟩) ] IsOrderedCommRingMono (R .snd) f (S .snd)
-_↣_ = OrderedCommRingMono
+
+isPropIsOrderedCommRingMono : ∀ {ℓ<≤} {ℓ<≤'} {A : Type ℓ} {B : Type ℓ'}
+                            → (R : OrderedCommRingStr ℓ<≤ A)
+                            → (f : A → B)
+                            → (S : OrderedCommRingStr ℓ<≤' B)
+                            → isProp (IsOrderedCommRingMono R f S)
+isPropIsOrderedCommRingMono R f S = isOfHLevelRetractFromIso 1 IsOrderedCommRingMonoIsoΣ $
+  isProp× (isPropIsOrderedCommRingHom R f S)
+          (isPropΠ2 λ _ _ → isProp→ (S.is-prop-valued< _ _))
+  where
+    open module S = OrderedCommRingStr S
+
+isSetOrderedCommRingMono : (R : OrderedCommRing ℓ ℓ<≤) (S : OrderedCommRing ℓ' ℓ<≤')
+                        → isSet (OrderedCommRingMono R S)
+isSetOrderedCommRingMono R S = isSetΣSndProp (isSetΠ λ _ → is-set) (λ f →
+  isPropIsOrderedCommRingMono (snd R) f (snd S))
+    where open OrderedCommRingStr (str S) using (is-set)
 
 module _
   {R : OrderedCommRing ℓ  ℓ<≤}
@@ -369,75 +367,35 @@ module _
     module S = OrderedCommRingStr (str S)
 
   module _
-    (p1 : f R.1r ≡ S.1r)
-    (p+ : (x y : ⟨ R ⟩) → f (x R.+ y) ≡ f x S.+ f y)
-    (p· : (x y : ⟨ R ⟩) → f (x R.· y) ≡ f x S.· f y)
-    (p≤ : (x y : ⟨ R ⟩) → x R.≤ y → f x S.≤ f y)
-    (p< : (x y : ⟨ R ⟩) → x R.< y → f x S.< f y)
-    (p<⁻ : (x y : ⟨ R ⟩) → f x S.< f y → x R.< y)
+    (p1  : f R.1r ≡ S.1r)
+    (p+  : ∀ x y → f (x R.+ y) ≡ f x S.+ f y)
+    (p·  : ∀ x y → f (x R.· y) ≡ f x S.· f y)
+    (p<  : ∀ x y → x R.< y → f x S.< f y)
+    (p<⁻ : ∀ x y → f x S.< f y → x R.< y)
     where
 
     open IsOrderedCommRingMono
 
     makeIsOrderedCommRingMono : IsOrderedCommRingMono (str R) f (str S)
-    makeIsOrderedCommRingMono = isOCRMono
-      where
-        OCRHom : IsOrderedCommRingHom (str R) f (str S)
-        OCRHom = makeIsOrderedCommRingHom p1 p+ p· p≤ p<⁻
-
-        isOCRMono : IsOrderedCommRingMono (str R) f (str S)
-        isOCRMono .pres0 = OCRHom .IsOrderedCommRingHom.pres0
-        isOCRMono .pres1 = OCRHom .IsOrderedCommRingHom.pres1
-        isOCRMono .pres+ = OCRHom .IsOrderedCommRingHom.pres+
-        isOCRMono .pres· = OCRHom .IsOrderedCommRingHom.pres·
-        isOCRMono .pres- = OCRHom .IsOrderedCommRingHom.pres-
-        isOCRMono .pres≤ = OCRHom .IsOrderedCommRingHom.pres≤
-        isOCRMono .pres< = p<
-        isOCRMono .reflect< = OCRHom .IsOrderedCommRingHom.reflect<
+    makeIsOrderedCommRingMono .isOrderedCommRingHom =
+      makeIsOrderedCommRingHom p1 p+ p· p<⁻
+    makeIsOrderedCommRingMono .pres< = p<
 
   module _ (isMonof : IsOrderedCommRingMono (str R) f (str S)) where
 
     isOrderedCommRingMono→reflect≤ : ∀ x y → f x S.≤ f y → x R.≤ y
-    isOrderedCommRingMono→reflect≤ x y fx≤fy =
-      invEq (R.≤≃¬> x y) $ equivFun (S.≤≃¬> (f x) (f y)) fx≤fy ∘ pres< y x
+    isOrderedCommRingMono→reflect≤ x y =
+      invEq (R.≤≃¬> x y) ∘ (_∘ pres< y x) ∘ equivFun (S.≤≃¬> (f x) (f y))
       where open IsOrderedCommRingMono isMonof
 
     isOrderedCommRingMono→isOrderedCommRingHom : IsOrderedCommRingHom (str R) f (str S)
-    isOrderedCommRingMono→isOrderedCommRingHom = isOCRHom
-      where
-        open IsOrderedCommRingHom
-        isOCRHom : IsOrderedCommRingHom _ _ _
-        isOCRHom .pres0    = isMonof .IsOrderedCommRingMono.pres0
-        isOCRHom .pres1    = isMonof .IsOrderedCommRingMono.pres1
-        isOCRHom .pres+    = isMonof .IsOrderedCommRingMono.pres+
-        isOCRHom .pres·    = isMonof .IsOrderedCommRingMono.pres·
-        isOCRHom .pres-    = isMonof .IsOrderedCommRingMono.pres-
-        isOCRHom .pres≤    = isMonof .IsOrderedCommRingMono.pres≤
-        isOCRHom .reflect< = isMonof .IsOrderedCommRingMono.reflect<
+    isOrderedCommRingMono→isOrderedCommRingHom = isOrderedCommRingHom
+      where open IsOrderedCommRingMono isMonof
 
-isPropIsOrderedCommRingMono : ∀ {ℓ<≤} {ℓ<≤'} {A : Type ℓ} {B : Type ℓ'}
-                            → (R : OrderedCommRingStr ℓ<≤ A)
-                            → (f : A → B)
-                            → (S : OrderedCommRingStr ℓ<≤' B)
-                            → isProp (IsOrderedCommRingMono R f S)
-isPropIsOrderedCommRingMono R f S = isOfHLevelRetractFromIso 1 IsOrderedCommRingMonoIsoΣ $
-  isProp× (S.is-set _ _) $
-  isProp× (S.is-set _ _) $
-  isProp× (isPropΠ2 λ _ _ → S.is-set _ _) $
-  isProp× (isPropΠ2 λ _ _ → S.is-set _ _) $
-  isProp× (isPropΠ  λ _ → S.is-set _ _) $
-  isProp× (isPropΠ3 λ _ _ _ → S.is-prop-valued≤ _ _) $
-  isProp× (isPropΠ3 λ _ _ _ → S.is-prop-valued< _ _)
-          (isPropΠ3 λ _ _ _ → R.is-prop-valued< _ _)
-  where
-    open module R = OrderedCommRingStr R
-    open module S = OrderedCommRingStr S
-
-isSetOrderedCommRingMono : (R : OrderedCommRing ℓ ℓ<≤) (S : OrderedCommRing ℓ' ℓ<≤')
-                        → isSet (OrderedCommRingMono R S)
-isSetOrderedCommRingMono R S = isSetΣSndProp (isSetΠ λ _ → is-set) (λ f →
-  isPropIsOrderedCommRingMono (snd R) f (snd S))
-    where open OrderedCommRingStr (str S) using (is-set)
+    isOrderedCommRingMono→isInjective : ∀ x y → f x ≡ f y → x ≡ y
+    isOrderedCommRingMono→isInjective x y fx≡fy = R.is-antisym x y
+      (isOrderedCommRingMono→reflect≤ x y (subst (S._≤_ (f x)) fx≡fy (S.is-refl _)))
+      (isOrderedCommRingMono→reflect≤ y x (subst (S._≤_ (f y)) (sym fx≡fy) (S.is-refl _)))
 
 opaque
   OrderedCommRingMono≡ : {R : OrderedCommRing ℓ ℓ<≤} {S : OrderedCommRing ℓ' ℓ<≤'}

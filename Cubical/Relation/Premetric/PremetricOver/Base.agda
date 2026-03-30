@@ -1,7 +1,7 @@
 open import Cubical.Algebra.OrderedCommRing
 
 module Cubical.Relation.Premetric.PremetricOver.Base {ℓR} {ℓR'}
-  (R' : OrderedCommRing ℓR ℓR') where
+  (R' : OrderedCommRing ℓR ℓR') (0<+Closed : _) (0<·Closed : _) where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
@@ -14,15 +14,18 @@ open import Cubical.Data.Sigma
 open import Cubical.Reflection.RecordEquiv
 open import Cubical.Reflection.StrictEquiv
 
+open import Cubical.Algebra.Ring
 open import Cubical.Algebra.OrderedCommRing
 
 private
   R = fst R'
+  RR = OrderedCommRing→Ring R'
   variable
     ℓ ℓ' ℓ'' : Level
 
 open OrderedCommRingStr (str R')
-open Positive R'
+open OrderedCommRingTheory R'
+open Positive R' 0<+Closed 0<·Closed
 
 record IsPremetricOver {M : Type ℓ}
   (_≈[_]_ : M → R₊ → M → Type ℓ') : Type (ℓ-max (ℓ-max (ℓ-max ℓR ℓR') ℓ) ℓ') where

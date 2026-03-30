@@ -68,7 +68,7 @@ record IsArchimedeanRing
   ι₊₁ : ℕ → R
   ι₊₁ = ι ∘ pos ∘ suc
 
-  open IsOrderedCommRing isOrderedCommRing hiding (·CancelR<) public
+  open IsOrderedCommRing isOrderedCommRing public
   open IsOrderedCommRingMono isMonomorphism public
 
   ·CancelL< : ∀ x y z → 0r < z → (z · x) < (z · y) → x < y

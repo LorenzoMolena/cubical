@@ -7,6 +7,10 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 
+open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
+
+open PositiveRationals
+
 private
   M = M' .fst
   open PremetricStr (M' .snd)

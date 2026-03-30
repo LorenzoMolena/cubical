@@ -26,21 +26,22 @@ open import Cubical.Data.Rationals.Fast.Order as ℚ using () renaming (_<_ to _
 open import Cubical.HITs.PropositionalTruncation as PT
 
 open import Cubical.Relation.Binary.Properties
+open import Cubical.Relation.Premetric.Properties
 
-open import Cubical.Algebra.Semigroup
 open import Cubical.Algebra.Ring
 open import Cubical.Algebra.CommRing
 open import Cubical.Algebra.OrderedCommRing
 open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
 
-open Characteristic≠2 ℚOrderedCommRing [ 1 / 2 ] (eq/ _ _ refl)
-
-open import Cubical.Relation.Premetric.Properties
-open PremetricTheory using (isLimit ; limit ; isComplete)
-
 open import Cubical.Reflection.RecordEquiv
 
 open import Cubical.Tactics.CommRingSolver
+
+open 1/2∈ℚ
+open PositiveRationals
+open PositiveHalvesℚ
+
+open PremetricTheory using (isLimit ; limit ; isComplete)
 
 private
   M = M' .fst
@@ -50,8 +51,6 @@ private
   open OrderedCommRingReasoning ℚOCR
   open OrderedCommRingTheory ℚOCR
   open RingTheory ℚR
-  open IsSemigroup (SemigroupStr.isSemigroup (snd +ℚ₊Semigroup)) using () renaming (
-    ·Assoc to +₊Assoc)
   open PremetricStr (M' .snd)
   open import Cubical.Relation.Premetric.Completion.Base M' renaming (ℭ to ℭM)
   open import Cubical.Relation.Premetric.Completion.Elim M'
@@ -271,6 +270,9 @@ isSym≈ᴮ : ∀ B B' ε → B ≈ᴮ[ ε ] B' → B' ≈ᴮ[ ε ] B
 isSym≈ᴮ B B' ε B≈B' δ y = fst Σ-swap-≃ (B≈B' δ y)
 
 -- Defintion 3.9
+-- NOTE : The definition of UpperCut present in Gilpert's paper requires
+-- an equivalence in the field `isRoundedUpperCut`.
+-- However, in order to construct `B[_]⟨_,_⟩`, we only need one implication.
 record IsUpperCut (U : ℚ₊ → Type (ℓ-max ℓ ℓ')) : Type (ℓ-suc (ℓ-max ℓ ℓ')) where
   no-eta-equality
   constructor isuppercut
@@ -465,7 +467,7 @@ module _
   B⟨ι,ι⟩→B⟨ι,lim⟩ x≈y = ∣ δ , δ<η+ε , B[η+ε-δ]x,zδ ∣₁ where opaque
     δ<η+ε : δ <₊ (η +₊ ε)
     δ<η+ε = begin<
-      ⟨ δ ⟩₊      <⟨ 0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ ⟩
+      ⟨ δ ⟩₊      <⟨ 0<Δ→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ ⟩
       ⟨ ε ⟩₊      <⟨ <₊SumRight ε η ⟩
       ⟨ η +₊ ε ⟩₊ ◾
 
@@ -544,7 +546,7 @@ module _
       η<θ+ε : η <₊ (θ +₊ ε)
       η<θ+ε = begin<
         ⟨ η ⟩₊      <⟨ <₊SumRight η δ ⟩
-        ⟨ δ +₊ η ⟩₊ <⟨ 0<-→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ ⟩
+        ⟨ δ +₊ η ⟩₊ <⟨ 0<Δ→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ ⟩
         ⟨ ε ⟩₊      <⟨ <₊SumRight ε θ ⟩
         ⟨ θ +₊ ε ⟩₊ ◾
 
@@ -661,7 +663,7 @@ module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ]
       let
         θ+δ<η+ε : (θ +₊ δ) <₊ (η +₊ ε)
         θ+δ<η+ε = begin<
-          ⟨ θ +₊ δ ⟩₊ <⟨ +Mono< ⟨ θ ⟩₊ ⟨ η ⟩₊ _ _ θ<η (0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ) ⟩
+          ⟨ θ +₊ δ ⟩₊ <⟨ +Mono< ⟨ θ ⟩₊ ⟨ η ⟩₊ _ _ θ<η (0<Δ→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ) ⟩
           ⟨ η +₊ ε ⟩₊ ◾
 
         B[η+ε-[θ+δ]]xθ,zδ : fst (Bx θ) [ (η +₊ ε) -₊ (θ +₊ δ) ]⟨ θ+δ<η+ε ⟩ (z δ)
@@ -736,7 +738,7 @@ module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ]
           ⟨ ξ +₊ η ⟩₊               <⟨ +Mono< ⟨ ξ ⟩₊ _ ⟨ η ⟩₊ _
                                       (<₊SumLeft ξ ζ) (<₊SumRight η δ) ⟩
           ⟨ (ξ +₊ ζ) +₊ (δ +₊ η) ⟩₊ <⟨ +Mono< ⟨ ξ +₊ ζ ⟩₊ ⟨ θ ⟩₊ ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊
-                                      ξ+ζ<θ (0<-→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ) ⟩
+                                      ξ+ζ<θ (0<Δ→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ) ⟩
           ⟨ θ +₊ ε ⟩₊               ◾
 
         B[θ+ε-[ξ+η]]xξ,zη : fst (Bx ξ) [ (θ +₊ ε) -₊ (ξ +₊ η) ]⟨ ξ+η<θ+ε ⟩ (z η)
@@ -865,7 +867,7 @@ module _
       let
         δ<η+ε : δ <₊ (η +₊ ε)
         δ<η+ε = begin<
-          ⟨ δ ⟩₊      <⟨ 0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ ⟩
+          ⟨ δ ⟩₊      <⟨ 0<Δ→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ ⟩
           ⟨ ε ⟩₊      <⟨ <₊SumRight ε η ⟩
           ⟨ η +₊ ε ⟩₊ ◾
 
@@ -883,7 +885,7 @@ module _
         δ+θ<η+ε : (δ +₊ θ) <₊ (η +₊ ε)
         δ+θ<η+ε = begin<
           ⟨ δ +₊ θ ⟩₊ ≡→≤⟨ ℚ.+Comm ⟨ δ ⟩₊ ⟨ θ ⟩₊ ⟩
-          ⟨ θ +₊ δ ⟩₊   <⟨ +Mono< ⟨ θ ⟩₊ _ ⟨ δ ⟩₊ _ θ<η (0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ) ⟩
+          ⟨ θ +₊ δ ⟩₊   <⟨ +Mono< ⟨ θ ⟩₊ _ ⟨ δ ⟩₊ _ θ<η (0<Δ→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ) ⟩
           ⟨ η +₊ ε ⟩₊   ◾
 
         B[η-θ+ε-δ]yδ,zθ : fst (By δ) ([ η -₊ θ ]⟨ θ<η ⟩ +₊ (ε -₊ δ , Δ)) (z θ)
@@ -940,7 +942,7 @@ module _
         ξ<η+ε = begin<
           ⟨ ξ ⟩₊             <⟨ <₊SumRight ξ ζ ⟩
           ⟨ ζ +₊ ξ ⟩₊        <⟨ <₊SumLeft (ζ +₊ ξ) δ ⟩
-          ⟨ (ζ +₊ ξ) +₊ δ ⟩₊ <⟨ +Mono< ⟨ ζ +₊ ξ ⟩₊ _ ⟨ δ ⟩₊ _ ζ+ξ<η (0<-→< ⟨ δ ⟩₊ _ Δ) ⟩
+          ⟨ (ζ +₊ ξ) +₊ δ ⟩₊ <⟨ +Mono< ⟨ ζ +₊ ξ ⟩₊ _ ⟨ δ ⟩₊ _ ζ+ξ<η (0<Δ→< ⟨ δ ⟩₊ _ Δ) ⟩
           ⟨ η +₊ ε ⟩₊        ◾
 
         B[η-[ζ+ξ]+ζ+δ]yδ,zξ : fst (By δ) (η-[ζ+ξ] +₊ (ζ +₊ δ)) (z ξ)
@@ -988,7 +990,7 @@ module _
         η<θ+ε : η <₊ (θ +₊ ε)
         η<θ+ε = begin<
           ⟨ η ⟩₊      <⟨ <₊SumRight η δ ⟩
-          ⟨ δ +₊ η ⟩₊ <⟨ 0<-→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ ⟩
+          ⟨ δ +₊ η ⟩₊ <⟨ 0<Δ→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ ⟩
           ⟨ ε ⟩₊      <⟨ <₊SumRight ε θ ⟩
           ⟨ θ +₊ ε ⟩₊ ◾
 
@@ -1017,7 +1019,7 @@ module _
           ⟨ η +₊ ξ ⟩₊                 <⟨ +Mono< ⟨ η ⟩₊ _ ⟨ ξ ⟩₊ _
                                         (<₊SumRight η δ) (<₊SumRight ξ ζ) ⟩
           ⟨ (δ +₊ η) +₊ (ζ +₊ ξ) ⟩₊   <⟨ +Mono< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ ⟨ ζ +₊ ξ ⟩₊ ⟨ θ ⟩₊
-                                        (0<-→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ) ζ+ξ<θ ⟩
+                                        (0<Δ→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ) ζ+ξ<θ ⟩
           ⟨ ε +₊ θ ⟩₊               ≡→≤⟨ ℚ.+Comm ⟨ ε ⟩₊ ⟨ θ ⟩₊ ⟩
           ⟨ θ +₊ ε ⟩₊                 ◾
 
@@ -1069,13 +1071,15 @@ lim-lim-B BallsAt[Rec] = makeOpaque B⟨lim,⟩≈B⟨lim,⟩
 isSymB    BallsAt[Rec] = isSym≈ᴮ
 isPropB   BallsAt[Rec] = isProp≈ᴮ
 
--- Defintion 3.13 (second part)
+
 private
   Braw : ℭM → Balls
   Braw = RecℭSym.go BallsAt[Rec]
 
+-- Defintion 3.13 (second part)
 B⟨_,⟩ : ℭM → Balls
-B⟨_,⟩ x = fst (Braw x) , makeOpaque (snd (Braw x))
+fst B⟨ x ,⟩ = fst (Braw x)
+snd B⟨ x ,⟩ = makeOpaque (snd (Braw x))
 
 B[_]⟨_,_⟩ : ℚ₊ → ℭM → ℭM → Type (ℓ-max ℓ ℓ')
 B[_]⟨_,_⟩ = flip (fst ∘ B⟨_,⟩)
@@ -1110,11 +1114,11 @@ module _ where
   r : Recℭ∼ λ x y → B[_]⟨ x , y ⟩
   Recℭ∼.ι-ι-B     r x y ε = lift
   Recℭ∼.ι-lim-B   r x y ε δ yc Δ _ q      =
-    ∣ δ , 0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ ι x , y δ ⟩ (ℚ₊≡ refl) q ∣₁
+    ∣ δ , 0<Δ→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ ι x , y δ ⟩ (ℚ₊≡ refl) q ∣₁
   Recℭ∼.lim-ι-B   r x y ε δ xc Δ _ q      =
-    ∣ δ , 0<-→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ x δ , ι y ⟩ (ℚ₊≡ refl) q ∣₁
+    ∣ δ , 0<Δ→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ x δ , ι y ⟩ (ℚ₊≡ refl) q ∣₁
   Recℭ∼.lim-lim-B r x y ε δ η xc yc Δ _ q =
-    ∣ δ , η , 0<-→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ x δ , y η ⟩ (ℚ₊≡ refl) q ∣₁
+    ∣ δ , η , 0<Δ→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ x δ , y η ⟩ (ℚ₊≡ refl) q ∣₁
   Recℭ∼.isPropB   r x y ε                 = IsBall.isPropBall (snd B⟨ x ,⟩) ε y
 
 B→∼ : ∀ {x y ε} → B[ ε ]⟨ x , y ⟩ → x ∼[ ε ] y
@@ -1127,7 +1131,7 @@ B→∼ {x} {y} {ε} = makeOpaque (Elimℭ-Prop2.go e x y ε) where
     λ (δ , δ<ε , B[ε-δ]x,yδ) →
     let
       Δ : 0 <ℚ ε -₊ δ
-      Δ = <→0<- ⟨ δ ⟩₊ ⟨ ε ⟩₊ δ<ε
+      Δ = <→0<Δ ⟨ δ ⟩₊ ⟨ ε ⟩₊ δ<ε
     in
       ι-lim x y ε δ yc Δ (
         IH δ (ε -₊ δ , Δ) B[ε-δ]x,yδ
@@ -1137,7 +1141,7 @@ B→∼ {x} {y} {ε} = makeOpaque (Elimℭ-Prop2.go e x y ε) where
     λ (δ , δ<ε , B[ε-δ]xδ,y) →
     let
       Δ : 0 <ℚ ε -₊ δ
-      Δ = <→0<- ⟨ δ ⟩₊ ⟨ ε ⟩₊ δ<ε
+      Δ = <→0<Δ ⟨ δ ⟩₊ ⟨ ε ⟩₊ δ<ε
     in
       lim-ι x y ε δ xc Δ (
         IH δ (ε -₊ δ , Δ) B[ε-δ]xδ,y
@@ -1147,7 +1151,7 @@ B→∼ {x} {y} {ε} = makeOpaque (Elimℭ-Prop2.go e x y ε) where
     λ (δ , η , δ+η<ε , B[ε-[δ+η]]xδ,yη) →
     let
       Δ : 0 <ℚ ε -₊ (δ +₊ η)
-      Δ = <→0<- ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ δ+η<ε
+      Δ = <→0<Δ ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ δ+η<ε
     in
       lim-lim x y ε δ η xc yc Δ (
         IH δ η (ε -₊ (δ +₊ η) , Δ) B[ε-[δ+η]]xδ,yη
@@ -1215,7 +1219,7 @@ isLimitLim = λ x xc ε θ → Elimℭ-Prop.go e (x ε) x xc ε θ (isRefl∼ (x
       4η/4 = (η /4₊ +₊ η /4₊) +₊ (η /4₊ +₊ η /4₊)
 
       Δ : 0 <ℚ (ε +₊ θ) -₊ (η /4₊ +₊ ε)
-      Δ = <→0<- ⟨ η /4₊ +₊ ε ⟩₊ ⟨ ε +₊ θ ⟩₊ (begin<
+      Δ = <→0<Δ ⟨ η /4₊ +₊ ε ⟩₊ ⟨ ε +₊ θ ⟩₊ (begin<
         ⟨ η /4₊ +₊ ε ⟩₊   <⟨ ℚ.<-+o ⟨ η /4₊ ⟩₊ ⟨ η ⟩₊ ⟨ ε ⟩₊ (/4₊<id η) ⟩
         ⟨ η +₊ ε ⟩₊       <⟨ ℚ.<-+o ⟨ η ⟩₊ ⟨ θ ⟩₊ ⟨ ε ⟩₊ (Δ<₊ θ δ) ⟩
         ⟨ θ +₊ ε ⟩₊     ≡→≤⟨ ℚ.+Comm ⟨ θ ⟩₊ ⟨ ε ⟩₊ ⟩
@@ -1231,7 +1235,7 @@ isLimitLim = λ x xc ε θ → Elimℭ-Prop.go e (x ε) x xc ε θ (isRefl∼ (x
       p : ⟨ 3η/4 +₊ δ ⟩₊ ≡ (ε +₊ θ) -₊ (η /4₊ +₊ ε)
       p =
         ⟨ 3η/4 +₊ δ ⟩₊               ≡⟨ lemma11 ℚCR ⟨ η /4₊ ⟩₊ ⟨ δ ⟩₊ ⟩
-        ⟨ 4η/4 ⟩₊ ℚ.+ (δ -₊ (η /4₊)) ≡⟨ cong (ℚ._+ δ -₊ (η /4₊)) (/4+/4+/4+/4≡id ⟨ η ⟩₊)⟩
+        ⟨ 4η/4 ⟩₊ ℚ.+ (δ -₊ (η /4₊)) ≡⟨ cong (ℚ._+ (δ -₊ η /4₊)) (/4+/4+/4+/4≡id ⟨ η ⟩₊)⟩
         ⟨ η ⟩₊ ℚ.+ (δ -₊ (η /4₊))    ≡⟨⟩
         (θ -₊ δ) ℚ.+ (δ -₊ (η /4₊)) ≡⟨ lemma12 ℚCR ⟨ θ ⟩₊ ⟨ δ ⟩₊ ⟨ η /4₊ ⟩₊ ⟨ ε ⟩₊ ⟩
         (ε +₊ θ) -₊ (η /4₊ +₊ ε)    ∎

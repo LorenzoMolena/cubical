@@ -32,8 +32,11 @@ open ≡-syntax
 
 open import Cubical.Algebra.OrderedCommRing.Properties
 open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
-open OrderedCommRingTheory (ℚOrderedCommRing)
-open Characteristic≠2 ℚOrderedCommRing [ 1 / 2 ] (eq/ _ _ refl)
+
+open OrderedCommRingTheory ℚOrderedCommRing
+open 1/2∈ℚ
+open PositiveRationals
+open PositiveHalvesℚ
 
 open import Cubical.Relation.Premetric.Base
 

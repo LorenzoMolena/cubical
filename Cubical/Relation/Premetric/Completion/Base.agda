@@ -5,9 +5,14 @@ module Cubical.Relation.Premetric.Completion.Base {ℓ} {ℓ'}
 
 open import Cubical.Foundations.Prelude
 
+open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
+
+open PositiveRationals
+
 private
   M = M' .fst
-  open PremetricStr (M' .snd)
+
+open PremetricStr (M' .snd)
 
 data ℭ : Type (ℓ-max ℓ ℓ')
 data _∼[_]_ : ℭ → ℚ₊ → ℭ → Type (ℓ-max ℓ ℓ')

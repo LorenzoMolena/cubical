@@ -5,10 +5,11 @@ open import Cubical.Foundations.Function
 
 open import Cubical.HITs.PropositionalTruncation
 
-open import Cubical.Data.NatPlusOne using ()
-open import Cubical.Data.Int.Fast   using ()
+import Cubical.Data.NatPlusOne
+import Cubical.Data.Int.Fast
 
-open import Cubical.Data.Rationals.Fast.Base
+open import Cubical.Data.Rationals.Fast.Base as ℚ
+import Cubical.Data.Rationals.Fast.Order as ℚ
 
 open import Cubical.Algebra.Ring
 
@@ -17,14 +18,18 @@ open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
 
 open import Cubical.Relation.Nullary
 
-open OrderedCommRingReasoning (ℚOrderedCommRing)
-
-open OrderedCommRingStr (snd ℚOrderedCommRing)
-open OrderedCommRingTheory (ℚOrderedCommRing)
-open Charactersitic≠2 ℚOrderedCommRing [ 1 / 2 ] (eq/ _ _ refl)
-open RingTheory (OrderedCommRing→Ring ℚOrderedCommRing)
 
 open import Cubical.Relation.Premetric.Base
+
+open OrderedCommRingStr (snd ℚOrderedCommRing)
+open OrderedCommRingReasoning (ℚOrderedCommRing)
+open RingTheory (OrderedCommRing→Ring ℚOrderedCommRing)
+open OrderedCommRingTheory ℚOrderedCommRing
+open 1/2∈ℚ
+open PositiveRationals
+open PositiveHalvesℚ
+open ℚ₊Inverse
+
 open PremetricStr
 
 ℚPremetricSpace : PremetricSpace ℓ-zero ℓ-zero
@@ -37,10 +42,10 @@ isPremetric (snd ℚPremetricSpace) = isPMℚ
     isPMℚ : IsPremetric _
     isPMℚ .isSetM = isSetℚ
     isPMℚ .isProp≈ x y ε = is-prop-valued< (abs (x - y)) ⟨ ε ⟩₊
-    isPMℚ .isRefl≈ x ε = subst ((_< ⟨ ε ⟩₊) ∘ abs) (sym (+InvR x)) (ε .snd)
-    isPMℚ .isSym≈ x y ε = subst (_< ⟨ ε ⟩₊) $ abs-Comm x y
+    isPMℚ .isRefl≈ x ε = ℚ.recompute< $ subst ((_< ⟨ ε ⟩₊) ∘ abs) (sym (+InvR x)) (ε .snd)
+    isPMℚ .isSym≈ x y ε = ℚ.recompute< ∘ (subst (_< ⟨ ε ⟩₊) $ abs-Comm x y)
     isPMℚ .isSeparated≈ = selfSeparated
-    isPMℚ .isTriangular≈ x y z ε δ <ε <δ = begin<
+    isPMℚ .isTriangular≈ x y z ε δ <ε <δ = ℚ.recompute< $ begin<
       abs (x - z)                 ≤⟨ triangularInequality- x z y ⟩
       abs (x - y) + abs (y - z)   <⟨ +Mono< (abs (x - y)) ⟨ ε ⟩₊ _ _ <ε <δ ⟩
       ⟨ ε +₊ δ ⟩₊                  ◾
@@ -53,9 +58,9 @@ isPremetric (snd ℚPremetricSpace) = isPMℚ
           mean (abs(x - y)) ⟨ ε ⟩₊ ◾)
 
         δ<ε : ⟨ δ ⟩₊ < ⟨ ε ⟩₊
-        δ<ε = <→mean< (abs(x - y)) ⟨ ε ⟩₊ <ε
+        δ<ε = ℚ.recompute< $ <→mean< (abs(x - y)) ⟨ ε ⟩₊ <ε
 
         ∣x-y∣<δ : abs(x - y) < ⟨ δ ⟩₊
-        ∣x-y∣<δ = <→<mean (abs(x - y)) ⟨ ε ⟩₊ <ε
+        ∣x-y∣<δ = ℚ.recompute< $ <→<mean (abs(x - y)) ⟨ ε ⟩₊ <ε
       in
         δ , δ<ε , ∣x-y∣<δ
