@@ -247,7 +247,7 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
     lift∘ι = snd ∘ liftLipschitzExtension
 
 -- It is quite common to have the codomain of the form ℭN, therefore here we specialize
--- the proof/constuctions above, avoiding to supply isComleteℭ every time.
+-- the proof/constuctions above, avoiding to supply isCompleteℭ every time.
 
 module LiftLipschitzℭ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
   open LiftLipschitzCompleteCodomain M' (ℭ N') (isCompleteℭ N') public renaming (
