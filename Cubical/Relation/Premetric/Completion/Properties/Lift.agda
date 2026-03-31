@@ -329,11 +329,11 @@ module CompletionFunctor (ℓ : Level) where
   F-ob  ℭFunctor = ℭ
   F-hom ℭFunctor = ℭ⟨_⟩
   F-id  ℭFunctor = lipschitz≡ _ (ℭ _) _ _ refl
-  F-seq ℭFunctor = λ f g → lipschitz≡ _ (ℭ _) _ _ $
-    ℭ⟪ g ∘L f ⟫ ∘ ι     ≡⟨ liftℭ∘ι _ _ (ιᴸ ∘L (g ∘L f)) ⟩
-    ι ∘ fst g ∘ fst f   ≡⟨ sym $ cong (_∘ fst f) (liftℭ∘ι _ _ (ιᴸ ∘L g)) ⟩
-    ℭ⟪ g ⟫ ∘ ι ∘ fst f  ≡⟨ sym $ cong (ℭ⟪ g ⟫ ∘_) (liftℭ∘ι _ _ (ιᴸ ∘L f)) ⟩
-    ℭ⟪ g ⟫ ∘ ℭ⟪ f ⟫ ∘ ι ∎
+  F-seq ℭFunctor = λ fᴸ@(f , _) gᴸ@(g , _) → lipschitz≡ _ (ℭ _) _ _ $
+    ℭ⟪ gᴸ ∘L fᴸ ⟫ ∘ ι     ≡⟨ liftℭ∘ι _ _ (ιᴸ ∘L (gᴸ ∘L fᴸ)) ⟩
+    ι ∘ g ∘ f             ≡⟨ sym $ cong (_∘ f) (liftℭ∘ι _ _ (ιᴸ ∘L gᴸ)) ⟩
+    ℭ⟪ gᴸ ⟫ ∘ ι ∘ f       ≡⟨ sym $ cong (ℭ⟪ gᴸ ⟫ ∘_) (liftℭ∘ι _ _ (ιᴸ ∘L fᴸ)) ⟩
+    ℭ⟪ gᴸ ⟫ ∘ ℭ⟪ fᴸ ⟫ ∘ ι ∎
 
 
   ιᴸnat : 𝟙⟨ PrSpacesᴸ ℓ ℓ ⟩ ⇒ ℭFunctor
