@@ -12,6 +12,7 @@ open import Cubical.Foundations.Univalence
 
 open import Cubical.Categories.Category.Base
 open import Cubical.Categories.Functor.Base
+open import Cubical.Categories.Functor.Properties
 open import Cubical.Categories.NaturalTransformation
 open import Cubical.Categories.Monad.Base
 
@@ -376,16 +377,37 @@ module CompletionFunctor (ℓ : Level) where
 
   -- open Category (PrSpacesᴸ ℓ ℓ)
 
-  -- isMonadℭ : IsMonad ℭFunctor
-  -- isMonadℭ .η       = ιᴸnat
-  -- isMonadℭ .μ       = μᴸ
-  -- isMonadℭ .idl-μ   = NatTrans-≡-intro
-  --   (funExt (λ M → L≡ (liftℭ∘ι (ℭ M) M idᴸ)))
-  --   {!  !}
-  -- isMonadℭ .idr-μ   = {!   !}
-  -- isMonadℭ .assoc-μ = {!   !}
+  isMonadℭ : IsMonad ℭFunctor
+  isMonadℭ .η       = ιᴸnat
+  isMonadℭ .μ       = μᴸ
+  isMonadℭ .idl-μ   =
+    makeNatTransPathP (F-rUnit {F = ℭFunctor}) refl
+      (funExt λ M → toPathP (transportRefl _ ∙ L≡ (liftℭ∘ι (ℭ M) M idᴸ)))
+  isMonadℭ .idr-μ   =
+    makeNatTransPathP (F-lUnit {F = ℭFunctor}) refl
+      (funExt λ M → toPathP (transportRefl _ ∙ (
+        lipschitz≡ M (ℭ M) _ _ $
+          μᴸ⟪ M ⟫ ∘ ℭ⟪ ιᴸ {M' = M} ⟫ ∘ ι
+            ≡⟨ cong (μᴸ⟪ M ⟫ ∘_) (liftℭ∘ι M (ℭ M) (ιᴸ ∘L ιᴸ)) ⟩
+          μᴸ⟪ M ⟫ ∘ ι ∘ ι
+            ≡⟨ cong (_∘ ι) (liftℭ∘ι (ℭ M) M idᴸ) ⟩
+          idfun _ ∘ ι
+            ∎)))
+  isMonadℭ .assoc-μ =
+    makeNatTransPathP F-assoc refl
+      (funExt λ M → toPathP (transportRefl _ ∙ (
+        lipschitz≡ (ℭ (ℭ M)) (ℭ M) _ _ $
+          μᴸ⟪ M ⟫ ∘ ℭ⟪ μᴸ⟨ M ⟩ ⟫ ∘ ι
+            ≡⟨ cong (μᴸ⟪ M ⟫ ∘_) (liftℭ∘ι (ℭ (ℭ M)) (ℭ M) (ιᴸ ∘L μᴸ⟨ M ⟩)) ⟩
+          μᴸ⟪ M ⟫ ∘ ι ∘ μᴸ⟪ M ⟫
+            ≡⟨ cong (_∘ μᴸ⟪ M ⟫) (liftℭ∘ι (ℭ M) M idᴸ) ⟩
+          idfun _ ∘ μᴸ⟪ M ⟫
+            ≡⟨⟩
+          μᴸ⟪ M ⟫ ∘ idfun _
+            ≡⟨ sym $ cong (μᴸ⟪ M ⟫ ∘_) (liftℭ∘ι (ℭ (ℭ M)) (ℭ M) idᴸ) ⟩
+          μᴸ⟪ M ⟫ ∘ μᴸ⟪ ℭ M ⟫ ∘ ι
+            ∎)))
 
-  -- ℭMonad : Monad (PrSpacesᴸ ℓ ℓ)
-  -- ℭMonad .fst = ℭFunctor
-  -- ℭMonad .snd = isMonadℭ
--- -}
+  ℭMonad : Monad (PrSpacesᴸ ℓ ℓ)
+  ℭMonad .fst = ℭFunctor
+  ℭMonad .snd = isMonadℭ
