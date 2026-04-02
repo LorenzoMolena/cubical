@@ -58,8 +58,8 @@ open PositiveRationals
 open PositiveHalvesℚ
 
 open PremetricTheory using (isLimit ; limit ; isComplete ; isLimit≈< ; isLim≈- ; isLim≈-₂)
-open CategoryStructures using (L≡ ; idᴸ ; _∘L_) renaming (
-  PremetricSpaceCategoryᴸ to PrSpacesᴸ)
+open CategoryStructures using (NE≡ ; idⁿ ; _∘NE_ ; L≡ ; idᴸ ; _∘L_)
+  renaming (PremetricSpaceCategoryⁿ to PrSpacesⁿ ; PremetricSpaceCategoryᴸ to PrSpacesᴸ)
 
 private
   variable
@@ -70,9 +70,9 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
   private
     M = ⟨ M' ⟩
     N = ⟨ N' ⟩
-    open module M  = PremetricStr (M' .snd)
-    open module CM = PremetricStr ((ℭ M') .snd)
-    open module N  = PremetricStr (N' .snd)
+    open module PM  = PremetricStr (M' .snd)
+    open module PCM = PremetricStr ((ℭ M') .snd)
+    open module PN  = PremetricStr (N' .snd)
     open import Cubical.Relation.Premetric.Completion.Elim M'
 
   -- Theorem 3.19
@@ -85,36 +85,36 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
 
       e : Elimℭ-Prop λ x → f x ≡ g x
       ιA      e          = funExt⁻ f∘ι≡g∘ι
-      limA    e x xc IH  = N.isSeparated≈ (f (lim x xc)) (g (lim x xc)) λ ε →
+      limA    e x xc IH  = PN.isSeparated≈ (f (lim x xc)) (g (lim x xc)) λ ε →
         PT.rec2
-          (N.isProp≈ (f (lim x xc)) (g (lim x xc)) ε)
+          (PN.isProp≈ (f (lim x xc)) (g (lim x xc)) ε)
           (λ { (δf , ∼δf→≈ε/2) (δg , ∼δg→≈ε/2) →
             let
               δ    = min₊ δf δg /2₊
               δ<δf = min/2₊<L δf δg
               δ<δg = min/2₊<R δf δg
             in
-              N.subst≈ (f (lim x xc)) (g (lim x xc)) (/2+/2≡id ⟨ ε ⟩₊)
-              (N.isTriangular≈ (f (lim x xc)) (f (x δ)) (g (lim x xc)) (ε /2₊) (ε /2₊)
-                (∼δf→≈ε/2 (x δ) (CM.isSym≈ (x δ) (lim x xc) δf (
+              PN.subst≈ (f (lim x xc)) (g (lim x xc)) (/2+/2≡id ⟨ ε ⟩₊)
+              (PN.isTriangular≈ (f (lim x xc)) (f (x δ)) (g (lim x xc)) (ε /2₊) (ε /2₊)
+                (∼δf→≈ε/2 (x δ) (PCM.isSym≈ (x δ) (lim x xc) δf (
                   isLimit≈< (ℭ M') x (lim x xc) (isLimitLim M' x xc) δ δf δ<δf
-                      :> x δ CM.≈[ δf ] lim x xc)
-                    :> lim x xc CM.≈[ δf ] x δ)
-                  :> f (lim x xc) N.≈[ ε /2₊ ] f (x δ))
-                (N.isSym≈ (g (lim x xc)) (f (x δ)) (ε /2₊)
-                  (subst (N._≈[_]_ _ (ε /2₊)) (sym (IH δ))
-                    (∼δg→≈ε/2 (x δ) ((CM.isSym≈ (x δ) (lim x xc) δg
+                      :> x δ PCM.≈[ δf ] lim x xc)
+                    :> lim x xc PCM.≈[ δf ] x δ)
+                  :> f (lim x xc) PN.≈[ ε /2₊ ] f (x δ))
+                (PN.isSym≈ (g (lim x xc)) (f (x δ)) (ε /2₊)
+                  (subst (PN._≈[_]_ _ (ε /2₊)) (sym (IH δ))
+                    (∼δg→≈ε/2 (x δ) ((PCM.isSym≈ (x δ) (lim x xc) δg
                           (isLimit≈< (ℭ M') x (lim x xc) (isLimitLim M' x xc) δ δg δ<δg
-                          :> x δ CM.≈[ δg ] lim x xc))
-                        :> lim x xc CM.≈[ δg ] x δ)
-                      :> g (lim x xc) N.≈[ ε /2₊ ] g (x δ))
-                    :> g (lim x xc) N.≈[ ε /2₊ ] f (x δ))
-                  :> f (x δ) N.≈[ ε /2₊ ] g (lim x xc))
-                :> f (lim x xc) N.≈[ ε /2₊ +₊ ε /2₊ ] g (lim x xc))
-              :> f (lim x xc) N.≈[ ε ] g (lim x xc) })
+                          :> x δ PCM.≈[ δg ] lim x xc))
+                        :> lim x xc PCM.≈[ δg ] x δ)
+                      :> g (lim x xc) PN.≈[ ε /2₊ ] g (x δ))
+                    :> g (lim x xc) PN.≈[ ε /2₊ ] f (x δ))
+                  :> f (x δ) PN.≈[ ε /2₊ ] g (lim x xc))
+                :> f (lim x xc) PN.≈[ ε /2₊ +₊ ε /2₊ ] g (lim x xc))
+              :> f (lim x xc) PN.≈[ ε ] g (lim x xc) })
           (fc (lim x xc) .pres≈ (ε /2₊))
           (gc (lim x xc) .pres≈ (ε /2₊))
-      isPropA e x        = N.isSetM (f x) (g x)
+      isPropA e x        = PN.isSetM (f x) (g x)
 
   ucontinuous≡ : (f g : UC[ ℭ M' , N' ]) → (fst f ∘ ι ≡ fst g ∘ ι) → f ≡ g
   ucontinuous≡ f g =
@@ -150,36 +150,36 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
       open ℚ₊Inverse
       open IsLipschitzWith
 
-      flim' : ∀ fx → (∀ ε δ → fx ε N.≈[ L ·₊ (ε +₊ δ) ] fx δ) → limit N' (fx ∘ (_/ L))
+      flim' : ∀ fx → (∀ ε δ → fx ε PN.≈[ L ·₊ (ε +₊ δ) ] fx δ) → limit N' (fx ∘ (_/ L))
       flim' fx fxcL = N-com (fx ∘ (_/ L)) fxc where
-        fxc : ∀ ε δ → fx (ε / L) N.≈[ ε +₊ δ ] fx (δ / L)
-        fxc ε δ = flip (N.subst≈ (fx (ε / L)) (fx (δ / L))) (fxcL (ε / L) (δ / L)) $
+        fxc : ∀ ε δ → fx (ε / L) PN.≈[ ε +₊ δ ] fx (δ / L)
+        fxc ε δ = flip (PN.subst≈ (fx (ε / L)) (fx (δ / L))) (fxcL (ε / L) (δ / L)) $
           ⟨ L ·₊ (ε / L +₊ δ / L) ⟩₊          ≡⟨ ℚ.·DistL+ ⟨ L ⟩₊ ⟨ ε / L ⟩₊ ⟨ δ / L ⟩₊ ⟩
           ⟨ L ·₊ ε / L ⟩₊ ℚ.+ ⟨ L ·₊ δ / L ⟩₊  ≡⟨ cong₂ ℚ._+_ (·/ L ε) (·/ L δ) ⟩
           ⟨ ε +₊ δ ⟩₊                         ∎
 
-      flim : ∀ fx → (∀ ε δ → fx ε N.≈[ L ·₊ (ε +₊ δ) ] fx δ) → N
+      flim : ∀ fx → (∀ ε δ → fx ε PN.≈[ L ·₊ (ε +₊ δ) ] fx δ) → N
       flim fx fxcL = fst (flim' fx fxcL)
 
       islim-flim : ∀ fx fxcL → isLimit N' (fx ∘ (_/ L)) (flim fx fxcL)
       islim-flim fx fxcL = snd (flim' fx fxcL)
 
-      r : RecℭSym N λ u v ε → u N.≈[ L ·₊ ε ] v
+      r : RecℭSym N λ u v ε → u PN.≈[ L ·₊ ε ] v
       r .ιA        = f
       r .limA      = flim
       r .eqA       = λ u v u≈v →
-        N.isSeparated≈ u v (λ ε → N.subst≈ u v (·/ L ε) (u≈v (ε / L)))
+        PN.isSeparated≈ u v (λ ε → PN.subst≈ u v (·/ L ε) (u≈v (ε / L)))
       r .ι-ι-B     = f-lip .pres≈
       r .ι-lim-B   x fy ε δ fycL Δ fx≈fyδ        =
         isLim≈- N' (f x) (fy ∘ (_/ L)) (flim fy fycL) (L ·₊ ε) (L ·₊ δ) Δ'
           (islim-flim fy fycL) (
-          subst2 ((f x) N.≈[_]_)
+          subst2 ((f x) PN.≈[_]_)
             (ℚ₊≡ $ ℚ.·DistL+ ⟨ L ⟩₊ ⟨ ε ⟩₊ _ ∙ cong (⟨ L ·₊ ε ⟩₊ ℚ.+_) (-DistR· ⟨ L ⟩₊ _))
             (cong fy (ℚ₊≡ $ sym (·/ L δ) ∙ ℚ.·Assoc ⟨ L ⟩₊ ⟨ δ ⟩₊ ⟨ L ⁻¹₊ ⟩₊))
             (fx≈fyδ
-              :> f x N.≈[ L ·₊ (ε -₊ δ , Δ) ] fy δ)
-            :> f x N.≈[ (L ·₊ ε) -₊ (L ·₊ δ) , Δ' ] fy ((L ·₊ δ) / L))
-          :> f x N.≈[ L ·₊ ε ] flim fy fycL
+              :> f x PN.≈[ L ·₊ (ε -₊ δ , Δ) ] fy δ)
+            :> f x PN.≈[ (L ·₊ ε) -₊ (L ·₊ δ) , Δ' ] fy ((L ·₊ δ) / L))
+          :> f x PN.≈[ L ·₊ ε ] flim fy fycL
         where
           Δ' : 0 <ℚ (L ·₊ ε) -₊ (L ·₊ δ)
           Δ' = <→0<Δ ⟨ L ·₊ δ ⟩₊ ⟨ L ·₊ ε ⟩₊
@@ -188,15 +188,15 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
       r .lim-lim-B fx fy ε δ η fxcL fycL Δ fxδ≈fyη  =
         isLim≈-₂ N' (fx ∘ (_/ L)) (fy ∘ (_/ L)) (flim fx fxcL) (flim fy fycL)
         (L ·₊ ε) (L ·₊ δ) (L ·₊ η) Δ' (islim-flim fx fxcL) (islim-flim fy fycL)
-        (subst2 (N._≈[ (L ·₊ ε) -₊ (L ·₊ δ +₊ (L ·₊ η)) , Δ' ]_)
+        (subst2 (PN._≈[ (L ·₊ ε) -₊ (L ·₊ δ +₊ (L ·₊ η)) , Δ' ]_)
           (cong fx (ℚ₊≡ $ sym (·/ L δ) ∙ ℚ.·Assoc ⟨ L ⟩₊ ⟨ δ ⟩₊ ⟨ L ⁻¹₊ ⟩₊))
           (cong fy (ℚ₊≡ $ sym (·/ L η) ∙ ℚ.·Assoc ⟨ L ⟩₊ ⟨ η ⟩₊ ⟨ L ⁻¹₊ ⟩₊))
-          (N.subst≈ (fx δ) (fy η)
+          (PN.subst≈ (fx δ) (fy η)
             (ℚ.·DistL+ ⟨ L ⟩₊ ⟨ ε ⟩₊ _ ∙ cong (⟨ L ·₊ ε ⟩₊ ℚ.+_)
             (-DistR· ⟨ L ⟩₊ _ ∙ cong ℚ.-_ (ℚ.·DistL+ ⟨ L ⟩₊ ⟨ δ ⟩₊ ⟨ η ⟩₊)))
-          fxδ≈fyη :> fx δ N.≈[ (L ·₊ ε) -₊ (L ·₊ δ +₊ (L ·₊ η)) , Δ' ] fy η)
-          :> fx ((L ·₊ δ) / L) N.≈[ (L ·₊ ε) -₊ (L ·₊ δ +₊ (L ·₊ η)) , Δ' ] fy ((L ·₊ η) / L))
-        :> flim fx fxcL N.≈[ L ·₊ ε ] flim fy fycL
+          fxδ≈fyη :> fx δ PN.≈[ (L ·₊ ε) -₊ (L ·₊ δ +₊ (L ·₊ η)) , Δ' ] fy η)
+          :> fx ((L ·₊ δ) / L) PN.≈[ (L ·₊ ε) -₊ (L ·₊ δ +₊ (L ·₊ η)) , Δ' ] fy ((L ·₊ η) / L))
+        :> flim fx fxcL PN.≈[ L ·₊ ε ] flim fy fycL
         where
           Δ' : 0 <ℚ (L ·₊ ε) -₊ ((L ·₊ δ) +₊ (L ·₊ η))
           Δ' = <→0<Δ ⟨ (L ·₊ δ) +₊ (L ·₊ η) ⟩₊ ⟨ L ·₊ ε ⟩₊ (begin<
@@ -204,8 +204,8 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
             ⟨ L ·₊ (δ +₊ η) ⟩₊          <⟨ ·MonoL< _ _ ⟨ L ⟩₊ (snd L)
                                         (0<Δ→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ) ⟩
             ⟨ L ·₊ ε ⟩₊                 ◾)
-      r .isSymB    = λ u v → N.isSym≈ u v ∘ (L ·₊_)
-      r .isPropB   = λ u v → N.isProp≈ u v ∘ (L ·₊_)
+      r .isSymB    = λ u v → PN.isSym≈ u v ∘ (L ·₊_)
+      r .isPropB   = λ u v → PN.isProp≈ u v ∘ (L ·₊_)
 
     liftLipschitzWithFun : ∀ L f → IsLipschitzWith (snd M') f (snd N') L → ⟨ℭ M' ⟩ → N
     liftLipschitzWithFun = ((fst ∘_) ∘_) ∘ liftLipschitzWith
@@ -227,7 +227,7 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
     isUniqueLiftLipschitz = uncurry λ f → PT.rec isPropIsProp λ
       { (L , f-lip) ((g , g-lip) , g∘ι≡f) ((h , h-lip) , h∘ι≡f) →
         Σ≡Prop
-        (λ g → λ p q i j x → N.isSetM (fst g (ι x)) (f x) (λ k → p k x) (λ k → q k x) i j)
+        (λ g → λ p q i j x → PN.isSetM (fst g (ι x)) (f x) (λ k → p k x) (λ k → q k x) i j)
         (Σ≡Prop (λ _ → squash₁)
           (cong fst (lipschitz≡ (g , g-lip) (h , h-lip) (g∘ι≡f ∙ sym h∘ι≡f)))) }
 
@@ -303,12 +303,50 @@ isComplete→≡ℭ = ua ∘ isComplete→≃ℭ
 isIdempotentℭ : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → ⟨ℭ M ⟩ ≡ ⟨ℭ ℭ M ⟩
 isIdempotentℭ = isComplete→≡ℭ (isCompleteℭ _)
 
+isComplete→CatIsoⁿ : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → isComplete M → CatIso (PrSpacesⁿ ℓ ℓ) M (ℭ M)
+isComplete→CatIsoⁿ {M = M} isCompM = ιⁿ , isiso invⁿ sec ret
+  where
+  open LiftLipschitzCompleteCodomain M M isCompM
+  module PM = PremetricStr (M .snd)
+
+  id-lip1 : IsLipschitzWith (M .snd) (idfun ⟨ M ⟩) (M .snd)
+            (1 , OrderedCommRingStr.0<1 (str ℚOrderedCommRing))
+  IsLipschitzWith.pres≈ id-lip1 x y ε =
+    PM.subst≈ x y (sym (ℚ.·IdL ⟨ ε ⟩₊))
+
+  lift1 : Σ[ f ∈ (⟨ℭ M ⟩ → ⟨ M ⟩) ]
+            IsLipschitzWith ((ℭ M) .snd) f (M .snd)
+              (1 , OrderedCommRingStr.0<1 (str ℚOrderedCommRing))
+  lift1 = liftLipschitzWith
+    (1 , OrderedCommRingStr.0<1 (str ℚOrderedCommRing)) (idfun _) id-lip1
+
+  lift1∘ι : fst lift1 ∘ ι ≡ idfun _
+  lift1∘ι = refl
+
+  invⁿ : NE[ ℭ M , M ]
+  fst invⁿ = fst lift1
+  IsNonExpanding.pres≈ (snd invⁿ) x y ε =
+    PM.subst≈ (fst lift1 x) (fst lift1 y) (ℚ.·IdL ⟨ ε ⟩₊)
+      ∘ IsLipschitzWith.pres≈ (snd lift1) x y ε
+
+  sec : invⁿ ⋆⟨ PrSpacesⁿ _ _ ⟩ ιⁿ ≡ idⁿ
+  sec = nonExpanding≡ M (ℭ M) (ιⁿ ∘NE invⁿ) idⁿ (cong ((ι {M' = M}) ∘_) lift1∘ι)
+
+  ret : ιⁿ ⋆⟨ PrSpacesⁿ _ _ ⟩ invⁿ ≡ idⁿ
+  ret = NE≡ lift1∘ι
+
+isComplete→≡ℭ-PM : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → isComplete M → M ≡ ℭ M
+isComplete→≡ℭ-PM {M = M} = isUnivalent.CatIsoToPath isUnivalentPrSpacesⁿ ∘ isComplete→CatIsoⁿ {M = M}
+
+isIdempotentℭ-PM : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → ℭ M ≡ ℭ (ℭ M)
+isIdempotentℭ-PM = isComplete→≡ℭ-PM (isCompleteℭ _)
+
 module CompletionFunctor (ℓ : Level) where
 
-  -- TO DO: prove that the category is univalent, and as a consequence,
-  -- conclude the following generalization of Theorem 3.21: "M ≡ ℭ M"
-  -- obtaining an equality between the *premetric spaces*, instead of only
-  -- between the underlying types (and similarly for isIdempotentℭ)
+  -- `PrSpacesⁿ` is univalent, which is enough to derive the generalized
+  -- Theorem 3.21 above as an equality of premetric spaces:
+  -- `isComplete→≡ℭ-PM` and `isIdempotentℭ-PM`.
+  -- Univalence of `PrSpacesᴸ` is a separate question.
 
   open Functor
   open NatTrans

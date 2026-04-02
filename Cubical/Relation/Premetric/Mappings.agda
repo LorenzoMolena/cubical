@@ -4,11 +4,16 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Equiv.Properties
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.Path
 open import Cubical.Foundations.SIP
+open import Cubical.Foundations.Univalence
 
 open import Cubical.Categories.Category.Base
 
 open import Cubical.Data.Sigma
+open import Cubical.Data.Sigma.Properties
 open import Cubical.Data.Empty as ⊥
 
 open import Cubical.Data.Nat as ℕ
@@ -35,6 +40,7 @@ open import Cubical.Displayed.Universe
 open import Cubical.Reflection.RecordEquiv
 open import Cubical.Reflection.StrictEquiv
 
+open import Cubical.Relation.Binary.Properties
 open import Cubical.Relation.Premetric.Base
 
 open OrderedCommRingTheory ℚOrderedCommRing
@@ -323,3 +329,127 @@ isPropIsIsometry M e N = isOfHLevelRetractFromIso 1
 
 PremetricSpaceEquiv : (M : PremetricSpace ℓM ℓM') (N : PremetricSpace ℓN ℓN') → Type _
 PremetricSpaceEquiv M N = Σ[ e ∈ ⟨ M ⟩ ≃ ⟨ N ⟩ ] IsIsometry (M .snd) e (N .snd)
+
+module _ {ℓ ℓ' : Level} where
+  PremetricStrEquiv : StrEquiv {ℓ = ℓ} (PremetricStr ℓ') (ℓ-suc (ℓ-max ℓ ℓ'))
+  PremetricStrEquiv (_ , s) (_ , t) e = IsIsometry s e t
+
+  premetricSNS : SNS (PremetricStr ℓ') PremetricStrEquiv
+  premetricSNS {X = X} s t = propBiimpl→Equiv
+    (isPropIsIsometry s (idEquiv X) t)
+    isPropStrEq
+    fwd
+    bwd
+    where
+    module s = PremetricStr s
+    module t = PremetricStr t
+
+    relOf : PremetricStr ℓ' X → X → ℚ₊ → X → Type ℓ'
+    relOf = PremetricStr._≈[_]_
+
+    premetricStrIsoΣ : Iso (PremetricStr ℓ' X)
+                            (Σ[ R ∈ (X → ℚ₊ → X → Type ℓ') ] IsPremetric R)
+    Iso.fun premetricStrIsoΣ u = relOf u , PremetricStr.isPremetric u
+    Iso.inv premetricStrIsoΣ (R , isR) = premetricstr R isR
+    Iso.rightInv premetricStrIsoΣ _ = refl
+    Iso.leftInv premetricStrIsoΣ _ = refl
+
+    strEqEquivRelEq : (s ≡ t) ≃ (relOf s ≡ relOf t)
+    strEqEquivRelEq =
+      congEquiv {x = s} {y = t} (isoToEquiv premetricStrIsoΣ)
+      ∙ₑ invEquiv (Σ≡PropEquiv (λ R → isPropIsPremetric R)
+            {u = Iso.fun premetricStrIsoΣ s}
+            {v = Iso.fun premetricStrIsoΣ t})
+
+    relEq→strEq : relOf s ≡ relOf t → s ≡ t
+    relEq→strEq = invEq strEqEquivRelEq
+
+    isPropPointwiseRelEq : ∀ x y ε → isProp (x s.≈[ ε ] y ≡ x t.≈[ ε ] y)
+    isPropPointwiseRelEq x y ε =
+      isOfHLevelRespectEquiv 1 (invEquiv (univalence {A = x s.≈[ ε ] y} {B = x t.≈[ ε ] y}))
+        (isOfHLevel≃ 1 (s.isProp≈ x y ε) (t.isProp≈ x y ε))
+
+    isPropRelEq : isProp (relOf s ≡ relOf t)
+    isPropRelEq p q i = funExt λ x → funExt λ ε → funExt λ y →
+      isPropPointwiseRelEq x y ε
+        (cong (λ R → R x ε y) p)
+        (cong (λ R → R x ε y) q) i
+
+    isPropStrEq : isProp (s ≡ t)
+    isPropStrEq = isOfHLevelRespectEquiv 1 (invEquiv strEqEquivRelEq) isPropRelEq
+
+    fwd : IsIsometry s (idEquiv X) t → s ≡ t
+    fwd ise = relEq→strEq $
+      funExt λ x → funExt λ ε → funExt λ y → ua (IsIsometry.pres≈ ise x y ε)
+
+    bwd : s ≡ t → IsIsometry s (idEquiv X) t
+    IsIsometry.pres≈ (bwd p) x y ε =
+      pathToEquiv (cong (λ R → R x ε y) (cong relOf p))
+
+  premetricUnivalentStr : UnivalentStr (PremetricStr ℓ') PremetricStrEquiv
+  premetricUnivalentStr = SNS→UnivalentStr PremetricStrEquiv premetricSNS
+
+  PremetricSIP : (M N : PremetricSpace ℓ ℓ') → PremetricSpaceEquiv M N ≃ (M ≡ N)
+  PremetricSIP = SIP premetricUnivalentStr
+
+module _ {ℓ ℓ' : Level} (M N : PremetricSpace ℓ ℓ') where
+  open Iso
+  open CategoryStructures
+  module M = PremetricStr (M .snd)
+  module N = PremetricStr (N .snd)
+
+  CatIso→PremetricSpaceEquiv : CatIso (PremetricSpaceCategoryⁿ ℓ ℓ') M N
+                             → PremetricSpaceEquiv M N
+  CatIso→PremetricSpaceEquiv (f , isiso g sec ret) = isoToEquiv is , isisometry pres
+    where
+    is : Iso ⟨ M ⟩ ⟨ N ⟩
+    is .fun = fst f
+    is .inv = fst g
+    is .rightInv = funExt⁻ (cong fst sec)
+    is .leftInv = funExt⁻ (cong fst ret)
+
+    pres : ∀ x y ε → x M.≈[ ε ] y ≃ isoToEquiv is .fst x N.≈[ ε ] isoToEquiv is .fst y
+    pres x y ε = propBiimpl→Equiv
+      (M.isProp≈ x y ε)
+      (N.isProp≈ (fst f x) (fst f y) ε)
+      (IsNonExpanding.pres≈ (snd f) x y ε)
+      (subst2 (λ x y → x M.≈[ ε ] y) (funExt⁻ (cong fst ret) x) (funExt⁻ (cong fst ret) y)
+        ∘ IsNonExpanding.pres≈ (snd g) (fst f x) (fst f y) ε)
+
+  PremetricSpaceEquiv→CatIso : PremetricSpaceEquiv M N
+                             → CatIso (PremetricSpaceCategoryⁿ ℓ ℓ') M N
+  PremetricSpaceEquiv→CatIso (e , ise) = f , isiso g sec ret
+    where
+    f : NE[ M , N ]
+    fst f = equivFun e
+    IsNonExpanding.pres≈ (snd f) x y ε = equivFun (IsIsometry.pres≈ ise x y ε)
+
+    g : NE[ N , M ]
+    fst g = invEq e
+    IsNonExpanding.pres≈ (snd g) x y ε =
+      invEq (IsIsometry.pres≈ ise (invEq e x) (invEq e y) ε)
+        ∘ subst2 (λ x y → x N.≈[ ε ] y) (sym (secEq e x)) (sym (secEq e y))
+
+    sec : g ⋆⟨ PremetricSpaceCategoryⁿ ℓ ℓ' ⟩ f ≡ idⁿ
+    sec = NE≡ (funExt (secEq e))
+
+    ret : f ⋆⟨ PremetricSpaceCategoryⁿ ℓ ℓ' ⟩ g ≡ idⁿ
+    ret = NE≡ (funExt (retEq e))
+
+  PrSpacesⁿCatIso≃PremetricSpaceEquiv
+    : CatIso (PremetricSpaceCategoryⁿ ℓ ℓ') M N ≃ PremetricSpaceEquiv M N
+  PrSpacesⁿCatIso≃PremetricSpaceEquiv = isoToEquiv isom
+    where
+    isom : Iso (CatIso (PremetricSpaceCategoryⁿ ℓ ℓ') M N) (PremetricSpaceEquiv M N)
+    isom .fun = CatIso→PremetricSpaceEquiv
+    isom .inv = PremetricSpaceEquiv→CatIso
+    isom .rightInv (e , ise) =
+      Σ≡Prop (λ _ → isPropIsIsometry (M .snd) _ (N .snd))
+        (equivEq refl)
+    isom .leftInv (f , _) = CatIso≡ _ _ (NE≡ refl)
+
+isUnivalentPrSpacesⁿ : isUnivalent (CategoryStructures.PremetricSpaceCategoryⁿ ℓ ℓ')
+isUnivalent.univ isUnivalentPrSpacesⁿ M N =
+  precomposesToId→Equiv pathToIso _
+    (funExt (CatIso≡ _ _ ∘ CategoryStructures.NE≡ ∘ λ _ → transportRefl _))
+    (snd (PrSpacesⁿCatIso≃PremetricSpaceEquiv M N ∙ₑ PremetricSIP M N))
