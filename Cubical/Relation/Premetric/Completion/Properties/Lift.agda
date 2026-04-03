@@ -41,6 +41,7 @@ open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
 
 open import Cubical.Relation.Premetric.Properties
 open import Cubical.Relation.Premetric.Mappings
+open import Cubical.Relation.Premetric.Instances.FunctionSpace
 open import Cubical.Relation.Premetric.Completion.Base renaming (ℭ to ⟨ℭ_⟩)
 open import Cubical.Relation.Premetric.Completion.Properties.Closeness renaming
   (ℭPremetricSpace to ℭ)
@@ -51,6 +52,7 @@ open import Cubical.Reflection.RecordEquiv
 open import Cubical.Tactics.CommRingSolver
 
 open RingTheory (CommRing→Ring ℚCommRing)
+open OrderedCommRingStr (str ℚOrderedCommRing)
 open OrderedCommRingTheory ℚOrderedCommRing
 open OrderedCommRingReasoning ℚOrderedCommRing
 open 1/2∈ℚ
@@ -62,8 +64,9 @@ open CategoryStructures using (NE≡ ; idⁿ ; _∘NE_ ; L≡ ; idᴸ ; _∘L_)
   renaming (PremetricSpaceCategoryⁿ to PrSpacesⁿ ; PremetricSpaceCategoryᴸ to PrSpacesᴸ)
 
 private
+  RCR = ℚCommRing
   variable
-    ℓM ℓM' ℓN ℓN' : Level
+    ℓA ℓA' ℓB ℓB' ℓM ℓM' ℓN ℓN' ℓT ℓT' : Level
 
 module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
 
@@ -246,6 +249,225 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
 
     lift∘ι : ∀ (f : L[ M' , N' ]) → liftLipschitzFun f ∘ ι ≡ fst f
     lift∘ι = snd ∘ liftLipschitzExtension
+
+module _ (A' : PremetricSpace ℓA ℓA') (B' : PremetricSpace ℓB ℓB') (T' : PremetricSpace ℓT ℓT') where
+
+  private
+    A = ⟨ A' ⟩
+    B = ⟨ B' ⟩
+    T = ⟨ T' ⟩
+    open module PA  = PremetricStr (A' .snd)
+    open module PℭA = PremetricStr ((ℭ A') .snd)
+    open module PB  = PremetricStr (B' .snd)
+    open module PℭB = PremetricStr ((ℭ B') .snd)
+    open module PC  = PremetricStr (T' .snd)
+
+  module _ (T-complete : isComplete T') where
+    open ℚ₊Inverse
+
+    private
+      F' = →PremetricSpace ⟨ ℭ B' ⟩ T'
+
+      module PF  = PremetricStr (F' .snd)
+      module TTh = PremetricTheory T'
+      module FTheory = PremetricTheory F'
+      module LiftB = LiftLipschitzCompleteCodomain B' T' T-complete
+
+      F-complete : isComplete F'
+      F-complete = isComplete→ ⟨ ℭ B' ⟩ T' T-complete
+
+      module LiftA = LiftLipschitzCompleteCodomain A' F' F-complete
+
+    liftCloseness :
+      ∀ (L : ℚ₊) (f g : B → T)
+      (f-lip : IsLipschitzWith (snd B') f (snd T') L)
+      (g-lip : IsLipschitzWith (snd B') g (snd T') L)
+      (ε : ℚ₊)
+      → (∀ (u : B) (δ : ℚ₊) → f u PC.≈[ ε +₊ δ ] g u)
+      → ∀ (u : ⟨ ℭ B' ⟩) (δ : ℚ₊)
+      → LiftB.liftLipschitzWithFun L f f-lip u PC.≈[ ε +₊ δ ] LiftB.liftLipschitzWithFun L g g-lip u
+    liftCloseness L f g f-lip g-lip ε fg-close = Elimℭ-Prop.go e
+      where
+      open import Cubical.Relation.Premetric.Completion.Elim B'
+
+      f̄ : ⟨ ℭ B' ⟩ → T
+      f̄ = LiftB.liftLipschitzWithFun L f f-lip
+
+      ḡ : ⟨ ℭ B' ⟩ → T
+      ḡ = LiftB.liftLipschitzWithFun L g g-lip
+
+      f̄-lip : IsLipschitzWith (snd (ℭ B')) f̄ (snd T') L
+      f̄-lip = snd (LiftB.liftLipschitzWith L f f-lip)
+
+      ḡ-lip : IsLipschitzWith (snd (ℭ B')) ḡ (snd T') L
+      ḡ-lip = snd (LiftB.liftLipschitzWith L g g-lip)
+
+      isLimit-f̄ : ∀ x xc → isLimit T' ((f̄ ∘ x) ∘ (_/ L)) (f̄ (lim x xc))
+      isLimit-f̄ x xc ε' δ =
+        PC.subst≈ (f̄ (x (ε' / L))) (f̄ (lim x xc))
+          (ℚ.·DistL+ ⟨ L ⟩₊ ⟨ ε' / L ⟩₊ ⟨ δ / L ⟩₊
+          ∙ cong₂ ℚ._+_ (·/ L ε') (·/ L δ))
+          (IsLipschitzWith.pres≈ f̄-lip
+            (x (ε' / L)) (lim x xc) (ε' / L +₊ δ / L)
+            (isLimitLim B' x xc (ε' / L) (δ / L)))
+
+      isLimit-ḡ : ∀ x xc → isLimit T' ((ḡ ∘ x) ∘ (_/ L)) (ḡ (lim x xc))
+      isLimit-ḡ x xc ε' δ =
+        PC.subst≈ (ḡ (x (ε' / L))) (ḡ (lim x xc))
+          (ℚ.·DistL+ ⟨ L ⟩₊ ⟨ ε' / L ⟩₊ ⟨ δ / L ⟩₊
+          ∙ cong₂ ℚ._+_ (·/ L ε') (·/ L δ))
+          (IsLipschitzWith.pres≈ ḡ-lip
+            (x (ε' / L)) (lim x xc) (ε' / L +₊ δ / L)
+            (isLimitLim B' x xc (ε' / L) (δ / L)))
+
+      e : Elimℭ-Prop (λ u → ∀ δ → f̄ u PC.≈[ ε +₊ δ ] ḡ u)
+      e .Elimℭ-Prop.ιA x δ = fg-close x δ
+      e .Elimℭ-Prop.limA x xc IH δ =
+        PC.isRounded≈⁻ (f̄ (lim x xc)) (ḡ (lim x xc)) (ε +₊ δ)
+          ∣ (η +₊ (η +₊ (ε +₊ η))
+          , witness<
+          , TTh.isLim≈+₂
+              (((f̄ ∘ x) ∘ (_/ L)))
+              (((ḡ ∘ x) ∘ (_/ L)))
+              (f̄ (lim x xc))
+              (ḡ (lim x xc))
+              (ε +₊ η) η η
+              (isLimit-f̄ x xc)
+              (isLimit-ḡ x xc)
+              (IH (η / L) η))
+          ∣₁
+        where
+        η : ℚ₊
+        η = δ /4₊
+
+        tail<δ : ((η +₊ η) +₊ η) <₊ δ
+        tail<δ = begin<
+          ⟨ (η +₊ η) +₊ η ⟩₊              ≡→≤⟨ cong (ℚ._+ ⟨ η ⟩₊) (/4+/4≡/2 ⟨ δ ⟩₊) ⟩
+          ⟨ δ /2₊ +₊ η ⟩₊                 <⟨ +MonoL< ⟨ η ⟩₊ ⟨ δ /2₊ ⟩₊ ⟨ δ /2₊ ⟩₊ (/4₊</2₊ δ) ⟩
+          ⟨ δ /2₊ +₊ δ /2₊ ⟩₊            ≡→≤⟨ /2+/2≡id ⟨ δ ⟩₊ ⟩
+          ⟨ δ ⟩₊                          ◾
+
+        witness< : η +₊ (η +₊ (ε +₊ η)) <₊ ε +₊ δ
+        witness< = begin<
+          ⟨ η +₊ (η +₊ (ε +₊ η)) ⟩₊      ≡→≤⟨
+            ℚ.+Assoc ⟨ η ⟩₊ ⟨ η ⟩₊ (⟨ ε ⟩₊ ℚ.+ ⟨ η ⟩₊)
+            ∙ ℚ.+Assoc (⟨ η ⟩₊ ℚ.+ ⟨ η ⟩₊) ⟨ ε ⟩₊ ⟨ η ⟩₊
+            ∙ cong (ℚ._+ ⟨ η ⟩₊) (ℚ.+Comm (⟨ η ⟩₊ ℚ.+ ⟨ η ⟩₊) ⟨ ε ⟩₊)
+            ∙ sym (ℚ.+Assoc ⟨ ε ⟩₊ (⟨ η ⟩₊ ℚ.+ ⟨ η ⟩₊) ⟨ η ⟩₊) ⟩
+          ⟨ ε +₊ ((η +₊ η) +₊ η) ⟩₊      <⟨ +MonoL< _ _ ⟨ ε ⟩₊ tail<δ ⟩
+          ⟨ ε +₊ δ ⟩₊                    ◾
+      e .Elimℭ-Prop.isPropA u = isPropΠ λ δ → PC.isProp≈ (f̄ u) (ḡ u) (ε +₊ δ)
+
+    liftLipschitzBinaryWith :
+      ∀ (L₁ L₂ : ℚ₊) (f : A → B → T)
+      (f-lipA : ∀ y → IsLipschitzWith (snd A') (λ x → f x y) (snd T') L₁)
+      (f-lipB : ∀ x → IsLipschitzWith (snd B') (f x) (snd T') L₂)
+      → Σ[ f̄ ∈ (⟨ ℭ A' ⟩ → ⟨ ℭ B' ⟩ → T) ]
+          ((∀ u → IsLipschitzWith (snd (ℭ B')) (f̄ u) (snd T') L₂)
+          × IsLipschitzWith (snd (ℭ A')) f̄ (snd (→PremetricSpace ⟨ ℭ B' ⟩ T')) L₁)
+    liftLipschitzBinaryWith L₁ L₂ f f-lipA f-lipB = f̄ , (f̄-lipB , f̄-lipA)
+      where
+      f₁ : A → ⟨ ℭ B' ⟩ → T
+      f₁ x = LiftB.liftLipschitzWithFun L₂ (f x) (f-lipB x)
+
+      f₁-lipB : ∀ x → IsLipschitzWith (snd (ℭ B')) (f₁ x) (snd T') L₂
+      f₁-lipB x = snd (LiftB.liftLipschitzWith L₂ (f x) (f-lipB x))
+
+      f₁-lipA : IsLipschitzWith (snd A') f₁ (snd F') L₁
+      f₁-lipA .IsLipschitzWith.pres≈ x y ε x≈y =
+        PT.rec squash₁ (λ where
+          (κ , κ<ε , x≈κy) →
+            let
+              L₁κ<L₁ε : (L₁ ·₊ κ) <₊ (L₁ ·₊ ε)
+              L₁κ<L₁ε = ·MonoL< ⟨ κ ⟩₊ ⟨ ε ⟩₊ ⟨ L₁ ⟩₊ (snd L₁) κ<ε
+
+              gap : ℚ₊
+              gap = [ (L₁ ·₊ ε) -₊ (L₁ ·₊ κ) ]⟨ L₁κ<L₁ε ⟩
+
+              δ₀ : ℚ₊
+              δ₀ = gap /2₊
+
+              witness< : (L₁ ·₊ κ) +₊ δ₀ <₊ L₁ ·₊ ε
+              witness< = subst2 (λ u v → u <ℚ v)
+                (ℚ.+Comm ⟨ δ₀ ⟩₊ ⟨ L₁ ·₊ κ ⟩₊)
+                (minusPlus₊ (L₁ ·₊ ε) (L₁ ·₊ κ))
+                (+MonoR< ⟨ δ₀ ⟩₊ ⟨ gap ⟩₊ ⟨ L₁ ·₊ κ ⟩₊ (/2₊<id gap))
+
+              base-close : ∀ z ρ → f x z PC.≈[ (L₁ ·₊ κ) +₊ ρ ] f y z
+              base-close z ρ =
+                PC.isMonotone≈< (f x z) (f y z) (L₁ ·₊ κ) ((L₁ ·₊ κ) +₊ ρ)
+                  (<₊SumLeft (L₁ ·₊ κ) ρ)
+                  (IsLipschitzWith.pres≈ (f-lipA z) x y κ x≈κy)
+            in
+            ∣ ((L₁ ·₊ κ) +₊ δ₀
+            , witness<
+            , λ v → liftCloseness L₂ (f x) (f y) (f-lipB x) (f-lipB y) (L₁ ·₊ κ) base-close v δ₀)
+            ∣₁)
+        (PA.isRounded≈ x y ε x≈y)
+
+      f₁ᴸ : L[ A' , F' ]
+      f₁ᴸ = f₁ , ∣ L₁ , f₁-lipA ∣₁
+
+      lift₂ : Σ[ h ∈ (⟨ ℭ A' ⟩ → (⟨ ℭ B' ⟩ → T)) ]
+                IsLipschitzWith (snd (ℭ A')) h (snd F') L₁
+      lift₂ = LiftA.liftLipschitzWith L₁ (fst f₁ᴸ) f₁-lipA
+
+      f̄ : ⟨ ℭ A' ⟩ → ⟨ ℭ B' ⟩ → T
+      f̄ = fst lift₂
+
+      f̄-lipA : IsLipschitzWith (snd (ℭ A')) f̄ (snd F') L₁
+      f̄-lipA = snd lift₂
+
+      f̄-lipB : ∀ u → IsLipschitzWith (snd (ℭ B')) (f̄ u) (snd T') L₂
+      f̄-lipB = Elimℭ-Prop.go e
+        where
+        open import Cubical.Relation.Premetric.Completion.Elim A'
+
+        e : Elimℭ-Prop (λ u → IsLipschitzWith (snd (ℭ B')) (f̄ u) (snd T') L₂)
+        e .Elimℭ-Prop.ιA x = f₁-lipB x
+        e .Elimℭ-Prop.limA x xc IH =
+          subst
+            (λ h → IsLipschitzWith (snd (ℭ B')) h (snd T') L₂)
+            l≡f̄lim
+            (limLipschitz (ℭ B') T' T-complete L₂ s s-cauchy (IH ∘ (_/ L₁)))
+          where
+          s : ℚ₊ → ⟨ ℭ B' ⟩ → T
+          s = (f̄ ∘ x) ∘ (_/ L₁)
+
+          s-cauchy : FTheory.isCauchy s
+          s-cauchy ε δ =
+            PF.subst≈ (s ε) (s δ)
+              {ε = L₁ ·₊ (ε / L₁ +₊ δ / L₁)}
+              {ε' = ε +₊ δ}
+              (ℚ.·DistL+ ⟨ L₁ ⟩₊ ⟨ ε / L₁ ⟩₊ ⟨ δ / L₁ ⟩₊
+              ∙ cong₂ ℚ._+_ (·/ L₁ ε) (·/ L₁ δ))
+              (IsLipschitzWith.pres≈ f̄-lipA
+                (x (ε / L₁)) (x (δ / L₁)) (ε / L₁ +₊ δ / L₁)
+                (xc (ε / L₁) (δ / L₁)))
+
+          f̄-s-lim : FTheory.isLimit s (f̄ (lim x xc))
+          f̄-s-lim ε δ =
+            PF.subst≈ (s ε) (f̄ (lim x xc))
+              {ε = L₁ ·₊ (ε / L₁ +₊ δ / L₁)}
+              {ε' = ε +₊ δ}
+              (ℚ.·DistL+ ⟨ L₁ ⟩₊ ⟨ ε / L₁ ⟩₊ ⟨ δ / L₁ ⟩₊
+              ∙ cong₂ ℚ._+_ (·/ L₁ ε) (·/ L₁ δ))
+              (IsLipschitzWith.pres≈ f̄-lipA
+                (x (ε / L₁)) (lim x xc) (ε / L₁ +₊ δ / L₁)
+                (isLimitLim A' x xc (ε / L₁) (δ / L₁)))
+
+          l≡f̄lim : fst (F-complete s s-cauchy) ≡ f̄ (lim x xc)
+          l≡f̄lim = cong fst (FTheory.isPropLimit s (F-complete s s-cauchy) (f̄ (lim x xc) , f̄-s-lim))
+        e .Elimℭ-Prop.isPropA u =
+          isPropIsLipschitzWith (snd (ℭ B')) (f̄ u) (snd T') L₂
+
+    liftBinary∘ι∘ι :
+      ∀ (L₁ L₂ : ℚ₊) (f : A → B → T)
+      (f-lipA : ∀ y → IsLipschitzWith (snd A') (λ x → f x y) (snd T') L₁)
+      (f-lipB : ∀ x → IsLipschitzWith (snd B') (f x) (snd T') L₂)
+      → (λ x y → fst (liftLipschitzBinaryWith L₁ L₂ f f-lipA f-lipB) (ι x) (ι y)) ≡ f
+    liftBinary∘ι∘ι L₁ L₂ f f-lipA f-lipB =
+      funExt λ x → funExt λ y → refl
 
 -- It is quite common to have the codomain of the form ℭN, therefore here we specialize
 -- the proof/constuctions above, avoiding to supply isCompleteℭ every time.
