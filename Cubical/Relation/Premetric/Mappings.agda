@@ -315,7 +315,7 @@ record IsIsometry {A : Type ℓM} {B : Type ℓN}
     module N = PremetricStr N
 
   field
-    pres≈ : ∀ x y ε → x M.≈[ ε ] y ≃ equivFun e x N.≈[ ε ] equivFun e y
+    pres≈ : ∀ x ε y → x M.≈[ ε ] y ≃ equivFun e x N.≈[ ε ] equivFun e y
 
 unquoteDecl IsIsometryIsoΣ = declareRecordIsoΣ IsIsometryIsoΣ (quote IsIsometry)
 
@@ -331,66 +331,20 @@ PremetricSpaceEquiv : (M : PremetricSpace ℓM ℓM') (N : PremetricSpace ℓN �
 PremetricSpaceEquiv M N = Σ[ e ∈ ⟨ M ⟩ ≃ ⟨ N ⟩ ] IsIsometry (M .snd) e (N .snd)
 
 module _ {ℓ ℓ' : Level} where
-  PremetricStrEquiv : StrEquiv {ℓ = ℓ} (PremetricStr ℓ') (ℓ-suc (ℓ-max ℓ ℓ'))
-  PremetricStrEquiv (_ , s) (_ , t) e = IsIsometry s e t
-
-  premetricSNS : SNS (PremetricStr ℓ') PremetricStrEquiv
-  premetricSNS {X = X} s t = propBiimpl→Equiv
-    (isPropIsIsometry s (idEquiv X) t)
-    isPropStrEq
-    fwd
-    bwd
+  𝒮ᴰ-Premetric : DUARel (𝒮-Univ ℓ) (PremetricStr ℓ') (ℓ-suc (ℓ-max ℓ ℓ'))
+  𝒮ᴰ-Premetric =
+    𝒮ᴰ-Record (𝒮-Univ _) IsIsometry
+      (fields:
+        data[ _≈[_]_ ∣ ternRel ∣ pres≈ ]
+        prop[ isPremetric ∣ (λ _ _ → isPropIsPremetric _) ])
     where
-    module s = PremetricStr s
-    module t = PremetricStr t
+    open PremetricStr
+    open IsIsometry
 
-    relOf : PremetricStr ℓ' X → X → ℚ₊ → X → Type ℓ'
-    relOf = PremetricStr._≈[_]_
-
-    premetricStrIsoΣ : Iso (PremetricStr ℓ' X)
-                            (Σ[ R ∈ (X → ℚ₊ → X → Type ℓ') ] IsPremetric R)
-    Iso.fun premetricStrIsoΣ u = relOf u , PremetricStr.isPremetric u
-    Iso.inv premetricStrIsoΣ (R , isR) = premetricstr R isR
-    Iso.rightInv premetricStrIsoΣ _ = refl
-    Iso.leftInv premetricStrIsoΣ _ = refl
-
-    strEqEquivRelEq : (s ≡ t) ≃ (relOf s ≡ relOf t)
-    strEqEquivRelEq =
-      congEquiv {x = s} {y = t} (isoToEquiv premetricStrIsoΣ)
-      ∙ₑ invEquiv (Σ≡PropEquiv (λ R → isPropIsPremetric R)
-            {u = Iso.fun premetricStrIsoΣ s}
-            {v = Iso.fun premetricStrIsoΣ t})
-
-    relEq→strEq : relOf s ≡ relOf t → s ≡ t
-    relEq→strEq = invEq strEqEquivRelEq
-
-    isPropPointwiseRelEq : ∀ x y ε → isProp (x s.≈[ ε ] y ≡ x t.≈[ ε ] y)
-    isPropPointwiseRelEq x y ε =
-      isOfHLevelRespectEquiv 1 (invEquiv (univalence {A = x s.≈[ ε ] y} {B = x t.≈[ ε ] y}))
-        (isOfHLevel≃ 1 (s.isProp≈ x y ε) (t.isProp≈ x y ε))
-
-    isPropRelEq : isProp (relOf s ≡ relOf t)
-    isPropRelEq p q i = funExt λ x → funExt λ ε → funExt λ y →
-      isPropPointwiseRelEq x y ε
-        (cong (λ R → R x ε y) p)
-        (cong (λ R → R x ε y) q) i
-
-    isPropStrEq : isProp (s ≡ t)
-    isPropStrEq = isOfHLevelRespectEquiv 1 (invEquiv strEqEquivRelEq) isPropRelEq
-
-    fwd : IsIsometry s (idEquiv X) t → s ≡ t
-    fwd ise = relEq→strEq $
-      funExt λ x → funExt λ ε → funExt λ y → ua (IsIsometry.pres≈ ise x y ε)
-
-    bwd : s ≡ t → IsIsometry s (idEquiv X) t
-    IsIsometry.pres≈ (bwd p) x y ε =
-      pathToEquiv (cong (λ R → R x ε y) (cong relOf p))
-
-  premetricUnivalentStr : UnivalentStr (PremetricStr ℓ') PremetricStrEquiv
-  premetricUnivalentStr = SNS→UnivalentStr PremetricStrEquiv premetricSNS
+    ternRel = autoDUARel (𝒮-Univ _) (λ A → A → ℚ₊ → A → Type ℓ')
 
   PremetricSIP : (M N : PremetricSpace ℓ ℓ') → PremetricSpaceEquiv M N ≃ (M ≡ N)
-  PremetricSIP = SIP premetricUnivalentStr
+  PremetricSIP = ∫ 𝒮ᴰ-Premetric .UARel.ua
 
 module _ {ℓ ℓ' : Level} (M N : PremetricSpace ℓ ℓ') where
   open Iso
@@ -408,8 +362,8 @@ module _ {ℓ ℓ' : Level} (M N : PremetricSpace ℓ ℓ') where
     is .rightInv = funExt⁻ (cong fst sec)
     is .leftInv = funExt⁻ (cong fst ret)
 
-    pres : ∀ x y ε → x M.≈[ ε ] y ≃ isoToEquiv is .fst x N.≈[ ε ] isoToEquiv is .fst y
-    pres x y ε = propBiimpl→Equiv
+    pres : ∀ x ε y → x M.≈[ ε ] y ≃ isoToEquiv is .fst x N.≈[ ε ] isoToEquiv is .fst y
+    pres x ε y = propBiimpl→Equiv
       (M.isProp≈ x y ε)
       (N.isProp≈ (fst f x) (fst f y) ε)
       (IsNonExpanding.pres≈ (snd f) x y ε)
@@ -422,12 +376,12 @@ module _ {ℓ ℓ' : Level} (M N : PremetricSpace ℓ ℓ') where
     where
     f : NE[ M , N ]
     fst f = equivFun e
-    IsNonExpanding.pres≈ (snd f) x y ε = equivFun (IsIsometry.pres≈ ise x y ε)
+    IsNonExpanding.pres≈ (snd f) x y ε = equivFun (IsIsometry.pres≈ ise x ε y)
 
     g : NE[ N , M ]
     fst g = invEq e
     IsNonExpanding.pres≈ (snd g) x y ε =
-      invEq (IsIsometry.pres≈ ise (invEq e x) (invEq e y) ε)
+      invEq (IsIsometry.pres≈ ise (invEq e x) ε (invEq e y))
         ∘ subst2 (λ x y → x N.≈[ ε ] y) (sym (secEq e x)) (sym (secEq e y))
 
     sec : g ⋆⟨ PremetricSpaceCategoryⁿ ℓ ℓ' ⟩ f ≡ idⁿ
