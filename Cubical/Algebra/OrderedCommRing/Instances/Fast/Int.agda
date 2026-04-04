@@ -152,12 +152,20 @@ module CanonicalMonoFromℤ (R : OrderedCommRing ℓ ℓ') where
   fst fromℤOCRMono = R.fromℤ
   snd fromℤOCRMono = isOCRMonoFromℤ
 
+  isUniqueFromℤOCR : (φ : OrderedCommRingHom ℤOrderedCommRing R)
+                   → ∀ n → R.fromℤ n ≡ fst φ n
+  isUniqueFromℤOCR φ = isUniqueFromℤ (OrderedCommRingHom→CommRingHom φ)
+    where open IsOrderedCommRingHom (snd φ)
+
+  isUniqueFromℤOCRMono : (φ : OrderedCommRingMono ℤOrderedCommRing R)
+                       → ∀ n → R.fromℤ n ≡ fst φ n
+  isUniqueFromℤOCRMono φ = isUniqueFromℤ (OrderedCommRingMono→CommRingHom φ)
+    where open IsOrderedCommRingMono (snd φ)
+
   isContrHom[ℤOCR,-] : isContr (OrderedCommRingHom ℤOrderedCommRing R)
   fst isContrHom[ℤOCR,-] = fromℤOCR
-  snd isContrHom[ℤOCR,-] =
-    OrderedCommRingHom≡ ∘ funExt ∘ isUniqueFromℤ ∘ OrderedCommRingHom→CommRingHom
+  snd isContrHom[ℤOCR,-] = OrderedCommRingHom≡ ∘ funExt ∘ isUniqueFromℤOCR
 
   isContrMono[ℤOCR,-] : isContr (OrderedCommRingMono ℤOrderedCommRing R)
   fst isContrMono[ℤOCR,-] = fromℤOCRMono
-  snd isContrMono[ℤOCR,-] =
-    OrderedCommRingMono≡ ∘ funExt ∘ isUniqueFromℤ ∘ OrderedCommRingMono→CommRingHom
+  snd isContrMono[ℤOCR,-] = OrderedCommRingMono≡ ∘ funExt ∘ isUniqueFromℤOCRMono
