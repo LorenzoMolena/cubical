@@ -508,7 +508,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     R₀₊CommSemiring : CommSemiring _
     fst R₀₊CommSemiring = R₀₊
     CommSemiringStr.0r  (snd R₀₊CommSemiring) = 0r , is-refl _
-    CommSemiringStr.1r  (snd R₀₊CommSemiring) = 1r , <-≤-weaken _ _ 0<1
+    CommSemiringStr.1r  (snd R₀₊CommSemiring) = 1r , 0≤1
     CommSemiringStr._+_ (snd R₀₊CommSemiring) = _+₀₊_
     CommSemiringStr._·_ (snd R₀₊CommSemiring) = _·₀₊_
     CommSemiringStr.isCommSemiring (snd R₀₊CommSemiring) =
