@@ -148,11 +148,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     ·CancelR≤ : ∀ x y z → 0r < z → x · z ≤ y · z → x ≤ y
     ·CancelR≤ x y z 0<z zx≤zy = ¬<→≥ y x $ ≤→¬> _ _ zx≤zy ∘ ·MonoR< _ _ z 0<z
 
-    -- NOTE:
-    -- It's to not clear if the properties commented below are derivable.
-    -- Note that we can prove their double negations, so they are classically valid;
-    -- moreover, in a Ordered Heyting Field (where elements are invertible iff they
-    -- are apart form zero) we can prove them by multiplying both sides by z⁻¹
+    -- It's to not clear if the properties commented below are constructively derivable.
     --
     -- ·CancelL< : ∀ x y z → 0r < z → z · x < z · y → x < y
     -- ·CancelL< = ?
@@ -160,6 +156,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     -- ·CancelR< : ∀ x y z → 0r < z → x · z < y · z → x < y
     -- ·CancelR< = ?
 
+    -- Howeverer, we can prove their double negations, so they are classically valid
     ¬¬·CancelL< : ∀ x y z → 0r < z → z · x < z · y → ¬ ¬ (x < y)
     ¬¬·CancelL< x y z 0<z zx<zy ¬x<y =
       ≤→¬> _ _ (·MonoL≤ _ _ z (<-≤-weaken 0r z 0<z) (¬<→≥ _ _ ¬x<y)) zx<zy
@@ -202,16 +199,16 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       - x             ◾
 
     0<→-<0 : ∀ x → 0r < x → - x < 0r
-    0<→-<0 x = subst (- x <_) (solve! RCR) ∘ -Flip< 0r x
+    0<→-<0 x = subst (- x <_) 0Selfinverse ∘ -Flip< 0r x
 
     <0→0<- : ∀ x → x < 0r → 0r < - x
-    <0→0<- x = subst (_< - x) (solve! RCR) ∘ -Flip< x 0r
+    <0→0<- x = subst (_< - x) 0Selfinverse ∘ -Flip< x 0r
 
     0≤→-≤0 : ∀ x → 0r ≤ x → - x ≤ 0r
-    0≤→-≤0 x = subst (- x ≤_) (solve! RCR) ∘ -Flip≤ 0r x
+    0≤→-≤0 x = subst (- x ≤_) 0Selfinverse ∘ -Flip≤ 0r x
 
     ≤0→0≤- : ∀ x → x ≤ 0r → 0r ≤ - x
-    ≤0→0≤- x = subst (_≤ - x) (solve! RCR) ∘ -Flip≤ x 0r
+    ≤0→0≤- x = subst (_≤ - x) 0Selfinverse ∘ -Flip≤ x 0r
 
     <→0<Δ : ∀ x y → x < y → 0r < y - x
     <→0<Δ x y = subst (_< (y - x)) (+InvR x) ∘ +MonoR< x y (- x)
@@ -220,10 +217,10 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     ≤→0≤Δ x y = subst (_≤ (y - x)) (+InvR x) ∘ +MonoR≤ x y (- x)
 
     0<Δ→< : ∀ x y → 0r < y - x → x < y
-    0<Δ→< x y = subst2 _<_ (solve! RCR) (solve! RCR) ∘ +MonoR< 0r (y - x) x
+    0<Δ→< x y = subst2 _<_ (+IdL x) (solve! RCR) ∘ +MonoR< 0r (y - x) x
 
     0≤Δ→≤ : ∀ x y → 0r ≤ y - x → x ≤ y
-    0≤Δ→≤ x y = subst2 _≤_ (solve! RCR) (solve! RCR) ∘ +MonoR≤ 0r (y - x) x
+    0≤Δ→≤ x y = subst2 _≤_ (+IdL x) (solve! RCR) ∘ +MonoR≤ 0r (y - x) x
 
     0≤² : ∀ x → 0r ≤ x · x
     0≤² x = ≥Using< (x · x) 0r λ x²<0 →
@@ -236,13 +233,13 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
           x · x            <⟨ x²<0 ⟩
           0r               ◾
       in
-        subst (_≤ x · x) (solve! RCR) (∘diag (·MonoR≤ _ _ _) 0≤x)
+        subst (_≤ x · x) (0LeftAnnihilates x) (∘diag (·MonoR≤ _ _ _) 0≤x)
 
     #→0<² : ∀ x → x # 0r → 0r < x · x
     #→0<² x (inl x<0) =
-      subst2 _<_ (solve! RCR) (solve! RCR) (∘diag (·MonoR< _ _ _) (<0→0<- x x<0))
+      subst2 _<_ (0LeftAnnihilates _) (solve! RCR) (∘diag (·MonoR< _ _ _) (<0→0<- x x<0))
     #→0<² x (inr 0<x) =
-      subst (_< x · x) (solve! RCR) (∘diag (·MonoR< _ _ _) 0<x)
+      subst (_< x · x) (0LeftAnnihilates _) (∘diag (·MonoR< _ _ _) 0<x)
 
     ≤abs : ∀ z → z ≤ abs z
     ≤abs z = L≤⊔
@@ -252,7 +249,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     0≤abs : ∀ z → 0r ≤ abs z
     0≤abs z = ¬<→≥ (abs z) 0r λ ∣z∣<0 → is-irrefl 0r $ begin<
-      0r      ≡→≤⟨ solve! RCR ⟩
+      0r      ≡→≤⟨ sym 0Selfinverse ⟩
       - 0r      <⟨ -Flip< _ _ ∣z∣<0 ⟩
       - abs z   ≤⟨ -Flip≤ _ _ (≤abs z) ⟩
       - z       ≤⟨ -≤abs z ⟩
@@ -266,15 +263,15 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         abs z ≤⟨ ∣z∣≤0 ⟩
         0r         ◾)
       (begin≤
-        0r        ≡→≤⟨ solve! RCR ⟩
+        0r        ≡→≤⟨ sym 0Selfinverse ⟩
         - 0r        ≤⟨ -Flip≤ _ _ ∣z∣≤0 ⟩
         - (abs z)   ≤⟨ -Flip≤ _ _ $ -≤abs z ⟩
-        - - z     ≡→≤⟨ solve! RCR ⟩
+        - - z     ≡→≤⟨ -Idempotent z ⟩
         z           ◾)
 
     #→0<abs : ∀ z → z # 0r → 0r < abs z
     #→0<abs z (inl z<0) = begin<
-      0r    ≡→≤⟨ solve! RCR ⟩
+      0r    ≡→≤⟨ sym 0Selfinverse ⟩
       - 0r    <⟨ -Flip< z 0r z<0 ⟩
       - z     ≤⟨ -≤abs _ ⟩
       abs z   ◾
@@ -284,7 +281,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       abs z ◾
 
     abs- : ∀ x → abs (- x) ≡ abs x
-    abs- x = cong ((- x) ⊔_) (solve! RCR) ∙ ⊔Comm
+    abs- x = cong ((- x) ⊔_) (-Idempotent x) ∙ ⊔Comm
 
     0≤→abs≡id : ∀ x → 0r ≤ x → abs x ≡ x
     0≤→abs≡id x 0≤x = is-antisym (abs x) x
@@ -315,9 +312,8 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
             abs x · abs x ≡→≤⟨ cong (∘diag _·_) (0≤→abs≡id x 0≤x) ⟩
             x · x           ◾))
       (0≤Δ→≤ (x · x) (abs x · abs x) (begin≤
-        0r                          ≡→≤⟨ solve! RCR ⟩
-        0r · (abs x - - x)            ≤⟨ ·MonoR≤ 0r _ _ (≤→0≤Δ _ _ (-≤abs x))
-                                                        (≤→0≤Δ _ _ (≤abs x)) ⟩
+        0r                          ≡→≤⟨ sym $ 0LeftAnnihilates (abs x - - x) ⟩
+        0r · (abs x - - x)            ≤⟨ ≤→0≤Δ _ _ (≤abs x) ≤·[ _ , ≤→0≤Δ _ _ (-≤abs x) ] ⟩
         (abs x - x) · (abs x - - x) ≡→≤⟨ solve! RCR ⟩
         abs x · abs x - x · x         ◾))
 
@@ -407,7 +403,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     infixl 7 _·subtype_
 
-  -- Of course 0<+Closed and 0<·Closed are derivable, but for concrete instances
+  -- 0<+Closed and 0<·Closed are derivable, but for concrete instances
   -- (like the rationals) it's more efficient to use alternative proofs
   module Positive
     (0<+Closed : (x y : R) → 0r < x → 0r < y → 0r < x + y)
@@ -487,17 +483,17 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     <₊SumLeft : ∀ x y → x <₊ x +₊ y
     <₊SumLeft (x , _) (y , 0<y) = begin<
-      x ≡→≤⟨ solve! RCR ⟩ x + 0r <⟨ +MonoL< _ _ _ 0<y ⟩ x + y ◾
+      x ≡→≤⟨ sym $ +IdR x ⟩ x + 0r <⟨ [ x ]+< 0<y ⟩ x + y ◾
 
     <₊SumRight : ∀ x y → x <₊ y +₊ x
     <₊SumRight (x , _) (y , 0<y) = begin<
-      x ≡→≤⟨ solve! RCR ⟩ 0r + x <⟨ +MonoR< _ _ _ 0<y ⟩ y + x ◾
+      x ≡→≤⟨ sym $ +IdL x ⟩ 0r + x <⟨ 0<y <+[ x ] ⟩ y + x ◾
 
     Δ<₊ : ∀ x y → x -₊ y < ⟨ x ⟩₊
     Δ<₊ (x , _) (y , 0<y) = begin<
-      x - y <⟨ +MonoL< _ _ _ (-Flip< 0r y 0<y) ⟩ x - 0r ≡→≤⟨ solve! RCR ⟩ x ◾
+      x - y <⟨ [ x ]+< -Flip< 0r y 0<y ⟩ x - 0r ≡→≤⟨ solve! RCR ⟩ x ◾
 
-  -- Of course 0≤+Closed and 0≤·Closed are derivable, but for concrete instances
+  -- 0≤+Closed and 0≤·Closed are derivable, but for concrete instances
   -- (like the rationals) it's more efficient to use alternative proofs
   module NonNegative
     (0≤+Closed : (x y : R) → 0r ≤ x → 0r ≤ y → 0r ≤ x + y)
@@ -568,15 +564,15 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     ≤₀₊SumLeft : ∀ x y → x ≤₀₊ x +₀₊ y
     ≤₀₊SumLeft (x , _) (y , 0≤y) = begin≤
-      x ≡→≤⟨ solve! RCR ⟩ x + 0r ≤⟨ +MonoL≤ _ _ _ 0≤y ⟩ x + y ◾
+      x ≡→≤⟨ sym $ +IdR x ⟩ x + 0r ≤⟨ [ x ]+≤ 0≤y ⟩ x + y ◾
 
     ≤₀₊SumRight : ∀ x y → x ≤₀₊ y +₀₊ x
     ≤₀₊SumRight (x , _) (y , 0≤y) = begin≤
-      x ≡→≤⟨ solve! RCR ⟩ 0r + x ≤⟨ +MonoR≤ _ _ _ 0≤y ⟩ y + x ◾
+      x ≡→≤⟨ sym $ +IdL x ⟩ 0r + x ≤⟨ 0≤y ≤+[ x ] ⟩ y + x ◾
 
     Δ≤₀₊ : ∀ x y → x -₀₊ y ≤ ⟨ x ⟩₀₊
     Δ≤₀₊ (x , _) (y , 0≤y) = begin≤
-      x - y ≤⟨ +MonoL≤ _ _ _ (-Flip≤ 0r y 0≤y) ⟩ x - 0r ≡→≤⟨ solve! RCR ⟩ x ◾
+      x - y ≤⟨ [ x ]+≤ -Flip≤ 0r y 0≤y ⟩ x - 0r ≡→≤⟨ solve! RCR ⟩ x ◾
 
   private
     2r = 1r + 1r
@@ -608,27 +604,30 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     mean : R → R → R
     mean x y = (x + y) · 1/2
 
+    /2+/2≡mean : ∀ x y → x /2 + y /2 ≡ mean x y
+    /2+/2≡mean x y = sym (·DistL+ x y 1/2)
+
     meanIdem : ∀ x → mean x x ≡ x
     meanIdem x =
       (x + x) · 1/2     ≡⟨ solve! RCR ⟩
       x · (1/2 + 1/2)   ≡⟨ cong (x ·_) 1/2+1/2≡1 ⟩
-      x · 1r            ≡⟨ solve! RCR ⟩
+      x · 1r            ≡⟨ ·IdR x ⟩
       x                 ∎
 
     <→<mean : ∀ x y → x < y → x < mean x y
     <→<mean x y x<y = begin<
       x             ≡→≤⟨ sym (meanIdem x) ⟩
-      (x + x) · 1/2   <⟨ ·MonoR< (x + x) (x + y) 1/2 0<1/2 (+MonoL< x y x x<y) ⟩
+      (x + x) · 1/2   <⟨ ([ x ]+< x<y) <·[ 1/2 , 0<1/2 ] ⟩
       (x + y) · 1/2   ◾
 
     <→mean< : ∀ x y → x < y → mean x y < y
     <→mean< x y x<y = begin<
-      (x + y) · 1/2   <⟨ ·MonoR< (x + y) (y + y) 1/2 0<1/2 (+MonoR< x y y x<y) ⟩
+      (x + y) · 1/2   <⟨ (x<y <+[ y ]) <·[ 1/2 , 0<1/2 ] ⟩
       (y + y) · 1/2 ≡→≤⟨ meanIdem y ⟩
       y               ◾
 
     /2+/2≡id : ∀ x → x /2 + x /2 ≡ x
-    /2+/2≡id x = solve! RCR ∙ meanIdem x
+    /2+/2≡id x = /2+/2≡mean x x ∙ meanIdem x
 
     id-/2≡/2 : ∀ x → x - x /2 ≡ x /2
     id-/2≡/2 x = cong (_- x /2) (sym (/2+/2≡id x)) ∙ solve! RCR
@@ -660,6 +659,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     _/4₊ : R₊ → R₊
     _/4₊ = _/2₊ ∘ _/2₊
+
+    mean₊ : R₊ → R₊ → R₊
+    mean₊ x y = (x +₊ y) /2₊
 
     /2₊<id : ∀ x → (x /2₊) <₊ x
     /2₊<id x = begin<
