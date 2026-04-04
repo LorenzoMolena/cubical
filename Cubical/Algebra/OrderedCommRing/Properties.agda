@@ -111,7 +111,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
   module OrderedCommRingTheory where
     open ApartnessStr (str (OrderedCommRing→Apartness R')) using (_#_) public
-    open PseudolatticeTheory (OrderedCommRing→PseudoLattice R') public renaming (
+    open PseudolatticeTheory (OrderedCommRing→PseudoLattice R') public using () renaming (
         L≤∨ to L≤⊔ ; R≤∨ to R≤⊔ ; ∨Comm to ⊔Comm ; ∨Idem to ⊔Idem ; ∨LUB to ⊔LUB
       ; ∧≤L to ⊓≤L ; ∧≤R to ⊓≤R ; ∧Comm to ⊓Comm ; ∧Idem to ⊓Idem ; ∧GLB to ⊓GLB)
 
