@@ -57,9 +57,6 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     RCR = OrderedCommRing→CommRing R'
   open RingTheory (OrderedCommRing→Ring R')
   open OrderedCommRingStr (snd R')
-  open PseudolatticeTheory (OrderedCommRing→PseudoLattice R') public renaming (
-      L≤∨ to L≤⊔ ; R≤∨ to R≤⊔ ; ∨Comm to ⊔Comm ; ∨Idem to ⊔Idem ; ∨LUB to ⊔LUB
-    ; ∧≤L to ⊓≤L ; ∧≤R to ⊓≤R ; ∧Comm to ⊓Comm ; ∧Idem to ⊓Idem ; ∧GLB to ⊓GLB)
 
   module OrderedCommRingReasoning where
     open <-≤-Reasoning
@@ -114,6 +111,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
   module OrderedCommRingTheory where
     open ApartnessStr (str (OrderedCommRing→Apartness R')) using (_#_) public
+    open PseudolatticeTheory (OrderedCommRing→PseudoLattice R') public using () renaming (
+        L≤∨ to L≤⊔ ; R≤∨ to R≤⊔ ; ∨Comm to ⊔Comm ; ∨Idem to ⊔Idem ; ∨LUB to ⊔LUB
+      ; ∧≤L to ⊓≤L ; ∧≤R to ⊓≤R ; ∧Comm to ⊓Comm ; ∧Idem to ⊓Idem ; ∧GLB to ⊓GLB)
 
     0≤1 : 0r ≤ 1r
     0≤1 = <-≤-weaken 0r 1r 0<1
@@ -362,6 +362,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     (+Closed : (x y : R) → P x → P y → P (x + y))
     where
 
+    subtype : Type (ℓ-max ℓ ℓ'')
     subtype = Σ[ x ∈ R ] P x
 
     isSetSubtype : isSet subtype
