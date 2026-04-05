@@ -11,6 +11,7 @@ open import Cubical.Data.Rationals.Fast.Properties as ℚ using ()
 open import Cubical.Data.Rationals.Fast.Order as ℚOrd using () renaming (_<_ to _<ℚ_)
 
 open import Cubical.HITs.PropositionalTruncation as PT
+open import Cubical.HITs.PropositionalTruncation.Monad
 
 open import Cubical.Algebra.OrderedCommRing
 open import Cubical.Algebra.OrderedCommRing.Properties
@@ -53,36 +54,20 @@ module _ {ℓA ℓN ℓN'} (A : Type ℓA) (N' : PremetricSpace ℓN ℓN') wher
   isPremetric→ .IsPremetric.isRefl≈ f ε =
     ∣ (ε /2₊ , /2₊<id ε , λ x → PN.isRefl≈ (f x) (ε /2₊)) ∣₁
   isPremetric→ .IsPremetric.isSym≈ f g ε =
-    PT.rec squash₁ λ where
-      (δ , δ<ε , pw) → ∣ (δ , δ<ε , λ x → PN.isSym≈ (f x) (g x) δ (pw x)) ∣₁
+    PT.map λ where
+      (δ , δ<ε , pw) → (δ , δ<ε , λ x → PN.isSym≈ (f x) (g x) δ (pw x))
   isPremetric→ .IsPremetric.isSeparated≈ f g f≈g =
     funExt λ x → PN.isSeparated≈ (f x) (g x) λ ε → ≈→→pointwise f g ε (f≈g ε) x
-  isPremetric→ .IsPremetric.isTriangular≈ f g h ε θ =
-    PT.rec (isProp→ squash₁) λ where
-      (δ₁ , δ₁<ε , fg) →
-        PT.rec squash₁ λ where
-          (δ₂ , δ₂<θ , gh) →
-            ∣ (δ₁ +₊ δ₂
-            , +Mono< ⟨ δ₁ ⟩₊ ⟨ ε ⟩₊ ⟨ δ₂ ⟩₊ ⟨ θ ⟩₊ δ₁<ε δ₂<θ
-            , λ x → PN.isTriangular≈ (f x) (g x) (h x) δ₁ δ₂ (fg x) (gh x))
-            ∣₁
+  isPremetric→ .IsPremetric.isTriangular≈ f g h ε θ f≈g g≈h = do
+    (δ₁ , δ₁<ε , fg) ← f≈g
+    (δ₂ , δ₂<θ , gh) ← g≈h
+    return (δ₁ +₊ δ₂
+          , +Mono< ⟨ δ₁ ⟩₊ ⟨ ε ⟩₊ ⟨ δ₂ ⟩₊ ⟨ θ ⟩₊ δ₁<ε δ₂<θ
+          , λ x → PN.isTriangular≈ (f x) (g x) (h x) δ₁ δ₂ (fg x) (gh x))
   isPremetric→ .IsPremetric.isRounded≈ f g ε =
-    PT.rec squash₁ λ where
+    PT.map λ where
       (δ₁ , δ₁<ε , pw) →
-        let
-          gap = [ ε -₊ δ₁ ]⟨ δ₁<ε ⟩
-          δ = δ₁ +₊ gap /2₊
-
-          δ<ε : δ <₊ ε
-          δ<ε = subst2 (λ x y → x <ℚ y)
-            (ℚ.+Comm ⟨ gap /2₊ ⟩₊ ⟨ δ₁ ⟩₊)
-            (minusPlus₊ ε δ₁)
-            (+MonoR< ⟨ gap /2₊ ⟩₊ ⟨ gap ⟩₊ ⟨ δ₁ ⟩₊ (/2₊<id gap))
-
-          δ₁<δ : δ₁ <₊ δ
-          δ₁<δ = <₊SumLeft δ₁ (gap /2₊)
-        in
-        ∣ (δ , δ<ε , ∣ (δ₁ , δ₁<δ , pw) ∣₁) ∣₁
+        (mean₊ δ₁ ε , <₊→mean₊<₊ δ₁ ε δ₁<ε , ∣ δ₁ , <₊→<₊mean₊ δ₁ ε δ₁<ε , pw ∣₁)
 
   →PremetricSpace : PremetricSpace (ℓ-max ℓA ℓN) (ℓ-max ℓA ℓN')
   fst →PremetricSpace = A → N
@@ -106,10 +91,7 @@ module _ {ℓA ℓN ℓN'} (A : Type ℓA) (N' : PremetricSpace ℓN ℓN') wher
     l-lim : FTh.isLimit s l
     l-lim ε θ =
       ∣ (ε +₊ θ /2₊
-      , subst2 (λ x y → x <ℚ y)
-          (ℚ.+Comm ⟨ θ /2₊ ⟩₊ ⟨ ε ⟩₊)
-          (ℚ.+Comm ⟨ θ ⟩₊ ⟨ ε ⟩₊)
-          (+MonoR< ⟨ θ /2₊ ⟩₊ ⟨ θ ⟩₊ ⟨ ε ⟩₊ (/2₊<id θ))
+      , +MonoL< ⟨ θ /2₊ ⟩₊ ⟨ θ ⟩₊ ⟨ ε ⟩₊ (/2₊<id θ)
       , λ x → l-lim-pointwise x ε (θ /2₊))
       ∣₁
 

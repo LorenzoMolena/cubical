@@ -60,7 +60,7 @@ open PositiveRationals
 open PositiveHalvesℚ
 
 open PremetricTheory using (isLimit ; limit ; isComplete ; isLimit≈< ; isLim≈- ; isLim≈-₂)
-open CategoryStructures using (NE≡ ; idⁿ ; _∘NE_ ; L≡ ; idᴸ ; _∘L_)
+open CategoryStructures using (NE≡ ; idⁿ ; _∘NE_ ; L≡ ; idᴸ ; _∘L_ ; CatIsoⁿ→CatIsoᴸ)
   renaming (PremetricSpaceCategoryⁿ to PrSpacesⁿ ; PremetricSpaceCategoryᴸ to PrSpacesᴸ)
 
 private
@@ -497,8 +497,7 @@ module _ {M' : PremetricSpace ℓM ℓM'} where
   snd ιᵘᶜ = isNonExpanding→isUniformlyContinuous _ ι _ (snd ιⁿ)
 
   ιᴸ : L[ M' , ℭ M' ]
-  fst ιᴸ = ι
-  snd ιᴸ = isNonExpanding→isLipschitz _ ι _ (snd ιⁿ)
+  ιᴸ = NE→L ιⁿ
 
 isComplete→≃ℭ : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → isComplete M → ⟨ M ⟩ ≃ ⟨ℭ M ⟩
 isComplete→≃ℭ {M = M} isCompM = isoToEquiv M≅ℭM
@@ -529,33 +528,26 @@ isComplete→CatIsoⁿ : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → isComplete M
 isComplete→CatIsoⁿ {M = M} isCompM = ιⁿ , isiso invⁿ sec ret
   where
   open LiftLipschitzCompleteCodomain M M isCompM
-  module PM = PremetricStr (M .snd)
-
-  id-lip1 : IsLipschitzWith (M .snd) (idfun ⟨ M ⟩) (M .snd)
-            (1 , OrderedCommRingStr.0<1 (str ℚOrderedCommRing))
-  IsLipschitzWith.pres≈ id-lip1 x y ε =
-    PM.subst≈ x y (sym (ℚ.·IdL ⟨ ε ⟩₊))
 
   lift1 : Σ[ f ∈ (⟨ℭ M ⟩ → ⟨ M ⟩) ]
             IsLipschitzWith ((ℭ M) .snd) f (M .snd)
-              (1 , OrderedCommRingStr.0<1 (str ℚOrderedCommRing))
+              (1 , 0<1)
   lift1 = liftLipschitzWith
-    (1 , OrderedCommRingStr.0<1 (str ℚOrderedCommRing)) (idfun _) id-lip1
-
-  lift1∘ι : fst lift1 ∘ ι ≡ idfun _
-  lift1∘ι = refl
+    (1 , 0<1) (idfun _)
+    (isNonExpanding→isLipschitzWith1 (M .snd) _ (M .snd) (snd (idⁿ {M = M})))
 
   invⁿ : NE[ ℭ M , M ]
   fst invⁿ = fst lift1
-  IsNonExpanding.pres≈ (snd invⁿ) x y ε =
-    PM.subst≈ (fst lift1 x) (fst lift1 y) (ℚ.·IdL ⟨ ε ⟩₊)
-      ∘ IsLipschitzWith.pres≈ (snd lift1) x y ε
+  snd invⁿ = isLipschitzWith1→isNonExpanding ((ℭ M) .snd) _ (M .snd) (snd lift1)
 
   sec : invⁿ ⋆⟨ PrSpacesⁿ _ _ ⟩ ιⁿ ≡ idⁿ
-  sec = nonExpanding≡ M (ℭ M) (ιⁿ ∘NE invⁿ) idⁿ (cong ((ι {M' = M}) ∘_) lift1∘ι)
+  sec = nonExpanding≡ M (ℭ M) (ιⁿ ∘NE invⁿ) idⁿ refl
 
   ret : ιⁿ ⋆⟨ PrSpacesⁿ _ _ ⟩ invⁿ ≡ idⁿ
-  ret = NE≡ lift1∘ι
+  ret = NE≡ refl
+
+isComplete→CatIsoᴸ : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → isComplete M → CatIso (PrSpacesᴸ ℓ ℓ) M (ℭ M)
+isComplete→CatIsoᴸ = CatIsoⁿ→CatIsoᴸ ∘ isComplete→CatIsoⁿ
 
 isComplete→≡ℭ-PM : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → isComplete M → M ≡ ℭ M
 isComplete→≡ℭ-PM {M = M} = isUnivalent.CatIsoToPath isUnivalentPrSpacesⁿ ∘ isComplete→CatIsoⁿ {M = M}
