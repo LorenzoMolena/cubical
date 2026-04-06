@@ -10,7 +10,7 @@ open import Cubical.Foundations.Path
 open import Cubical.Foundations.SIP
 open import Cubical.Foundations.Univalence
 
-open import Cubical.Categories.Category.Base
+open import Cubical.Categories.Category.Base as Cat
 
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sigma.Properties
@@ -59,9 +59,6 @@ module _
   (f : A → B)
   (N : PremetricStr ℓN' B)
   where
-
-  open OrderedCommRingStr (str ℚOrderedCommRing)
-  open ℚ₊Inverse
 
   private
     module M = PremetricStr M
@@ -135,21 +132,21 @@ module _
 
   -- Implications Non-expanding ⇒ Lipschitz ⇒ U.Continuous ⇒ Continuous :
 
-  isNonExpanding→isLipschitzWith1 : IsNonExpanding → IsLipschitzWith (1 , 0<1)
+  isNonExpanding→isLipschitzWith1 : IsNonExpanding → IsLipschitzWith 1
   isNonExpanding→isLipschitzWith1 isNE .IsLipschitzWith.pres≈ x y ε =
     N.subst≈ (f x) (f y) (sym (ℚ.·IdL ⟨ ε ⟩₊)) ∘ isNE .IsNonExpanding.pres≈ x y ε
 
-  isLipschitzWith1→isNonExpanding : IsLipschitzWith (1 , 0<1) → IsNonExpanding
+  isLipschitzWith1→isNonExpanding : IsLipschitzWith 1 → IsNonExpanding
   IsNonExpanding.pres≈ (isLipschitzWith1→isNonExpanding lip) x y ε =
     N.subst≈ (f x) (f y) (ℚ.·IdL ⟨ ε ⟩₊) ∘ lip .IsLipschitzWith.pres≈ x y ε
 
-  IsNonExpanding≃IsLipschitzWith1 : IsNonExpanding ≃ IsLipschitzWith (1 , 0<1)
+  IsNonExpanding≃IsLipschitzWith1 : IsNonExpanding ≃ IsLipschitzWith 1
   IsNonExpanding≃IsLipschitzWith1 = propBiimpl→Equiv
-    isPropIsNonExpanding (isPropIsLipschitzWith (1 , 0<1))
+    isPropIsNonExpanding (isPropIsLipschitzWith 1)
     isNonExpanding→isLipschitzWith1 isLipschitzWith1→isNonExpanding
 
   isNonExpanding→isLipschitz : IsNonExpanding → isLipschitz
-  isNonExpanding→isLipschitz isNE = ∣ (1 , 0<1) , isNonExpanding→isLipschitzWith1 isNE ∣₁
+  isNonExpanding→isLipschitz isNE = ∣ 1 , isNonExpanding→isLipschitzWith1 isNE ∣₁
 
   isLipschitz→isUniformlyContinuous : isLipschitz → isUniformlyContinuous
   isLipschitz→isUniformlyContinuous = PT.map λ
@@ -189,7 +186,8 @@ NE[_,_] : PremetricSpace ℓM ℓM' → PremetricSpace ℓN ℓN' → Type _
 NE[ M , N ] = Σ[ f ∈ (M .fst → N .fst) ] IsNonExpanding (M .snd) f (N .snd)
 
 NE→L : ∀ {M : PremetricSpace ℓM ℓM'} {N : PremetricSpace ℓN ℓN'} → NE[ M , N ] → L[ M , N ]
-NE→L {M = M} {N = N} (f , isNE) = f , isNonExpanding→isLipschitz (M .snd) f (N .snd) isNE
+fst (NE→L f) = fst f
+snd (NE→L f) = isNonExpanding→isLipschitz _ (fst f) _ (snd f)
 
 module CategoryStructures where
   open OrderedCommRingStr (str ℚOrderedCommRing)
@@ -314,11 +312,14 @@ module CategoryStructures where
       isSetΣSndProp (isSet→ (N .snd .isSetM)) (flip (isPropIsNonExpanding _) _)
       where open PremetricStr
 
+  open isIso
   CatIsoⁿ→CatIsoᴸ : ∀ {M N : PremetricSpace ℓM ℓM'}
-    → CatIso (PremetricSpaceCategoryⁿ ℓM ℓM') M N
-    → CatIso (PremetricSpaceCategoryᴸ ℓM ℓM') M N
-  CatIsoⁿ→CatIsoᴸ (f , isiso g sec ret) =
-    NE→L f , isiso (NE→L g) (L≡ (cong fst sec)) (L≡ (cong fst ret))
+                  → CatIso (PremetricSpaceCategoryⁿ ℓM ℓM') M N
+                  → CatIso (PremetricSpaceCategoryᴸ ℓM ℓM') M N
+  fst (CatIsoⁿ→CatIsoᴸ f)       = NE→L (fst f)
+  inv (snd (CatIsoⁿ→CatIsoᴸ f)) = NE→L (inv (snd f))
+  sec (snd (CatIsoⁿ→CatIsoᴸ f)) = L≡ (cong fst (sec (snd f)))
+  ret (snd (CatIsoⁿ→CatIsoᴸ f)) = L≡ (cong fst (ret (snd f)))
 
 record IsIsometry {A : Type ℓM} {B : Type ℓN}
   (M : PremetricStr ℓM' A) (e : A ≃ B) (N : PremetricStr ℓN' B)
@@ -346,10 +347,38 @@ isPropIsIsometry M e N = isOfHLevelRetractFromIso 1
     where open PremetricStr
 
 isIsometry→IsNonExpanding : {A : Type ℓM} {B : Type ℓN}
-  (M : PremetricStr ℓM' A) (e : A ≃ B) (N : PremetricStr ℓN' B)
-  → IsIsometry M e N → IsNonExpanding M (equivFun e) N
+                          → (M : PremetricStr ℓM' A) (e : A ≃ B) (N : PremetricStr ℓN' B)
+                          → IsIsometry M e N
+                          → IsNonExpanding M (equivFun e) N
 IsNonExpanding.pres≈ (isIsometry→IsNonExpanding M e N ise) x y ε =
   equivFun (IsIsometry.pres≈ ise x ε y)
+
+IsIsometry→isContinuous : {A : Type ℓM} {B : Type ℓN}
+                       → (M : PremetricStr ℓM' A)
+                       → (e : A ≃ B)
+                       → (N : PremetricStr ℓN' B)
+                       → IsIsometry M e N
+                       → isContinuous M (equivFun e) N
+IsIsometry→isContinuous M e N =
+  isNonExpanding→isContinuous M (equivFun e) N ∘ isIsometry→IsNonExpanding M e N
+
+IsIsometry→isUniformlyContinuous : {A : Type ℓM} {B : Type ℓN}
+                                 → (M : PremetricStr ℓM' A)
+                                 → (e : A ≃ B)
+                                 → (N : PremetricStr ℓN' B)
+                                 → IsIsometry M e N
+                                 → isUniformlyContinuous M (equivFun e) N
+IsIsometry→isUniformlyContinuous M e N =
+  isNonExpanding→isUniformlyContinuous M (equivFun e) N ∘ isIsometry→IsNonExpanding M e N
+
+IsIsometry→isLipschitz : {A : Type ℓM} {B : Type ℓN}
+                       → (M : PremetricStr ℓM' A)
+                       → (e : A ≃ B)
+                       → (N : PremetricStr ℓN' B)
+                       → IsIsometry M e N
+                       → isLipschitz M (equivFun e) N
+IsIsometry→isLipschitz M e N =
+  isNonExpanding→isLipschitz M (equivFun e) N ∘ isIsometry→IsNonExpanding M e N
 
 PremetricSpaceEquiv : (M : PremetricSpace ℓM ℓM') (N : PremetricSpace ℓN ℓN') → Type _
 PremetricSpaceEquiv M N = Σ[ e ∈ ⟨ M ⟩ ≃ ⟨ N ⟩ ] IsIsometry (M .snd) e (N .snd)
@@ -377,12 +406,11 @@ module _ {ℓ ℓ' : Level} (M N : PremetricSpace ℓ ℓ') where
   module N = PremetricStr (N .snd)
 
   isCatIso→IsPremetricSpaceEquiv : (f : NE[ M , N ])
-    → Cubical.Categories.Category.Base.isIso (PremetricSpaceCategoryⁿ ℓ ℓ') f
+    → Cat.isIso (PremetricSpaceCategoryⁿ ℓ ℓ') f
     → PremetricSpaceEquiv M N
   isCatIso→IsPremetricSpaceEquiv f fi = isoToEquiv is , isisometry pres
     where
-    open Cubical.Categories.Category.Base.isIso fi
-      renaming (inv to invⁿ ; sec to secⁿ ; ret to retⁿ)
+    open Cat.isIso fi renaming (inv to invⁿ ; sec to secⁿ ; ret to retⁿ)
 
     is : Iso ⟨ M ⟩ ⟨ N ⟩
     is .fun = fst f
@@ -404,22 +432,18 @@ module _ {ℓ ℓ' : Level} (M N : PremetricSpace ℓ ℓ') where
 
   PremetricSpaceEquiv→CatIso : PremetricSpaceEquiv M N
                              → CatIso (PremetricSpaceCategoryⁿ ℓ ℓ') M N
-  PremetricSpaceEquiv→CatIso (e , ise) = f , isiso g sec ret
-    where
+  fst (PremetricSpaceEquiv→CatIso e) = f where
     f : NE[ M , N ]
-    f = equivFun e , isIsometry→IsNonExpanding (M .snd) e (N .snd) ise
-
+    fst f = equivFun (fst e)
+    snd f = isIsometry→IsNonExpanding _ (fst e) _ (snd e)
+  isIso.inv (snd (PremetricSpaceEquiv→CatIso e)) = g where
     g : NE[ N , M ]
-    fst g = invEq e
+    fst g = invEq (fst e)
     IsNonExpanding.pres≈ (snd g) x y ε =
-      invEq (IsIsometry.pres≈ ise (invEq e x) ε (invEq e y))
-        ∘ subst2 (λ x y → x N.≈[ ε ] y) (sym (secEq e x)) (sym (secEq e y))
-
-    sec : g ⋆⟨ PremetricSpaceCategoryⁿ ℓ ℓ' ⟩ f ≡ idⁿ
-    sec = NE≡ (funExt (secEq e))
-
-    ret : f ⋆⟨ PremetricSpaceCategoryⁿ ℓ ℓ' ⟩ g ≡ idⁿ
-    ret = NE≡ (funExt (retEq e))
+        invEq (IsIsometry.pres≈ (snd e) (invEq (fst e) x) ε (invEq (fst e) y))
+      ∘ subst2 N._≈[ ε ]_ (sym (secEq (fst e) x)) (sym (secEq (fst e) y))
+  isIso.sec (snd (PremetricSpaceEquiv→CatIso e)) = NE≡ (funExt (secEq (fst e)))
+  isIso.ret (snd (PremetricSpaceEquiv→CatIso e)) = NE≡ (funExt (retEq (fst e)))
 
   PrSpacesⁿCatIso≃PremetricSpaceEquiv
     : CatIso (PremetricSpaceCategoryⁿ ℓ ℓ') M N ≃ PremetricSpaceEquiv M N
