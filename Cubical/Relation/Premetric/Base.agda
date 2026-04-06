@@ -74,6 +74,8 @@ record PremetricStr (ℓ' : Level) (M : Type ℓ) : Type (ℓ-suc (ℓ-max ℓ �
 
   open IsPremetric isPremetric public
 
+unquoteDecl PremetricStrIsoΣ = declareRecordIsoΣ PremetricStrIsoΣ (quote PremetricStr)
+
 PremetricSpace : (ℓ ℓ' : Level) → Type (ℓ-suc (ℓ-max ℓ ℓ'))
 PremetricSpace ℓ ℓ' = TypeWithStr ℓ (PremetricStr ℓ')
 
