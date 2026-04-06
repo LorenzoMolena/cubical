@@ -40,14 +40,17 @@ module _ {ℓA ℓN ℓN'} (A : Type ℓA) (N' : PremetricSpace ℓN ℓN') wher
 
   infix 5 _≈→[_]_
 
+  -- Definition 2.14
   _≈→[_]_ : (A → N) → ℚ₊ → (A → N) → Type (ℓ-max ℓA ℓN')
   f ≈→[ ε ] g = ∃[ δ ∈ ℚ₊ ] (δ <₊ ε) × (∀ x → f x PN.≈[ δ ] g x)
 
+  -- Lemma 2.15
   ≈→→pointwise : ∀ f g ε → f ≈→[ ε ] g → ∀ x → f x PN.≈[ ε ] g x
   ≈→→pointwise f g ε =
     PT.rec (isPropΠ λ x → PN.isProp≈ (f x) (g x) ε) λ where
       (δ , δ<ε , pw) x → PN.isMonotone≈< (f x) (g x) δ ε δ<ε (pw x)
 
+  -- Theorem 2.16 (first part)
   isPremetric→ : IsPremetric _≈→[_]_
   isPremetric→ .IsPremetric.isSetM = isSet→ PN.isSetM
   isPremetric→ .IsPremetric.isProp≈ _ _ _ = squash₁
@@ -75,12 +78,12 @@ module _ {ℓA ℓN ℓN'} (A : Type ℓA) (N' : PremetricSpace ℓN ℓN') wher
 
   module FTh = PremetricTheory →PremetricSpace
 
+  -- Theorem 2.16 (second part)
   isComplete→ : NTh.isComplete → FTh.isComplete
   isComplete→ N-complete s s-cauchy = l , l-lim
     where
     pointwiseCauchy : ∀ x → NTh.isCauchy (λ ε → s ε x)
-    pointwiseCauchy x ε θ =
-      ≈→→pointwise (s ε) (s θ) (ε +₊ θ) (s-cauchy ε θ) x
+    pointwiseCauchy x ε θ = ≈→→pointwise (s ε) (s θ) (ε +₊ θ) (s-cauchy ε θ) x
 
     l : A → N
     l x = fst (N-complete (λ ε → s ε x) (pointwiseCauchy x))
@@ -106,12 +109,13 @@ module _ {ℓM ℓM' ℓN ℓN'}
     module NTh' = PremetricTheory N'
     module FTh' = PremetricTheory (→PremetricSpace M N')
 
+  -- Lemma 2.17
   limLipschitz :
     (N-complete : NTh'.isComplete) (L : ℚ₊)
     → (s : ℚ₊ → (M → N)) (s-cauchy : FTh'.isCauchy s)
     → (∀ ε → IsLipschitzWith (snd M') (s ε) (snd N') L)
     → IsLipschitzWith (snd M') (fst (isComplete→ M N' N-complete s s-cauchy)) (snd N') L
-  limLipschitz N-complete L s s-cauchy L-lip = islipschitzwith λ x y ε x≈y →
+  limLipschitz N-complete L s s-cauchy L-lip .IsLipschitzWith.pres≈ x y ε x≈y =
     PT.rec (PN.isProp≈ (l x) (l y) (L ·₊ ε)) (step x y ε) (PM.isRounded≈ x y ε x≈y)
     where
     l : M → N
@@ -121,8 +125,7 @@ module _ {ℓM ℓM' ℓN ℓN'}
     l-lim = snd (isComplete→ M N' N-complete s s-cauchy)
 
     l-lim-pointwise : ∀ z → NTh'.isLimit (λ ρ → s ρ z) (l z)
-    l-lim-pointwise z ρ θ =
-      ≈→→pointwise M N' (s ρ) l (ρ +₊ θ) (l-lim ρ θ) z
+    l-lim-pointwise z ρ θ = ≈→→pointwise M N' (s ρ) l (ρ +₊ θ) (l-lim ρ θ) z
 
     step : ∀ x y ε → Σ[ δ ∈ ℚ₊ ] (δ <₊ ε) × (x PM.≈[ δ ] y) → l x PN.≈[ L ·₊ ε ] l y
     step x y ε (δ , δ<ε , x≈δy) =
@@ -148,8 +151,12 @@ module _ {ℓM ℓM' ℓN ℓN'}
 
       η+η+Lδ<Lε : η +₊ (η +₊ L ·₊ δ) <₊ L ·₊ ε
       η+η+Lδ<Lε = begin<
-        ⟨ η +₊ (η +₊ L ·₊ δ) ⟩₊         ≡→≤⟨ ℚ.+Assoc ⟨ η ⟩₊ ⟨ η ⟩₊ ⟨ L ·₊ δ ⟩₊ ⟩
-        ⟨ η +₊ η ⟩₊ ℚ.+ ⟨ L ·₊ δ ⟩₊     ≡→≤⟨ cong (ℚ._+ ⟨ L ·₊ δ ⟩₊) (/4+/4≡/2 ⟨ gap ⟩₊) ⟩
-        ⟨ gap /2₊ +₊ L ·₊ δ ⟩₊          <⟨ +MonoR< ⟨ gap /2₊ ⟩₊ ⟨ gap ⟩₊ ⟨ L ·₊ δ ⟩₊ (/2₊<id gap) ⟩
-        ⟨ gap ⟩₊ ℚ.+ ⟨ L ·₊ δ ⟩₊         ≡→≤⟨ minusPlus₊ (L ·₊ ε) (L ·₊ δ) ⟩
-        ⟨ L ·₊ ε ⟩₊                      ◾
+        ⟨ η +₊ (η +₊ L ·₊ δ) ⟩₊      ≡→≤⟨ ℚ.+Assoc ⟨ η ⟩₊ ⟨ η ⟩₊ ⟨ L ·₊ δ ⟩₊ ⟩
+        ⟨ η +₊ η ⟩₊ ℚ.+ ⟨ L ·₊ δ ⟩₊  ≡→≤⟨ cong (ℚ._+ ⟨ L ·₊ δ ⟩₊) (/4+/4≡/2 ⟨ gap ⟩₊) ⟩
+        ⟨ gap /2₊ +₊ L ·₊ δ ⟩₊         <⟨ /2₊<id gap <+[ ⟨ L ·₊ δ ⟩₊ ] ⟩
+        ⟨ gap ⟩₊ ℚ.+ ⟨ L ·₊ δ ⟩₊     ≡→≤⟨ minusPlus₊ (L ·₊ ε) (L ·₊ δ) ⟩
+        ⟨ L ·₊ ε ⟩₊                   ◾
+
+  -- TO DO :
+  -- Add premetric subspace, and use it to definte the space of lipschitz functions ;
+  -- Use the proof above to show when we can take limits in that function space
