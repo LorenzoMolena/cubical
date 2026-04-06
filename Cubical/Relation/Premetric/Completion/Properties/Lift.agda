@@ -143,7 +143,7 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
       fC = fst f , isNonExpanding→isContinuous _ (fst f) _ (snd f)
       gC = fst g , isNonExpanding→isContinuous _ (fst g) _ (snd g)
 
-  module LiftLipschitzCompleteCodomain (N-com : isComplete N') where
+  module LiftCompleteCodomain (N-com : isComplete N') where
     -- Theorem 3.20
     liftLipschitzWith : ∀ L → (f : M → N) → IsLipschitzWith (snd M') f (snd N') L
                       → Σ[ f' ∈ (⟨ℭ M' ⟩ → N) ] IsLipschitzWith (snd (ℭ M')) f' (snd N') L
@@ -250,6 +250,22 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
     lift∘ι : ∀ (f : L[ M' , N' ]) → liftLipschitzFun f ∘ ι ≡ fst f
     lift∘ι = snd ∘ liftLipschitzExtension
 
+    liftNonExpanding : NE[ M' , N' ] → NE[ ℭ M' , N' ]
+    liftNonExpanding f =
+      map-snd (isLipschitzWith1→isNonExpanding _ _ _)
+      (liftLipschitzWith 1 (fst f) (isNonExpanding→isLipschitzWith1 _ (fst f) _ (snd f)))
+
+    liftNonExpandingFun : NE[ M' , N' ] → ⟨ℭ M' ⟩ → N
+    liftNonExpandingFun = fst ∘ liftNonExpanding
+
+    liftⁿ∘ι : ∀ (f : NE[ M' , N' ]) → liftNonExpandingFun f ∘ ι ≡ fst f
+    liftⁿ∘ι f = refl
+
+    liftNonExpandingExtension : (f : NE[ M' , N' ])
+                              → Σ[ g ∈ NE[ ℭ M' , N' ] ] (fst g ∘ ι ≡ fst f)
+    fst (liftNonExpandingExtension f) = liftNonExpanding f
+    snd (liftNonExpandingExtension f) = liftⁿ∘ι f
+
 module _ (A' : PremetricSpace ℓA ℓA') (B' : PremetricSpace ℓB ℓB') (T' : PremetricSpace ℓT ℓT') where
 
   private
@@ -271,12 +287,12 @@ module _ (A' : PremetricSpace ℓA ℓA') (B' : PremetricSpace ℓB ℓB') (T' :
       module PF  = PremetricStr (F' .snd)
       module TTh = PremetricTheory T'
       module FTheory = PremetricTheory F'
-      module LiftB = LiftLipschitzCompleteCodomain B' T' T-complete
+      module LiftB = LiftCompleteCodomain B' T' T-complete
 
       F-complete : isComplete F'
       F-complete = isComplete→ ⟨ ℭ B' ⟩ T' T-complete
 
-      module LiftA = LiftLipschitzCompleteCodomain A' F' F-complete
+      module LiftA = LiftCompleteCodomain A' F' F-complete
 
     liftCloseness :
       ∀ (L : ℚ₊) (f g : B → T)
@@ -472,15 +488,19 @@ module _ (A' : PremetricSpace ℓA ℓA') (B' : PremetricSpace ℓB ℓB') (T' :
 -- It is quite common to have the codomain of the form ℭN, therefore here we specialize
 -- the proof/constuctions above, avoiding to supply isCompleteℭ every time.
 
-module LiftLipschitzℭ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
-  open LiftLipschitzCompleteCodomain M' (ℭ N') (isCompleteℭ N') public renaming (
+module Liftℭ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN' ℓN) where
+  open LiftCompleteCodomain M' (ℭ N') (isCompleteℭ N') public renaming (
       liftLipschitzWith to liftLipschitzWithℭ
     ; liftLipschitzWithFun to liftLipschitzWithFunℭ
     ; isLipschitzLiftLipschitzWith to isLipschitzLiftLipschitzWithℭ
     ; liftLipschitzExtension to liftLipschitzExtensionℭ
     ; liftLipschitz to liftLipschitzℭ
     ; liftLipschitzFun to liftLipschitzFunℭ
-    ; lift∘ι to liftℭ∘ι)
+    ; lift∘ι to liftℭ∘ι
+    ; liftNonExpanding to liftNonExpandingℭ
+    ; liftNonExpandingFun to liftNonExpandingFunℭ
+    ; liftⁿ∘ι to liftⁿℭ∘ι
+    ; liftNonExpandingExtension to liftNonExpandingExtensionℭ)
 
 module _ {M' : PremetricSpace ℓM ℓM'} where
 
@@ -499,21 +519,19 @@ module _ {M' : PremetricSpace ℓM ℓM'} where
   ιᴸ : L[ M' , ℭ M' ]
   ιᴸ = NE→L ιⁿ
 
+isComplete→CatIsoⁿ : ∀ {ℓ} {M : PremetricSpace ℓ ℓ}
+                   → isComplete M → CatIso (PrSpacesⁿ ℓ ℓ) M (ℭ M)
+fst (isComplete→CatIsoⁿ {M = M} isCompM) = ιⁿ
+isIso.inv (snd (isComplete→CatIsoⁿ {M = M} isCompM)) = liftNonExpanding idⁿ
+  where open LiftCompleteCodomain M M isCompM
+isIso.sec (snd (isComplete→CatIsoⁿ {M = M} isCompM)) = nonExpanding≡ M (ℭ M) _ _ refl
+isIso.ret (snd (isComplete→CatIsoⁿ {M = M} isCompM)) = NE≡ refl
+
+isComplete→CatIsoᴸ : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → isComplete M → CatIso (PrSpacesᴸ ℓ ℓ) M (ℭ M)
+isComplete→CatIsoᴸ = CatIsoⁿ→CatIsoᴸ ∘ isComplete→CatIsoⁿ
+
 isComplete→≃ℭ : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → isComplete M → ⟨ M ⟩ ≃ ⟨ℭ M ⟩
-isComplete→≃ℭ {M = M} isCompM = isoToEquiv M≅ℭM
-  where
-  open Iso
-  open LiftLipschitzCompleteCodomain M M isCompM
-
-  L[id] : L[ ℭ M , M ]
-  L[id] = liftLipschitz idᴸ
-
-  M≅ℭM : Iso ⟨ M ⟩ ⟨ℭ M ⟩
-  M≅ℭM .fun      = ι
-  M≅ℭM .inv      = fst L[id]
-  M≅ℭM .rightInv = funExt⁻ $ cong fst $
-    lipschitz≡ _ _ (ιᴸ ∘L L[id]) idᴸ (cong ((ι {M' = M}) ∘_) (lift∘ι idᴸ))
-  M≅ℭM .leftInv  = funExt⁻ (lift∘ι idᴸ)
+isComplete→≃ℭ {M = M} = fst ∘ CatIso→PremetricSpaceEquiv M (ℭ M) ∘ isComplete→CatIsoⁿ
 
 -- This theorem needs the relation ≈ and the underlying type ⟨ M ⟩ to live in the same
 -- universe to be well-typed if we want to state it without using `Lift`s:
@@ -524,49 +542,25 @@ isComplete→≡ℭ = ua ∘ isComplete→≃ℭ
 isIdempotentℭ : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → ⟨ℭ M ⟩ ≡ ⟨ℭ ℭ M ⟩
 isIdempotentℭ = isComplete→≡ℭ (isCompleteℭ _)
 
-isComplete→CatIsoⁿ : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → isComplete M → CatIso (PrSpacesⁿ ℓ ℓ) M (ℭ M)
-isComplete→CatIsoⁿ {M = M} isCompM = ιⁿ , isiso invⁿ sec ret
-  where
-  open LiftLipschitzCompleteCodomain M M isCompM
-
-  lift1 : Σ[ f ∈ (⟨ℭ M ⟩ → ⟨ M ⟩) ]
-            IsLipschitzWith ((ℭ M) .snd) f (M .snd)
-              (1 , 0<1)
-  lift1 = liftLipschitzWith
-    (1 , 0<1) (idfun _)
-    (isNonExpanding→isLipschitzWith1 (M .snd) _ (M .snd) (snd (idⁿ {M = M})))
-
-  invⁿ : NE[ ℭ M , M ]
-  fst invⁿ = fst lift1
-  snd invⁿ = isLipschitzWith1→isNonExpanding ((ℭ M) .snd) _ (M .snd) (snd lift1)
-
-  sec : invⁿ ⋆⟨ PrSpacesⁿ _ _ ⟩ ιⁿ ≡ idⁿ
-  sec = nonExpanding≡ M (ℭ M) (ιⁿ ∘NE invⁿ) idⁿ refl
-
-  ret : ιⁿ ⋆⟨ PrSpacesⁿ _ _ ⟩ invⁿ ≡ idⁿ
-  ret = NE≡ refl
-
-isComplete→CatIsoᴸ : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → isComplete M → CatIso (PrSpacesᴸ ℓ ℓ) M (ℭ M)
-isComplete→CatIsoᴸ = CatIsoⁿ→CatIsoᴸ ∘ isComplete→CatIsoⁿ
+-- `PrSpacesⁿ` is univalent, which is enough to derive the generalized
+-- Theorem 3.21 above as an equality of premetric spaces:
+-- `isComplete→≡ℭ-PM` and `isIdempotentℭ-PM`.
+-- Univalence of `PrSpacesᴸ` is a separate question.
 
 isComplete→≡ℭ-PM : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → isComplete M → M ≡ ℭ M
-isComplete→≡ℭ-PM {M = M} = isUnivalent.CatIsoToPath isUnivalentPrSpacesⁿ ∘ isComplete→CatIsoⁿ {M = M}
+isComplete→≡ℭ-PM {M = M} =
+  isUnivalent.CatIsoToPath isUnivalentPrSpacesⁿ ∘ isComplete→CatIsoⁿ {M = M}
 
 isIdempotentℭ-PM : ∀ {ℓ} {M : PremetricSpace ℓ ℓ} → ℭ M ≡ ℭ (ℭ M)
 isIdempotentℭ-PM = isComplete→≡ℭ-PM (isCompleteℭ _)
 
 module CompletionFunctor (ℓ : Level) where
 
-  -- `PrSpacesⁿ` is univalent, which is enough to derive the generalized
-  -- Theorem 3.21 above as an equality of premetric spaces:
-  -- `isComplete→≡ℭ-PM` and `isIdempotentℭ-PM`.
-  -- Univalence of `PrSpacesᴸ` is a separate question.
-
   open Functor
   open NatTrans
   open NatTransP
   open IsMonad
-  open LiftLipschitzℭ
+  open Liftℭ
 
   -- The act on maps M → N is given by:
   -- 1) postcomposition with ι : N → ℭN, to get a map M → ℭN

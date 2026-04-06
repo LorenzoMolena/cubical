@@ -405,10 +405,10 @@ module _ {ℓ ℓ' : Level} (M N : PremetricSpace ℓ ℓ') where
   module M = PremetricStr (M .snd)
   module N = PremetricStr (N .snd)
 
-  isCatIso→IsPremetricSpaceEquiv : (f : NE[ M , N ])
+  isCatIso→PremetricSpaceEquiv : (f : NE[ M , N ])
     → Cat.isIso (PremetricSpaceCategoryⁿ ℓ ℓ') f
     → PremetricSpaceEquiv M N
-  isCatIso→IsPremetricSpaceEquiv f fi = isoToEquiv is , isisometry pres
+  isCatIso→PremetricSpaceEquiv f fi = isoToEquiv is , isisometry pres
     where
     open Cat.isIso fi renaming (inv to invⁿ ; sec to secⁿ ; ret to retⁿ)
 
@@ -428,7 +428,7 @@ module _ {ℓ ℓ' : Level} (M N : PremetricSpace ℓ ℓ') where
 
   CatIso→PremetricSpaceEquiv : CatIso (PremetricSpaceCategoryⁿ ℓ ℓ') M N
                              → PremetricSpaceEquiv M N
-  CatIso→PremetricSpaceEquiv = uncurry isCatIso→IsPremetricSpaceEquiv
+  CatIso→PremetricSpaceEquiv = uncurry isCatIso→PremetricSpaceEquiv
 
   PremetricSpaceEquiv→CatIso : PremetricSpaceEquiv M N
                              → CatIso (PremetricSpaceCategoryⁿ ℓ ℓ') M N
