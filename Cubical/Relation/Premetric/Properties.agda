@@ -45,7 +45,8 @@ private
     ℓ ℓ' ℓ'' : Level
 
 module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
-  M = fst M'
+  private
+    M = fst M'
   open PremetricStr (snd M')
 
   -- Cauchy Approximations/Sequences
