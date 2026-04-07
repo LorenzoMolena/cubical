@@ -402,8 +402,9 @@ module _ {ℓ ℓ' : Level} where
 module _ {ℓ ℓ' : Level} (M N : PremetricSpace ℓ ℓ') where
   open Iso
   open CategoryStructures
-  module M = PremetricStr (M .snd)
-  module N = PremetricStr (N .snd)
+  private
+    module M = PremetricStr (M .snd)
+    module N = PremetricStr (N .snd)
 
   isCatIso→PremetricSpaceEquiv : (f : NE[ M , N ])
     → Cat.isIso (PremetricSpaceCategoryⁿ ℓ ℓ') f
