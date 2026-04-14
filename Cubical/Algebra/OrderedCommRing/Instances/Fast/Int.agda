@@ -78,7 +78,6 @@ module CanonicalMonoFromℤ (R : OrderedCommRing ℓ ℓ') where
 
   open CanonicalHomFromℤ (OrderedCommRing→CommRing R)
   open OrderedCommRingTheory R
-  open OrderedCommRingReasoning R
 
   private
     module R where
@@ -154,13 +153,11 @@ module CanonicalMonoFromℤ (R : OrderedCommRing ℓ ℓ') where
 
   isUniqueFromℤOCR : (φ : OrderedCommRingHom ℤOrderedCommRing R)
                    → ∀ n → R.fromℤ n ≡ fst φ n
-  isUniqueFromℤOCR φ = isUniqueFromℤ (OrderedCommRingHom→CommRingHom φ)
-    where open IsOrderedCommRingHom (snd φ)
+  isUniqueFromℤOCR = isUniqueFromℤ ∘ OrderedCommRingHom→CommRingHom
 
   isUniqueFromℤOCRMono : (φ : OrderedCommRingMono ℤOrderedCommRing R)
                        → ∀ n → R.fromℤ n ≡ fst φ n
-  isUniqueFromℤOCRMono φ = isUniqueFromℤ (OrderedCommRingMono→CommRingHom φ)
-    where open IsOrderedCommRingMono (snd φ)
+  isUniqueFromℤOCRMono = isUniqueFromℤ ∘ OrderedCommRingMono→CommRingHom
 
   isContrHom[ℤOCR,-] : isContr (OrderedCommRingHom ℤOrderedCommRing R)
   fst isContrHom[ℤOCR,-] = fromℤOCR
