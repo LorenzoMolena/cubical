@@ -148,7 +148,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     ·CancelR≤ : ∀ x y z → 0r < z → x · z ≤ y · z → x ≤ y
     ·CancelR≤ x y z 0<z zx≤zy = ¬<→≥ y x $ ≤→¬> _ _ zx≤zy ∘ ·MonoR< _ _ z 0<z
 
-    -- It's to not clear if the properties commented below are constructively derivable.
+    -- It is not clear if the properties commented below are constructively derivable.
     --
     -- ·CancelL< : ∀ x y z → 0r < z → z · x < z · y → x < y
     -- ·CancelL< = ?
