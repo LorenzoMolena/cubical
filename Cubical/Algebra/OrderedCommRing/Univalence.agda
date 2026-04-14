@@ -64,14 +64,13 @@ OrderedCommRingEquivIsoOrderedCommRingIso R S = OCREquivIsoOCRIso
     fst (fun OCREquivIsoOCRIso e) = equivToIso (fst e)
     snd (fun OCREquivIsoOCRIso e) = snd (OrderedCommRingEquiv→OrderedCommRingMono e)
     fst (inv OCREquivIsoOCRIso e) = isoToEquiv (fst e)
-    snd (inv OCREquivIsoOCRIso e) = makeIsOrderedCommRingEquiv (isoToEquiv (fst e)) (snd e)
+    snd (inv OCREquivIsoOCRIso e) = makeIsOrderedCommRingEquivFromMono (isoToEquiv (fst e)) (snd e)
     sec OCREquivIsoOCRIso e =
       Σ≡Prop (λ f → isPropIsOrderedCommRingMono _ (fun f) _) (
       Iso≡Set (OrderedCommRingStr.is-set (snd R)) (OrderedCommRingStr.is-set (snd S))
         _ _ (λ x → refl) (λ x → refl))
     ret OCREquivIsoOCRIso e =
-      Σ≡Prop (λ f → isPropIsOrderedCommRingEquiv _ f _)
-      (equivEq refl)
+      Σ≡Prop (λ f → isPropIsOrderedCommRingEquiv _ f _) (equivEq refl)
 
 isGroupoidOrderedCommRing : isGroupoid (OrderedCommRing ℓ ℓ')
 isGroupoidOrderedCommRing _ _ =
