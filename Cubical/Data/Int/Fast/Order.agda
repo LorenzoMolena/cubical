@@ -490,6 +490,9 @@ isAsym'< = recompute≤ ∘ proof _ _ where
 -pos≤ : m - (pos k) ≤ m
 -pos≤ {m} {k} = recompute≤ $ subst (m - pos k ≤_) (ℤ.+IdR m) (≤-o+ {o = m} (-Dist≤ zero-≤pos))
 
+-possuc< : m - (pos (suc k)) < m
+-possuc< {m} {k} = recompute< $ subst (m - pos (suc k) <_) (ℤ.+IdR m) (<-o+ {o = m} (-Dist< zero-<possuc))
+
 ≤→0≤Δ : m ≤ n → 0 ≤ n ℤ.- m
 ≤→0≤Δ {m} {n} = recompute≤ ∘ subst (_≤ n ℤ.- m) (ℤ.-Cancel m) ∘ ≤-+o
 
