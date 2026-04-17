@@ -425,7 +425,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         isSG .IsSemigroup.is-set = isSetR₊
         isSG .IsSemigroup.·Assoc = λ _ _ _ → R₊≡ (+Assoc _ _ _)
 
-    open SemigroupStr (snd R₊AdditiveSemigroup) public hiding (_·_) renaming (
+    open SemigroupStr (snd R₊AdditiveSemigroup) using () public renaming (
       ·Assoc to +₊Assoc)
 
     R₊MultiplicativeCommMonoid : CommMonoid _
@@ -439,7 +439,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         (λ _     → R₊≡ (·IdR _))
         (λ _ _   → R₊≡ (·Comm _ _))
 
-    open CommMonoidStr (snd R₊MultiplicativeCommMonoid) public hiding (_·_) renaming (
+    open CommMonoidStr (snd R₊MultiplicativeCommMonoid) using () public renaming (
       ε to 1₊ ; ·Assoc to ·₊Assoc ; ·IdR to ·₊IdR ; ·Comm to ·₊Comm)
 
     selfSeparated : ∀ (x y : R) → (∀ (z : R₊) → abs(x - y) < ⟨ z ⟩₊) → x ≡ y
@@ -524,8 +524,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
         (λ _     → R₀₊≡ (0LeftAnnihilates _))
         (λ _ _   → R₀₊≡ (·Comm _ _))
 
-    open CommSemiringStr (snd R₀₊CommSemiring) public hiding (_+_ ; _·_)
-      renaming (
+    open CommSemiringStr (snd R₀₊CommSemiring) using () public renaming (
         0r to 0₀₊ ; 1r to 1₀₊
       ; +Assoc to +₀₊Assoc ; +IdL to +₀₊IdL ; +IdR to +₀₊IdR ; +Comm to +₀₊Comm
       ; ·Assoc to ·₀₊Assoc ; ·IdL to ·₀₊IdL ; ·IdR to ·₀₊IdR ; ·Comm to ·₀₊Comm
