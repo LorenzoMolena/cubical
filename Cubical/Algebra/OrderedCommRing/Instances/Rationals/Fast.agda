@@ -4,6 +4,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Equiv
+open import Cubical.Foundations.Structure
 
 open import Cubical.Data.Empty as ⊥
 
@@ -75,11 +76,11 @@ module PositiveRationals where
     ℚCR  = OrderedCommRing→CommRing ℚOrderedCommRing
 
     0<+Closed : ∀ x y → 0 <ℚ x → 0 <ℚ y → 0 <ℚ x +ℚ y
-    0<+Closed = SQ.elimProp2 (λ _ _ → isProp→ (isProp→ (isProp< 0 _))) λ
+    0<+Closed = makeOpaque $ SQ.elimProp2 (λ _ _ → isProp→ (isProp→ (isProp< 0 _))) λ
       { (pos (suc n) , _) (pos (suc m) , _) (pos<pos p) (pos<pos q) → pos<pos tt }
 
     0<·Closed : ∀ x y → 0 <ℚ x → 0 <ℚ y → 0 <ℚ x ·ℚ y
-    0<·Closed = SQ.elimProp2 (λ _ _ → isProp→ (isProp→ (isProp< 0 _))) λ
+    0<·Closed = makeOpaque $ SQ.elimProp2 (λ _ _ → isProp→ (isProp→ (isProp< 0 _))) λ
       { (pos (suc n) , _) (pos (suc m) , _) (pos<pos p) (pos<pos q) → pos<pos tt   }
 
   open Units ℚCommRing
@@ -107,7 +108,7 @@ module PositiveRationals where
 
   max₊ : ℚ₊ → ℚ₊ → ℚ₊
   fst (max₊ x y) = ℚ.max (fst x) (fst y)
-  snd (max₊ x y) = elimProp2
+  snd (max₊ x y) = makeOpaque $ elimProp2
     {P = λ a b → 0 <ℚ a → 0 <ℚ b → 0 <ℚ ℚ.max a b}
     (λ a b → isPropΠ2 λ _ _ → isProp< 0 (ℚ.max a b))
     (λ { (pos (suc n) , 1+ a) (pos (suc m) , 1+ b) (pos<pos p) (pos<pos q) →
@@ -126,7 +127,7 @@ module PositiveRationals where
 
   min₊ : ℚ₊ → ℚ₊ → ℚ₊
   fst (min₊ x y) = ℚ.min (fst x) (fst y)
-  snd (min₊ x y) = elimProp2
+  snd (min₊ x y) = makeOpaque $ elimProp2
     {P = λ a b → 0 <ℚ a → 0 <ℚ b → 0 <ℚ ℚ.min a b}
     (λ a b → isPropΠ2 λ _ _ → isProp< 0 (ℚ.min a b))
     (λ { (pos (suc n) , 1+ a) (pos (suc m) , 1+ b) (pos<pos p) (pos<pos q) →
