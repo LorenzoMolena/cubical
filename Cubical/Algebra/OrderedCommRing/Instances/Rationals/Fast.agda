@@ -75,13 +75,14 @@ module PositiveRationals where
   private
     ℚCR  = OrderedCommRing→CommRing ℚOrderedCommRing
 
-    0<+Closed : ∀ x y → 0 <ℚ x → 0 <ℚ y → 0 <ℚ x +ℚ y
-    0<+Closed = makeOpaque $ SQ.elimProp2 (λ _ _ → isProp→ (isProp→ (isProp< 0 _))) λ
-      { (pos (suc n) , _) (pos (suc m) , _) (pos<pos p) (pos<pos q) → pos<pos tt }
+    opaque
+      0<+Closed : ∀ x y → 0 <ℚ x → 0 <ℚ y → 0 <ℚ x +ℚ y
+      0<+Closed = SQ.elimProp2 (λ _ _ → isProp→ (isProp→ (isProp< 0 _))) λ
+        { (pos (suc n) , _) (pos (suc m) , _) (pos<pos p) (pos<pos q) → pos<pos tt }
 
-    0<·Closed : ∀ x y → 0 <ℚ x → 0 <ℚ y → 0 <ℚ x ·ℚ y
-    0<·Closed = makeOpaque $ SQ.elimProp2 (λ _ _ → isProp→ (isProp→ (isProp< 0 _))) λ
-      { (pos (suc n) , _) (pos (suc m) , _) (pos<pos p) (pos<pos q) → pos<pos tt   }
+      0<·Closed : ∀ x y → 0 <ℚ x → 0 <ℚ y → 0 <ℚ x ·ℚ y
+      0<·Closed = SQ.elimProp2 (λ _ _ → isProp→ (isProp→ (isProp< 0 _))) λ
+        { (pos (suc n) , _) (pos (suc m) , _) (pos<pos p) (pos<pos q) → pos<pos tt   }
 
   open Units ℚCommRing
   open CommRingTheory ℚCommRing
