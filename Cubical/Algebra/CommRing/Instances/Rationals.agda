@@ -20,3 +20,4 @@ open import Cubical.Data.Rationals as ℚ
   where
   p : IsCommRing 0 1 _+_ _·_ (-_)
   p = makeIsCommRing isSetℚ +Assoc +IdR +InvR +Comm ·Assoc ·IdR ·DistL+ ·Comm
+
