@@ -3,17 +3,17 @@ module Cubical.Data.Nat.GCD where
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
-open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.Isomorphism
 
 open import Cubical.Induction.WellFounded
 
 open import Cubical.Data.Sigma as Σ
-open import Cubical.Data.Fin   as F hiding (_%_ ; _/_)
-open import Cubical.Data.NatPlusOne
+open import Cubical.Data.Sum
+open import Cubical.Data.Fin as F hiding (_%_ ; _/_)
 
 open import Cubical.HITs.PropositionalTruncation as PropTrunc
 
+open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat.Base
 open import Cubical.Data.Nat.Properties
 open import Cubical.Data.Nat.Order
@@ -27,7 +27,7 @@ open import Cubical.Relation.Nullary
 
 private
   variable
-    m n d : ℕ
+    m n c d : ℕ
 
 -- common divisors
 
@@ -55,7 +55,6 @@ isPropGCD : isProp (GCD m n)
 isPropGCD (d , dCD , gr) (d' , d'CD , gr') =
   Σ≡Prop (λ _ → isPropIsGCD) (antisym∣ (gr' d dCD) (gr d' d'CD))
 
-
 symGCD : isGCD m n d → isGCD n m d
 symGCD (dCD , gr) = symCD dCD , λ { d' d'CD → gr d' (symCD d'CD) }
 
@@ -65,10 +64,20 @@ divsGCD p = (∣-refl refl , p) , λ { d (d∣m , _) → d∣m }
 oneGCD : ∀ m → isGCD m 1 1
 oneGCD m = symGCD (divsGCD (∣-oneˡ m))
 
-
 -- The base case of the Euclidean algorithm
 zeroGCD : ∀ m → isGCD m 0 m
 zeroGCD m = divsGCD (∣-zeroʳ m)
+
+-- zeroGCD-unique lemma: if d is gcd of m and 0, then d ≡ m
+zeroGCD-unique : {m d : ℕ} → isGCD m 0 d → m ≡ d
+zeroGCD-unique {m} {d} (iscd , greatest) =
+  let
+    d∣m = fst iscd
+    m∣m = ∣-refl (refl {x = m})
+    m∣0 = ∣-zeroʳ m
+    m∣d = greatest m (m∣m , m∣0)
+  in
+  antisym∣ m∣d d∣m
 
 -- a pair of useful lemmas about ∣ and (efficient) %
 private
@@ -159,7 +168,6 @@ euclid m n@(suc n-1) =
   in
     r .fst , stepGCD (r .snd)
 
-
 isContrGCD : ∀ m n → isContr (GCD m n)
 isContrGCD m n = euclid m n , isPropGCD _
 
@@ -177,6 +185,16 @@ isGCD→gcd≡ dGCD = cong fst (isContrGCD _ _ .snd (_ , dGCD))
 gcd≡→isGCD : gcd m n ≡ d → isGCD m n d
 gcd≡→isGCD p = subst (isGCD _ _) p (gcdIsGCD _ _)
 
+gcd≡isGCD : ∀ m n d → (gcd m n ≡ d) ≡ (isGCD m n d)
+gcd≡isGCD m n d = isoToPath (iso gcd≡→isGCD isGCD→gcd≡
+  (λ b → isPropIsGCD (gcd≡→isGCD (isGCD→gcd≡ b)) b)
+  (λ a →  isSetℕ (gcd m n) d (isGCD→gcd≡ {m}{n}{d} (gcd≡→isGCD a)) a))
+
+uniqueGCD : ∀ {d'} → isGCD m n d → isGCD m n d' → d ≡ d'
+uniqueGCD isgd isgd' = sym (isGCD→gcd≡ isgd) ∙ isGCD→gcd≡ isgd'
+
+gcdSym : (m n : ℕ) → (gcd m n) ≡ (gcd n m)
+gcdSym m n =  uniqueGCD (gcdIsGCD m n) (symGCD (gcdIsGCD n m))
 
 -- multiplicative properties of the gcd
 
@@ -213,6 +231,43 @@ isGCD-multʳ : ∀ k → isGCD m n d
 isGCD-multʳ {m} {n} {d} k dGCD = gcd≡→isGCD (gcd-factorʳ m n k ∙ cong (_· k) r)
   where r : gcd m n ≡ d
         r = isGCD→gcd≡ dGCD
+
+-- Core properties of gcd
+
+gcd[m,n]∣m : (m n : ℕ) → (gcd m n) ∣ m
+gcd[m,n]∣m m n = fst (fst (gcdIsGCD m n))
+
+gcd[m,n]∣n : (m n : ℕ) → (gcd m n) ∣ n
+gcd[m,n]∣n m n = transport (cong (λ a → a ∣ n) (gcdSym n m) ) (gcd[m,n]∣m n m)
+
+gcd-greatest : c ∣ m → c ∣ n → c ∣ gcd m n
+gcd-greatest c∣m c∣n =
+  rec2 isPropPropTrunc (λ x y → ∣ gcd-greatestHlp y x ∣₁) c∣n c∣m
+  where
+    gcd-greatestHlp : ∀ {m}{n}{c} → (x : Σ ℕ (λ c₁ → c₁ · c ≡ m)) →
+      (y : Σ ℕ (λ c₁ → c₁ · c ≡ n)) → Σ ℕ (λ c₁ → c₁ · c ≡ gcd m n)
+    gcd-greatestHlp {m} {n} {c} (m' , m'c≡m) (n' , n'c≡n) =
+      (gcd m' n') , sym (gcd-factorʳ m' n' c) ∙ cong₂ (λ a b → gcd a b) m'c≡m n'c≡n
+
+-- Other properties
+
+gcd[0,0]≡0 : gcd 0 0 ≡ 0
+gcd[0,0]≡0 = antisym∣ (∣-zeroʳ (gcd 0 0) ) (gcd-greatest (∣-zeroʳ 0) (∣-zeroʳ 0))
+
+gcd[m,n]≢0 : ∀ (m n : ℕ) → (¬ (m ≡ 0)) ⊎ (¬ (n ≡ 0)) → ¬ (gcd m n ≡ 0)
+gcd[m,n]≢0 m n (inl m≢0) gcd0 =
+  m≢0 (sym (∣-zeroˡ (transport (cong (λ a → a ∣ m) gcd0) (gcd[m,n]∣m m n))))
+gcd[m,n]≢0 m n (inr n≢0) gcd0 =
+  n≢0 (sym (∣-zeroˡ (transport ((cong (λ a → a ∣ n) gcd0)) (gcd[m,n]∣n m n))))
+
+gcd[m,n]≡0⇒m≡0 : gcd m n ≡ 0 → m ≡ 0
+gcd[m,n]≡0⇒m≡0 {zero} {n} gmn = refl
+gcd[m,n]≡0⇒m≡0 {suc m} {n} gmn =
+  ⊥.elim {A = λ bot → suc m ≡ 0} (gcd[m,n]≢0 (suc m) n (inl snotz) gmn)
+
+gcd[m,n]≡0⇒n≡0 : ∀ {m n} → gcd m n ≡ 0 → n ≡ 0
+gcd[m,n]≡0⇒n≡0 {m}{n} gmn = gcd[m,n]≡0⇒m≡0 {n}{m}
+  (transport (cong (λ a → a ≡ 0) (gcdSym m n)) gmn)
 
 -- Inequality for strict divisibility
 
