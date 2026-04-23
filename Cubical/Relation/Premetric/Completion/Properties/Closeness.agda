@@ -148,14 +148,10 @@ isSym∼ = λ _ _ _ → Recℭ∼.go∼ r where
   Recℭ∼.ι-lim-B   r x y ε δ yc Δ _ q      = lim-ι y x ε δ yc Δ q
   Recℭ∼.lim-ι-B   r x y ε δ xc Δ _ q      = ι-lim y x ε δ xc Δ q
   Recℭ∼.lim-lim-B r x y ε δ η xc yc Δ _ q =
-    let
+    lim-lim y x ε η δ yc xc (subst (0 <ℚ_) p Δ) (subst∼ (y η) (x δ) p q)
+    where
       p : ε -₊ (δ +₊ η) ≡ ε -₊ (η +₊ δ)
       p = cong (ℚ._-_ ⟨ ε ⟩₊) (ℚ.+Comm ⟨ δ ⟩₊ ⟨ η ⟩₊)
-
-      Δ' : 0 <ℚ ε -₊ (η +₊ δ)
-      Δ' = subst (0 <ℚ_) p Δ
-    in
-      lim-lim y x ε η δ yc xc Δ' (subst∼ (y η) (x δ) p q)
   Recℭ∼.isPropB   r x y ε                 = isProp∼ y ε x
 
 -- Using isSym∼, we can introduce a variant for Casesℭ:
@@ -670,12 +666,7 @@ module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ]
         B[η+ε-[θ+δ]]xθ,zδ = subst (flip (fst (Bx θ)) (z δ))
           (ℚ₊≡ (lemma3 ℚCR ⟨ η ⟩₊ ⟨ θ ⟩₊ ⟨ ε ⟩₊ ⟨ δ ⟩₊))
           (isBx.isTriangularBall θ [ η -₊ θ ]⟨ θ<η ⟩ (ε -₊ δ , Δ)
-            (ι y) (z δ)
-          (B[η-θ]xθ,y
-            :> fst (Bx θ) [ η -₊ θ ]⟨ θ<η ⟩ (ι y))
-          (y∼zδ
-            :> (ι y ∼[ (ε -₊ δ) , Δ ] z δ))
-            :> Bx θ .fst ([ η -₊ θ ]⟨ θ<η ⟩ +₊ ((ε -₊ δ) , Δ)) (z δ))
+            (ι y) (z δ) B[η-θ]xθ,y y∼zδ)
 
       in
         θ , δ , θ+δ<η+ε , B[η+ε-[θ+δ]]xθ,zδ)
@@ -727,11 +718,11 @@ module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ]
     (yc : ∀ α β → y α ∼[ α +₊ β ] y β)
     (zc : ∀ α β → z α ∼[ α +₊ β ] z β)
     (Δ : 0 <ℚ ε -₊ (δ +₊ η)) (yδ∼zη : y δ ∼[ ε -₊ (δ +₊ η) , Δ ] z η) (θ : ℚ₊)
-    where
+    where opaque
 
     B⟨lim,lim⟩→B⟨lim,lim⟩ : fst (B⟨limᴿ[_,_],lim[_,_]⟩ y yc) θ
                         → fst (B⟨limᴿ[_,_],lim[_,_]⟩ z zc) (θ +₊ ε)
-    B⟨lim,lim⟩→B⟨lim,lim⟩ = makeOpaque (PT.map λ (ξ , ζ , ξ+ζ<θ , B[θ-[ξ+ζ]]xξ,yζ) →
+    B⟨lim,lim⟩→B⟨lim,lim⟩ = PT.map λ (ξ , ζ , ξ+ζ<θ , B[θ-[ξ+ζ]]xξ,yζ) →
       let
         ξ+η<θ+ε : (ξ +₊ η) <₊ (θ +₊ ε)
         ξ+η<θ+ε = begin<
@@ -760,7 +751,7 @@ module _ (Bx : ℚ₊ → Balls) (Bxc : ∀ ε δ → Bx ε ≈ᴮ[ ε +₊ δ ]
                     (z η))
 
       in
-        ξ , η , ξ+η<θ+ε , B[θ+ε-[ξ+η]]xξ,zη)
+        ξ , η , ξ+η<θ+ε , B[θ+ε-[ξ+η]]xξ,zη
 
   private
     B⟨lim,lim⟩≈ᵁB⟨lim,lim⟩ : ∀ y z ε δ η yc zc Δ
@@ -817,13 +808,8 @@ module _ (x y : M) (ε : ℚ₊) (x≈y : x ≈[ ε ] y) where
     open Elimℭ-Prop
 
     e : Elimℭ-Prop λ z → (δ : ℚ₊) → B[ δ ]⟨ι x , z ⟩ → B[ δ +₊ ε ]⟨ι y , z ⟩
-    ιA      e z δ (lift x≈z) =
-      lift (subst≈ y z (ℚ.+Comm ⟨ ε ⟩₊ ⟨ δ ⟩₊) (
-        isTriangular≈ y x z ε δ (isSym≈ x y ε x≈y
-          :> (y ≈[ ε ] x))
-        (x≈z
-          :> (x ≈[ δ ] z))
-          :> (y ≈[ ε +₊ δ ] z)))
+    ιA      e z δ (lift x≈z) = lift (subst≈ y z (ℚ.+Comm ⟨ ε ⟩₊ ⟨ δ ⟩₊) (
+      isTriangular≈ y x z ε δ (isSym≈ x y ε x≈y) x≈z))
     limA    e z zc Bx,z→By,z δ = PT.map λ (η , η<δ , B[δ-η]ιx,zη) →
       let
         η<δ+ε : η <₊ (δ +₊ ε)
@@ -1012,7 +998,11 @@ module _
         η , η<θ+ε , B[θ+ε-η]yη,z
     limA    e z zc _ θ = PT.map λ (ζ , ξ , ζ+ξ<θ , B[θ-[ζ+ξ]]xζ,zξ) →
       let
-        ε-[δ+η] = (ε -₊ (δ +₊ η) , Δ) ; θ-[ζ+ξ] = [ θ -₊ (ζ +₊ ξ) ]⟨ ζ+ξ<θ ⟩
+        ε-[δ+η] : ℚ₊
+        ε-[δ+η] = (ε -₊ (δ +₊ η) , Δ)
+
+        θ-[ζ+ξ] : ℚ₊
+        θ-[ζ+ξ] = [ θ -₊ (ζ +₊ ξ) ]⟨ ζ+ξ<θ ⟩
 
         η+ξ<θ+ε : (η +₊ ξ) <₊ (θ +₊ ε)
         η+ξ<θ+ε = begin<
@@ -1023,16 +1013,16 @@ module _
           ⟨ ε +₊ θ ⟩₊               ≡→≤⟨ ℚ.+Comm ⟨ ε ⟩₊ ⟨ θ ⟩₊ ⟩
           ⟨ θ +₊ ε ⟩₊                 ◾
 
-        B[θ-[ζ+ξ]+ζ+δ]xδ,zξ : fst (Bx δ) (θ-[ζ+ξ] +₊ (ζ +₊ δ)) (z ξ)
+        -- B[θ-[ζ+ξ]+ζ+δ]xδ,zξ : fst (Bx δ) (θ-[ζ+ξ] +₊ (ζ +₊ δ)) (z ξ)
         B[θ-[ζ+ξ]+ζ+δ]xδ,zξ = fst (Bxc ζ δ θ-[ζ+ξ] (z ξ))
           (B[θ-[ζ+ξ]]xζ,zξ :> fst (Bx ζ) θ-[ζ+ξ] (z ξ))
 
-        B[θ-[ζ+ξ]+ζ+δ+ε-[δ+η]]yη,zξ : fst (By η) (θ-[ζ+ξ] +₊ (ζ +₊ δ) +₊ ε-[δ+η]) (z ξ)
+        -- B[θ-[ζ+ξ]+ζ+δ+ε-[δ+η]]yη,zξ : fst (By η) (θ-[ζ+ξ] +₊ (ζ +₊ δ) +₊ ε-[δ+η]) (z ξ)
         B[θ-[ζ+ξ]+ζ+δ+ε-[δ+η]]yη,zξ =
           fst (Bxδ≈[ε-[δ+η]]Byη (θ-[ζ+ξ] +₊ (ζ +₊ δ)) (z ξ))
             B[θ-[ζ+ξ]+ζ+δ]xδ,zξ
 
-        B[θ+ε-[η+ξ]]yη,zξ : fst (By η) [ (θ +₊ ε) -₊ (η +₊ ξ) ]⟨ η+ξ<θ+ε ⟩ (z ξ)
+        -- B[θ+ε-[η+ξ]]yη,zξ : fst (By η) [ (θ +₊ ε) -₊ (η +₊ ξ) ]⟨ η+ξ<θ+ε ⟩ (z ξ)
         B[θ+ε-[η+ξ]]yη,zξ = substBall {B = fst (By η)} {y = z ξ}
           (lemma10 ℚCR ⟨ θ ⟩₊ ⟨ ζ ⟩₊ ⟨ ξ ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊ ⟨ η ⟩₊)
           B[θ-[ζ+ξ]+ζ+δ+ε-[δ+η]]yη,zξ
@@ -1072,115 +1062,91 @@ isSymB    BallsAt[Rec] = isSym≈ᴮ
 isPropB   BallsAt[Rec] = isProp≈ᴮ
 
 
-private
-  Braw : ℭM → Balls
-  Braw = RecℭSym.go BallsAt[Rec]
-
 -- Defintion 3.13 (second part)
-B⟨_,⟩ : ℭM → Balls
-fst B⟨ x ,⟩ = fst (Braw x)
-snd B⟨ x ,⟩ = makeOpaque (snd (Braw x))
+opaque
+  B⟨_,⟩ : ℭM → Balls
+  B⟨_,⟩ = RecℭSym.go BallsAt[Rec]
 
-B[_]⟨_,_⟩ : ℚ₊ → ℭM → ℭM → Type (ℓ-max ℓ ℓ')
-B[_]⟨_,_⟩ = flip (fst ∘ B⟨_,⟩)
+  B[_]⟨_,_⟩ : ℚ₊ → ℭM → ℭM → Type (ℓ-max ℓ ℓ')
+  B[_]⟨_,_⟩ = flip (fst ∘ B⟨_,⟩)
 
-isNonExpanding∼→≈ᴮB⟨,⟩ : nonExpanding∼→≈ᴮ B⟨_,⟩
-isNonExpanding∼→≈ᴮB⟨,⟩ = λ _ _ _ → RecℭSym.go∼ BallsAt[Rec]
+  isNonExpanding∼→≈ᴮB⟨,⟩ : nonExpanding∼→≈ᴮ B⟨_,⟩
+  isNonExpanding∼→≈ᴮB⟨,⟩ = λ _ _ _ → RecℭSym.go∼ BallsAt[Rec]
 
 -- Theorem 3.14
-module _ where
+-- {-
   _ : ∀ {ε x y} → B[ ε ]⟨ ι x , ι y ⟩ ≡ Lift {ℓ'} {ℓ} (x ≈[ ε ] y)
   _ = refl
 
   _ : ∀ {ε x y yc}
       → B[ ε ]⟨ ι x , lim y yc ⟩
-      ≡ (∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ (δ <₊ ε) ] B[ [ ε -₊ δ ]⟨ δ<ε ⟩ ]⟨ ι x , y δ ⟩)
+      ≡ (∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ (δ <₊ ε) ] B[ (-₊< ε δ δ<ε .fst) , (-₊< ε δ δ<ε .snd) ]⟨ ι x , y δ ⟩)
   _ = refl
 
   _ : ∀ {ε x y xc}
       → B[ ε ]⟨ lim x xc , ι y ⟩
-      ≡ (∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ (δ <₊ ε) ] B[ [ ε -₊ δ ]⟨ δ<ε ⟩ ]⟨ x δ , ι y ⟩)
+      ≡ (∃[ δ ∈ ℚ₊ ] Σ[ δ<ε ∈ (δ <₊ ε) ] B[ (-₊< ε δ δ<ε .fst) , (-₊< ε δ δ<ε .snd) ]⟨ x δ , ι y ⟩)
   _ = refl
 
   _ : ∀ {ε x y xc yc}
       → B[ ε ]⟨ lim x xc , lim y yc ⟩
       ≡ (∃[ δ ∈ ℚ₊ ] Σ[ η ∈ ℚ₊ ] Σ[ δ+η<ε ∈ ((δ +₊ η) <₊ ε) ]
-          B[ [ ε -₊ (δ +₊ η) ]⟨ δ+η<ε ⟩ ]⟨ x δ , y η ⟩)
+          B[ (-₊< ε (δ +₊ η) δ+η<ε .fst) , (-₊< ε (δ +₊ η) δ+η<ε .snd) ]⟨ x δ , y η ⟩)
   _ = refl
+-- -}
+
+  ∼→B : ∀ {x y ε} → x ∼[ ε ] y → B[ ε ]⟨ x , y ⟩
+  ∼→B =  (Recℭ∼.go∼ r) where
+    r : Recℭ∼ λ x y → B[_]⟨ x , y ⟩
+    Recℭ∼.ι-ι-B     r x y ε = lift
+    Recℭ∼.ι-lim-B   r x y ε δ yc Δ _ q      =
+      ∣ δ , 0<Δ→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ ι x , y δ ⟩ (ℚ₊≡ refl) q ∣₁
+    Recℭ∼.lim-ι-B   r x y ε δ xc Δ _ q      =
+      ∣ δ , 0<Δ→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ x δ , ι y ⟩ (ℚ₊≡ refl) q ∣₁
+    Recℭ∼.lim-lim-B r x y ε δ η xc yc Δ _ q =
+      ∣ δ , η , 0<Δ→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ x δ , y η ⟩ (ℚ₊≡ refl) q ∣₁
+    Recℭ∼.isPropB   r x y ε                 = IsBall.isPropBall (snd B⟨ x ,⟩) ε y
 
 
-∼→B : ∀ {x y ε} → x ∼[ ε ] y → B[ ε ]⟨ x , y ⟩
-∼→B = makeOpaque (Recℭ∼.go∼ r) where
-  r : Recℭ∼ λ x y → B[_]⟨ x , y ⟩
-  Recℭ∼.ι-ι-B     r x y ε = lift
-  Recℭ∼.ι-lim-B   r x y ε δ yc Δ _ q      =
-    ∣ δ , 0<Δ→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ ι x , y δ ⟩ (ℚ₊≡ refl) q ∣₁
-  Recℭ∼.lim-ι-B   r x y ε δ xc Δ _ q      =
-    ∣ δ , 0<Δ→< ⟨ δ ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ x δ , ι y ⟩ (ℚ₊≡ refl) q ∣₁
-  Recℭ∼.lim-lim-B r x y ε δ η xc yc Δ _ q =
-    ∣ δ , η , 0<Δ→< ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ Δ , subst B[_]⟨ x δ , y η ⟩ (ℚ₊≡ refl) q ∣₁
-  Recℭ∼.isPropB   r x y ε                 = IsBall.isPropBall (snd B⟨ x ,⟩) ε y
+  B→∼ : ∀ {x y ε} → B[ ε ]⟨ x , y ⟩ → x ∼[ ε ] y
+  B→∼ {x} {y} {ε} = Elimℭ-Prop2.go e x y ε where
+    open Elimℭ-Prop2
 
-B→∼ : ∀ {x y ε} → B[ ε ]⟨ x , y ⟩ → x ∼[ ε ] y
-B→∼ {x} {y} {ε} = makeOpaque (Elimℭ-Prop2.go e x y ε) where
-  open Elimℭ-Prop2
+    e : Elimℭ-Prop2 λ x y → ∀ ε → B[ ε ]⟨ x , y ⟩ → x ∼[ ε ] y
+    ι-ιA     e x y ε (lift x≈y) = ι-ι x y ε x≈y
+    ι-limA   e x y yc IH ε = PT.rec (isProp∼ (ι x) ε (lim y yc))
+      λ (δ , δ<ε , B[ε-δ]x,yδ) →
+        ι-lim x y ε δ yc _ (IH δ (ε -₊ δ , _) B[ε-δ]x,yδ)
+    lim-ιA   e x xc y IH ε = PT.rec (isProp∼ (lim x xc) ε (ι y))
+      λ (δ , δ<ε , B[ε-δ]xδ,y) →
+        lim-ι x y ε δ xc _ (
+          IH δ (ε -₊ δ , _) B[ε-δ]xδ,y)
+    lim-limA e x xc y yc IH ε = PT.rec (isProp∼ (lim x xc) ε (lim y yc))
+      λ (δ , η , δ+η<ε , B[ε-[δ+η]]xδ,yη) →
+        lim-lim x y ε δ η xc yc _ (
+          IH δ η (ε -₊ (δ +₊ η) , _) B[ε-[δ+η]]xδ,yη)
 
-  e : Elimℭ-Prop2 λ x y → ∀ ε → B[ ε ]⟨ x , y ⟩ → x ∼[ ε ] y
-  ι-ιA     e x y ε (lift x≈y) = ι-ι x y ε x≈y
-  ι-limA   e x y yc IH ε = PT.rec (isProp∼ (ι x) ε (lim y yc))
-    λ (δ , δ<ε , B[ε-δ]x,yδ) →
-    let
-      Δ : 0 <ℚ ε -₊ δ
-      Δ = <→0<Δ ⟨ δ ⟩₊ ⟨ ε ⟩₊ δ<ε
-    in
-      ι-lim x y ε δ yc Δ (
-        IH δ (ε -₊ δ , Δ) B[ε-δ]x,yδ
-        :> (ι x ∼[ ε -₊ δ , Δ ] y δ))
-        :> (ι x ∼[ ε ] lim y yc)
-  lim-ιA   e x xc y IH ε = PT.rec (isProp∼ (lim x xc) ε (ι y))
-    λ (δ , δ<ε , B[ε-δ]xδ,y) →
-    let
-      Δ : 0 <ℚ ε -₊ δ
-      Δ = <→0<Δ ⟨ δ ⟩₊ ⟨ ε ⟩₊ δ<ε
-    in
-      lim-ι x y ε δ xc Δ (
-        IH δ (ε -₊ δ , Δ) B[ε-δ]xδ,y
-        :> (x δ ∼[ ε -₊ δ , Δ ] ι y))
-        :> (lim x xc ∼[ ε ] ι y)
-  lim-limA e x xc y yc IH ε = PT.rec (isProp∼ (lim x xc) ε (lim y yc))
-    λ (δ , η , δ+η<ε , B[ε-[δ+η]]xδ,yη) →
-    let
-      Δ : 0 <ℚ ε -₊ (δ +₊ η)
-      Δ = <→0<Δ ⟨ δ +₊ η ⟩₊ ⟨ ε ⟩₊ δ+η<ε
-    in
-      lim-lim x y ε δ η xc yc Δ (
-        IH δ η (ε -₊ (δ +₊ η) , Δ) B[ε-[δ+η]]xδ,yη
-        :> (x δ ∼[ ε -₊ (δ +₊ η) , Δ ] y η))
-        :> (lim x xc ∼[ ε ] lim y yc)
-  isPropA  e x y = isPropΠ λ ε → isProp→ (isProp∼ x ε y)
+    isPropA  e x y = isPropΠ λ ε → isProp→ (isProp∼ x ε y)
 
--- Theorem 3.15
-∼≃B : ∀ {x y ε} → (x ∼[ ε ] y) ≃ B[ ε ]⟨ x , y ⟩
-∼≃B {x} {y} {ε} =
-  propBiimpl→Equiv (isProp∼ x ε y) (IsBall.isPropBall (snd B⟨ x ,⟩) ε y) ∼→B B→∼
+  -- Theorem 3.15
+  ∼≃B : ∀ {x y ε} → (x ∼[ ε ] y) ≃ B[ ε ]⟨ x , y ⟩
+  ∼≃B {x} {y} {ε} =
+    propBiimpl→Equiv (isProp∼ x ε y) (IsBall.isPropBall (snd B⟨ x ,⟩) ε y) ∼→B B→∼
 
-isTriangular∼ : ∀ x y z ε δ → x ∼[ ε ] y → y ∼[ δ ] z → x ∼[ ε +₊ δ ] z
-isTriangular∼ x y z ε δ x∼y y∼z =
-  makeOpaque (B→∼ (isTriangularBall (snd B⟨ x ,⟩) ε δ y z
-  (∼→B (x∼y
-    :> (x ∼[ ε ] y))
-    :> B[ ε ]⟨ x , y ⟩)
-  (y∼z
-    :> y ∼[ δ ] z)
-    :> B[ ε +₊ δ ]⟨ x , z ⟩)
-    :> (x ∼[ ε +₊ δ ] z))
-  where open IsBall
+  isTriangular∼ : ∀ x y z ε δ → x ∼[ ε ] y → y ∼[ δ ] z → x ∼[ ε +₊ δ ] z
+  isTriangular∼ x y z ε δ x∼y y∼z =
+    (B→∼ (isTriangularBall (snd B⟨ x ,⟩) ε δ y z (∼→B x∼y) y∼z))
+    where open IsBall
 
-isRounded∼ : ∀ x y ε → x ∼[ ε ] y → ∃[ δ ∈ ℚ₊ ] (δ <₊ ε) × x ∼[ δ ] y
-isRounded∼ x y ε x∼y = makeOpaque (PT.map (
-  λ (δ , δ<ε , B[δ]x,y) → (δ , δ<ε , B→∼ B[δ]x,y))
-  (isRoundedBall (snd B⟨ x ,⟩) ε y (∼→B x∼y)))
-  where open IsBall
+  isRounded∼ : ∀ x y ε → x ∼[ ε ] y → ∃[ δ ∈ ℚ₊ ] (δ <₊ ε) × x ∼[ δ ] y
+  isRounded∼ x y ε x∼y = PT.map (λ (δ , δ<ε , B[δ]x,y) → (δ , δ<ε , B→∼ B[δ]x,y))
+    (isRoundedBall (snd B⟨ x ,⟩) ε y (∼→B x∼y))
+    where open IsBall
+
+  -- Theorem 3.17
+  isInjectiveι : ∀ x y → ι x ≡ ι y → x ≡ y
+  isInjectiveι x y ιx≡ιy = isSeparated≈ x y λ ε →
+    ∼→B (subst (ι x ∼[ ε ]_) ιx≡ιy (isRefl∼ (ι x) ε)) .lower
 
 -- Theorem 3.16
 ℭPremetricSpace : PremetricSpace (ℓ-max ℓ ℓ') (ℓ-max ℓ ℓ')
@@ -1198,12 +1164,6 @@ PremetricStr.isPremetric (snd ℭPremetricSpace) = isPMℭ
     isSeparated≈  isPMℭ = eqℭ
     isTriangular≈ isPMℭ = isTriangular∼
     isRounded≈    isPMℭ = isRounded∼
-
--- Theorem 3.17
-isInjectiveι : ∀ x y → ι x ≡ ι y → x ≡ y
-isInjectiveι x y ιx≡ιy = isSeparated≈ x y λ ε →
-  case ∼→B (subst (ι x ∼[ ε ]_) ιx≡ιy (isRefl∼ (ι x) ε)) of
-  λ (lift x≈y) → x≈y
 
 isLimitLim : ∀ x xc → isLimit ℭPremetricSpace x (lim x xc)
 isLimitLim = λ x xc ε θ → Elimℭ-Prop.go e (x ε) x xc ε θ (isRefl∼ (x ε) θ) where opaque
@@ -1225,10 +1185,10 @@ isLimitLim = λ x xc ε θ → Elimℭ-Prop.go e (x ε) x xc ε θ (isRefl∼ (x
         ⟨ θ +₊ ε ⟩₊     ≡→≤⟨ ℚ.+Comm ⟨ θ ⟩₊ ⟨ ε ⟩₊ ⟩
         ⟨ ε +₊ θ ⟩₊       ◾)
 
-      uη/4∼[3η/4]limu : u (η /4₊) ∼[ 3η/4 ] lim u uc
+      -- uη/4∼[3η/4]limu : u (η /4₊) ∼[ 3η/4 ] lim u uc
       uη/4∼[3η/4]limu = IH (η /4₊) u uc (η /4₊) (η /4₊ +₊ η /4₊) (uc (η /4₊) (η /4₊))
 
-      uη/4∼[3η/4+δ]xε : u (η /4₊) ∼[ 3η/4 +₊ δ ] x ε
+      -- uη/4∼[3η/4+δ]xε : u (η /4₊) ∼[ 3η/4 +₊ δ ] x ε
       uη/4∼[3η/4+δ]xε = isTriangular∼
         (u (η /4₊)) (lim u uc) (x ε) 3η/4 δ uη/4∼[3η/4]limu limu∼[δ]xε
 
