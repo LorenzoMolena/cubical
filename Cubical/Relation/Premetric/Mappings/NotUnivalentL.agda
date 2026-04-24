@@ -4,21 +4,19 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.Equiv
 
-open import Cubical.Data.Empty as ⊥
-
 open import Cubical.Categories.Category.Base
 
-open import Cubical.HITs.PropositionalTruncation as PT
+open import Cubical.HITs.PropositionalTruncation
 
 open import Cubical.Algebra.OrderedCommRing
 open import Cubical.Algebra.OrderedCommRing.Instances.Rationals.Fast
 open import Cubical.Algebra.Ring.Properties
 
-open import Cubical.Data.Int.Fast as ℤ using ()
-open import Cubical.Data.NatPlusOne as ℕ₊₁
+open import Cubical.Data.Int.Fast using ()
+open import Cubical.Data.NatPlusOne
 open import Cubical.Data.Rationals.Fast.Base as ℚ
 import Cubical.Data.Rationals.Fast.Properties as ℚ
-open import Cubical.Data.Rationals.Fast.Order as ℚOrd using (pos<pos)
+open import Cubical.Data.Rationals.Fast.Order using (pos<pos)
 
 open import Cubical.Relation.Premetric.Base
 open import Cubical.Relation.Premetric.Mappings
