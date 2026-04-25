@@ -346,16 +346,16 @@ module _ {R : OrderedCommRing ℓ ℓ<≤} {S : OrderedCommRing ℓ' ℓ<≤'} (
 
     open IsOrderedCommRingEquiv
 
-    makeIsOrderedCommRingEquivFromMono : IsOrderedCommRingEquiv (str R) e (str S)
-    makeIsOrderedCommRingEquivFromMono .pres0 = M.pres0
-    makeIsOrderedCommRingEquivFromMono .pres1 = M.pres1
-    makeIsOrderedCommRingEquivFromMono .pres+ = M.pres+
-    makeIsOrderedCommRingEquivFromMono .pres· = M.pres·
-    makeIsOrderedCommRingEquivFromMono .pres- = M.pres-
-    makeIsOrderedCommRingEquivFromMono .pres≤ = λ x y → propBiimpl→Equiv
+    makeIsOrderedCommRingEquivFromIsMono : IsOrderedCommRingEquiv (str R) e (str S)
+    makeIsOrderedCommRingEquivFromIsMono .pres0 = M.pres0
+    makeIsOrderedCommRingEquivFromIsMono .pres1 = M.pres1
+    makeIsOrderedCommRingEquivFromIsMono .pres+ = M.pres+
+    makeIsOrderedCommRingEquivFromIsMono .pres· = M.pres·
+    makeIsOrderedCommRingEquivFromIsMono .pres- = M.pres-
+    makeIsOrderedCommRingEquivFromIsMono .pres≤ = λ x y → propBiimpl→Equiv
       (R.is-prop-valued≤ _ _) (S.is-prop-valued≤ _ _)
       (M.pres≤ x y) (isOrderedCommRingMono→reflect≤ isMono x y)
-    makeIsOrderedCommRingEquivFromMono .pres< = λ x y → propBiimpl→Equiv
+    makeIsOrderedCommRingEquivFromIsMono .pres< = λ x y → propBiimpl→Equiv
       (R.is-prop-valued< _ _) (S.is-prop-valued< _ _)
       (M.pres< x y) (M.reflect< x y)
 
@@ -368,5 +368,5 @@ module _ {R : OrderedCommRing ℓ ℓ<≤} {S : OrderedCommRing ℓ' ℓ<≤'} (
     where
 
     makeIsOrderedCommRingEquiv : IsOrderedCommRingEquiv (str R) e (str S)
-    makeIsOrderedCommRingEquiv = makeIsOrderedCommRingEquivFromMono
+    makeIsOrderedCommRingEquiv = makeIsOrderedCommRingEquivFromIsMono
       (makeIsOrderedCommRingMono p1 p+ p· p< p<⁻)
