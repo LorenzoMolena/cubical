@@ -333,6 +333,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     <0→abs≡- : ∀ x → x < 0r → abs x ≡ - x
     <0→abs≡- x = ≤0→abs≡- x ∘ <-≤-weaken x 0r
 
+    ·DistL⊔≥ : ∀ x y z → 0r ≤ x → (x · y) ⊔ (x · z) ≤ x · (y ⊔ z)
+    ·DistL⊔≥ _ _ _ 0≤x = ⊔LUB (·MonoL≤ _ _ _ 0≤x L≤⊔) (·MonoL≤ _ _ _ 0≤x R≤⊔)
+
     0≤→abs·≤ : ∀ k x → 0r ≤ k → abs (k · x) ≤ k · abs x
     0≤→abs·≤ k x 0≤k = ⊔LUB
       (begin≤
