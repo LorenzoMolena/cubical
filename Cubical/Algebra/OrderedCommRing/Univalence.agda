@@ -64,7 +64,7 @@ OrderedCommRingEquivIsoOrderedCommRingIso R S = OCREquivIsoOCRIso
     fst (fun OCREquivIsoOCRIso e) = equivToIso (fst e)
     snd (fun OCREquivIsoOCRIso e) = snd (OrderedCommRingEquiv→OrderedCommRingMono e)
     fst (inv OCREquivIsoOCRIso e) = isoToEquiv (fst e)
-    snd (inv OCREquivIsoOCRIso e) = makeIsOrderedCommRingEquivFromMono (isoToEquiv (fst e)) (snd e)
+    snd (inv OCREquivIsoOCRIso e) = makeIsOrderedCommRingEquivFromIsMono (isoToEquiv (fst e)) (snd e)
     sec OCREquivIsoOCRIso e =
       Σ≡Prop (λ f → isPropIsOrderedCommRingMono _ (fun f) _) (
       Iso≡Set (OrderedCommRingStr.is-set (snd R)) (OrderedCommRingStr.is-set (snd S))
