@@ -333,6 +333,16 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     <0→abs≡- : ∀ x → x < 0r → abs x ≡ - x
     <0→abs≡- x = ≤0→abs≡- x ∘ <-≤-weaken x 0r
 
+    0≤→abs·≤ : ∀ k x → 0r ≤ k → abs (k · x) ≤ k · abs x
+    0≤→abs·≤ k x 0≤k = ⊔LUB
+      (begin≤
+        k · x ≤⟨ ·MonoL≤ x (abs x) k 0≤k (≤abs x) ⟩
+        k · abs x ◾)
+      (begin≤
+        - (k · x) ≡→≤⟨ solve! RCR ⟩
+        k · (- x)   ≤⟨ ·MonoL≤ (- x) (abs x) k 0≤k (-≤abs x) ⟩
+        k · abs x   ◾)
+
     abs²≡² : ∀ x → abs x · abs x ≡ x · x
     abs²≡² x = is-antisym (abs x · abs x) (x · x)
       (¬<→≥ (x · x) (abs x · abs x) λ x²<∣x∣² →

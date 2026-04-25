@@ -8,6 +8,7 @@ open import Cubical.Foundations.SIP
 
 
 open import Cubical.Data.Sigma
+open import Cubical.Data.Empty as ⊥
 
 open import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Nat.Order as ℕ renaming (_≤_ to _≤ℕ_ ; _<_ to _<ℕ_)
@@ -48,6 +49,101 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
   private
     M = fst M'
   open PremetricStr (snd M')
+
+  subst≈L : ∀ {x y z ε} → x ≡ y → x ≈[ ε ] z → y ≈[ ε ] z
+  subst≈L = subst (_≈[ _ ] _)
+
+  subst≈R : ∀ {x y z ε} → y ≡ z → x ≈[ ε ] y → x ≈[ ε ] z
+  subst≈R = subst (_ ≈[ _ ]_)
+
+  module PremetricReasoning where
+
+    private
+      variable
+        x y z w : M
+        ε δ η θ κ : ℚ₊
+
+      +≈ : x ≈[ ε ] y → y ≈[ δ ] z → x ≈[ ε +₊ δ ] z
+      +≈ = isTriangular≈ _ _ _ _ _
+
+      data _≈_≈_[_:+_] (x y z : M) (δ η : ℚ₊) : Type (ℓ-max ℓ ℓ') where
+        ≈step+ : x ≈[ δ ] y → y ≈[ η ] z → x ≈ y ≈ z [ δ :+ η ]
+        ≈end   : x ≡ y      → y ≡ z      → x ≈ y ≈ z [ δ :+ η ]
+
+      is≈Step+ : x ≈ y ≈ z [ δ :+ η ] → Type
+      is≈Step+ (≈step+ _ _) = Unit
+      is≈Step+ (≈end   _ _) = ⊥.⊥
+
+      step+₊ : x ≈ y ≈ z [ δ :+ η ] → ℚ₊ → ℚ₊ → ℚ₊
+      step+₊ (≈step+ _ _) = _+₊_
+      step+₊ (≈end   _ _) = const
+
+    infixr 2 step≈
+    step≈ : ∀ x {w} ε {δ η}
+          → (r : y ≈ z ≈ w [ δ :+ η ])
+          → x ≈[ ε ] y
+          → x ≈ z ≈ w [ step+₊ r ε δ :+ η ]
+    step≈ x ε (≈step+ y≈ ≈w) x≈ = ≈step+ (+≈ x≈ y≈) ≈w
+    step≈ x ε (≈end   y≡ ≡w) x≈ = ≈step+ (subst≈R y≡ x≈) (subst≈R ≡w (isRefl≈ _ _))
+
+    syntax step≈ x ε y≈w x≈y = x ≈[ ε ]⟨ x≈y ⟩ y≈w
+
+    infixr 2 step≈≡
+    step≈≡ : ∀ x {w} ε {θ δ η}
+           → ⟨ θ ⟩₊ ≡ ⟨ ε ⟩₊
+           → (r : y ≈ z ≈ w [ δ :+ η ])
+           → x ≈[ θ ] y
+           → x ≈ z ≈ w [ step+₊ r ε δ :+ η ]
+    step≈≡ x ε θ≡ε r = step≈ x ε r ∘ subst≈ x _ θ≡ε
+
+    syntax step≈≡ x ε θ≡ε y≈w x≈y = x ≈≡[ ε ]⟨ θ≡ε ⟩⟨ x≈y ⟩ y≈w
+
+    infixr 2 step≈<
+    step≈< : ∀ x {w} ε {θ δ η}
+           → θ <₊ ε
+           → (r : y ≈ z ≈ w [ δ :+ η ])
+           → x ≈[ θ ] y
+           → x ≈ z ≈ w [ step+₊ r ε δ :+ η ]
+    step≈< x ε θ<ε r = step≈ x ε r ∘ isMonotone≈< x _ _ ε θ<ε
+
+    syntax step≈< x ε θ<ε y≈w x≈y = x ≈<[ ε ]⟨ θ<ε ⟩⟨ x≈y ⟩ y≈w
+
+    infixr 2 step≈≤
+    step≈≤ : ∀ x {w} ε {θ δ η}
+           → θ ≤₊ ε
+           → (r : y ≈ z ≈ w [ δ :+ η ])
+           → x ≈[ θ ] y
+           → x ≈ z ≈ w [ step+₊ r ε δ :+ η ]
+    step≈≤ x ε θ≤ε r = step≈ x ε r ∘ isMonotone≈≤ x _ _ ε θ≤ε
+
+    syntax step≈≤ x ε θ≤ε y≈w x≈y = x ≈≤[ ε ]⟨ θ≤ε ⟩⟨ x≈y ⟩ y≈w
+
+    infix 3 ≈⁻_
+    ≈⁻_ : x ≈[ ε ] y → y ≈[ ε ] x
+    ≈⁻_ = isSym≈ _ _ _
+
+    infixr 2 step≡→≈
+    step≡→≈ : ∀ x {w} {δ η}
+            → (r : y ≈ z ≈ w [ δ :+ η ])
+            → x ≡ y
+            → x ≈ z ≈ w [ δ :+ η ]
+    step≡→≈ x (≈step+ y≈ ≈w) x≡ = ≈step+ (subst≈L (sym x≡) y≈) ≈w
+    step≡→≈ x (≈end   y≡ ≡w) x≡ = ≈end (x≡ ∙ y≡) ≡w
+
+    syntax step≡→≈ x y≈w x≡y = x ≡→≈⟨ x≡y ⟩ y≈w
+
+    infix 3 _≈∎
+    _≈∎ : ∀ x → x ≈ x ≈ x [ 1 :+ 1 ] -- dummy ℚ₊ values, discarded by ≈end/const
+    _≈∎ x = ≈end refl refl
+
+    infix 1 begin≈[_]⟨_⟩_
+    begin≈[_]⟨_⟩_ : ∀ ε {δ} {x y} → ⟨ δ ⟩₊ ≡ ⟨ ε ⟩₊
+                 → (r : x ≈ y ≈ y [ δ :+ 1 ])
+                 → {is≈Step+ r}
+                 → x ≈[ ε ] y
+    begin≈[ ε ]⟨ p ⟩ ≈step+ x≈y _ = subst≈ _ _ p x≈y
+
+  open PremetricReasoning
 
   -- Cauchy Approximations/Sequences
 
@@ -94,20 +190,10 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
 
   isPropLimit : ∀ x → isProp (limit x)
   isPropLimit x (l , l-lim) (l' , l'-lim) = Σ≡Prop (isPropIsLimit x) $
-    isSeparated≈ l l' λ ε →
-      subst≈ l l' (
-        ⟨ ε /4₊ +₊ ε /4₊ +₊ (ε /4₊ +₊ ε /4₊) ⟩₊ ≡⟨ cong (∘diag ℚ._+_) (/4+/4≡/2 ⟨ ε ⟩₊) ⟩
-        ⟨ ε /2₊ +₊ ε /2₊ ⟩₊                     ≡⟨ /2+/2≡id ⟨ ε ⟩₊ ⟩
-        ⟨ ε ⟩₊                                  ∎)
-      (isTriangular≈ l (x (ε /4₊)) l' (ε /4₊ +₊ ε /4₊) (ε /4₊ +₊ ε /4₊)
-        (isSym≈ (x (ε /4₊)) l (ε /4₊ +₊ ε /4₊) (
-        l-lim (ε /4₊) (ε /4₊)
-          :> (x (ε /4₊) ≈[ (ε /4₊) +₊ (ε /4₊) ] l))
-        :> (l ≈[ ε /4₊ +₊ ε /4₊ ] x (ε /4₊)))
-        (l'-lim (ε /4₊) (ε /4₊)
-        :> (x (ε /4₊) ≈[ ε /4₊ +₊ ε /4₊ ] l'))
-      :> (l ≈[ (ε /4₊ +₊ ε /4₊) +₊ (ε /4₊ +₊ ε /4₊) ] l'))
-      :> (l ≈[ ε ] l')
+    isSeparated≈ l l' λ ε → begin≈[ ε ]⟨ /2+/2≡id ⟨ ε ⟩₊ ⟩
+      l          ≈≡[ ε /2₊ ]⟨ /4+/4≡/2 ⟨ ε ⟩₊ ⟩⟨ ≈⁻ l-lim (ε /4₊) (ε /4₊) ⟩
+      x (ε /4₊)  ≈≡[ ε /2₊ ]⟨ /4+/4≡/2 ⟨ ε ⟩₊ ⟩⟨   l'-lim (ε /4₊) (ε /4₊) ⟩
+      l'         ≈∎
 
   isComplete : Type (ℓ-max ℓ ℓ')
   isComplete = ∀ x → isCauchy x → limit x
@@ -116,29 +202,22 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
   isPropIsComplete = isPropΠ λ _ → isProp→ (isPropLimit _)
 
   isLimit≈< : ∀ x l → isLimit x l → ∀ ε δ → (ε <₊ δ) → x ε ≈[ δ ] l
-  isLimit≈< x l l-lim ε δ ε<δ = subst≈ (x ε) l (
-    ⟨ ε ⟩₊ ℚ.+ (δ -₊ ε) ≡⟨ ℚ.+Comm ⟨ ε ⟩₊ (δ -₊ ε) ⟩
-    (δ -₊ ε) ℚ.+ ⟨ ε ⟩₊ ≡⟨ minusPlus₊ δ ε ⟩
-    ⟨ δ ⟩₊              ∎)
-    (l-lim ε [ δ -₊ ε ]⟨ ε<δ ⟩
-    :> x ε ≈[ ε +₊ [ δ -₊ ε ]⟨ ε<δ ⟩ ] l)
+  isLimit≈< x l l-lim ε δ ε<δ =
+    begin≈[ δ ]⟨ ℚ.+Comm ⟨ ε ⟩₊ (δ -₊ ε) ∙ minusPlus₊ δ ε ⟩
+      x ε  ≈[ ε +₊ [ δ -₊ ε ]⟨ ε<δ ⟩ ]⟨ l-lim ε [ δ -₊ ε ]⟨ ε<δ ⟩ ⟩
+      l    ≈∎
 
   -- Lemma 2.8
   isLim≈+ : ∀ u x l ε δ → isLimit x l → u ≈[ δ ] x ε → u ≈[ ε +₊ δ ] l
   isLim≈+ u x l ε δ l-lim = PT.rec (isProp≈ u l _)
     (λ { (η , η<δ , u≈xε) →
-    subst≈ u l (
-      ⟨ η +₊ (ε +₊ [ δ -₊ η ]⟨ η<δ ⟩) ⟩₊ ≡⟨ ℚ.+Comm ⟨ η ⟩₊ _ ⟩
-      ⟨ (ε +₊ [ δ -₊ η ]⟨ η<δ ⟩) +₊ η ⟩₊ ≡⟨ sym $ ℚ.+Assoc ⟨ ε ⟩₊ (δ -₊ η) ⟨ η ⟩₊ ⟩
-      ⟨ ε +₊ ([ δ -₊ η ]⟨ η<δ ⟩ +₊ η) ⟩₊ ≡⟨ cong (⟨ ε ⟩₊ ℚ.+_) (minusPlus₊ δ η) ⟩
-      ⟨ ε +₊ δ ⟩₊                       ∎)
-    (isTriangular≈ u (x ε) l η (ε +₊ [ δ -₊ η ]⟨ η<δ ⟩)
-      (u≈xε
-        :> u ≈[ η ] x ε)
-      (l-lim ε [ δ -₊ η ]⟨ η<δ ⟩
-        :> x ε ≈[ ε +₊ [ δ -₊ η ]⟨ η<δ ⟩ ] l)
-      :> u ≈[ η +₊ (ε +₊ [ δ -₊ η ]⟨ η<δ ⟩) ] l)
-    :> u ≈[ ε +₊ δ ] l })
+    begin≈[ ε +₊ δ ]⟨
+      ℚ.+Comm ⟨ η ⟩₊ _ ∙
+      sym (ℚ.+Assoc ⟨ ε ⟩₊ (δ -₊ η) ⟨ η ⟩₊) ∙
+      cong (⟨ ε ⟩₊ ℚ.+_) (minusPlus₊ δ η) ⟩
+      u    ≈[ η ]⟨ u≈xε ⟩
+      x ε  ≈[ ε +₊ [ δ -₊ η ]⟨ η<δ ⟩ ]⟨ l-lim ε [ δ -₊ η ]⟨ η<δ ⟩ ⟩
+      l    ≈∎ })
     ∘ isRounded≈ u (x ε) δ
 
   isLim≈- : ∀ u x l ε δ Δ → isLimit x l → u ≈[ ε -₊ δ , Δ ] x δ → u ≈[ ε ] l
