@@ -16,6 +16,12 @@ open import Cubical.Data.Nat.GCD
 areCoprime : ℕ × ℕ → Type₀
 areCoprime (m , n) = isGCD m n 1
 
+zeroCoprime : {d-1 : ℕ} → (copr : areCoprime (0 , ℕ.suc d-1)) → d-1 ≡ 0
+zeroCoprime {d-1} copr = injSuc (zeroGCD-unique (symGCD copr))
+
+isPropAreCoprime : (x : ℕ) (y : ℕ) → isProp (areCoprime (x , y))
+isPropAreCoprime x y = isPropIsGCD
+
 -- Any pair (m , n) can be converted to a coprime pair (m' , n') s.t.
 --  m' ∣ m, n' ∣ n if and only if one of m or n is nonzero
 
