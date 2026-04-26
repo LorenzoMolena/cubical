@@ -41,7 +41,8 @@ open 1/2∈ℚ
 open PositiveRationals
 open PositiveHalvesℚ
 
-open PremetricTheory using (isLimit ; limit ; isComplete)
+open PremetricTheory using (isLimit ; limit ; isComplete ; subst≈L ; subst≈R)
+open PremetricTheory.PremetricReasoning M'
 
 private
   M = M' .fst
@@ -808,8 +809,11 @@ module _ (x y : M) (ε : ℚ₊) (x≈y : x ≈[ ε ] y) where
     open Elimℭ-Prop
 
     e : Elimℭ-Prop λ z → (δ : ℚ₊) → B[ δ ]⟨ι x , z ⟩ → B[ δ +₊ ε ]⟨ι y , z ⟩
-    ιA      e z δ (lift x≈z) = lift (subst≈ y z (ℚ.+Comm ⟨ ε ⟩₊ ⟨ δ ⟩₊) (
-      isTriangular≈ y x z ε δ (isSym≈ x y ε x≈y) x≈z))
+    ιA      e z δ (lift x≈z) =
+      lift (begin≈[ δ +₊ ε ]⟨ ℚ.+Comm ⟨ ε ⟩₊ ⟨ δ ⟩₊ ⟩
+        y ≈[ ε ]⟨ ≈⁻ x≈y ⟩
+        x ≈[ δ ]⟨ x≈z ⟩
+        z ≈∎)
     limA    e z zc Bx,z→By,z δ = PT.map λ (η , η<δ , B[δ-η]ιx,zη) →
       let
         η<δ+ε : η <₊ (δ +₊ ε)
