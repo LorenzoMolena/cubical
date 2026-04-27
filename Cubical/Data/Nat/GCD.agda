@@ -191,7 +191,7 @@ gcd≡isGCD m n d = isoToPath (iso gcd≡→isGCD isGCD→gcd≡
   (λ a →  isSetℕ (gcd m n) d (isGCD→gcd≡ {m}{n}{d} (gcd≡→isGCD a)) a))
 
 uniqueGCD : ∀ {d'} → isGCD m n d → isGCD m n d' → d ≡ d'
-uniqueGCD isgd isgd' = sym (isGCD→gcd≡ isgd) ∙ isGCD→gcd≡ isgd'
+uniqueGCD isgd isgd' = cong fst (isPropGCD (_ , isgd) (_ , isgd'))
 
 gcdSym : (m n : ℕ) → (gcd m n) ≡ (gcd n m)
 gcdSym m n =  uniqueGCD (gcdIsGCD m n) (symGCD (gcdIsGCD n m))
@@ -238,36 +238,28 @@ gcd[m,n]∣m : (m n : ℕ) → (gcd m n) ∣ m
 gcd[m,n]∣m m n = fst (fst (gcdIsGCD m n))
 
 gcd[m,n]∣n : (m n : ℕ) → (gcd m n) ∣ n
-gcd[m,n]∣n m n = transport (cong (λ a → a ∣ n) (gcdSym n m) ) (gcd[m,n]∣m n m)
+gcd[m,n]∣n m n = snd (fst (gcdIsGCD m n))
 
 gcd-greatest : c ∣ m → c ∣ n → c ∣ gcd m n
-gcd-greatest c∣m c∣n =
-  rec2 isPropPropTrunc (λ x y → ∣ gcd-greatestHlp y x ∣₁) c∣n c∣m
-  where
-    gcd-greatestHlp : ∀ {m}{n}{c} → (x : Σ ℕ (λ c₁ → c₁ · c ≡ m)) →
-      (y : Σ ℕ (λ c₁ → c₁ · c ≡ n)) → Σ ℕ (λ c₁ → c₁ · c ≡ gcd m n)
-    gcd-greatestHlp {m} {n} {c} (m' , m'c≡m) (n' , n'c≡n) =
-      (gcd m' n') , sym (gcd-factorʳ m' n' c) ∙ cong₂ (λ a b → gcd a b) m'c≡m n'c≡n
+gcd-greatest = curry (snd (gcdIsGCD _ _) _)
 
 -- Other properties
 
 gcd[0,0]≡0 : gcd 0 0 ≡ 0
-gcd[0,0]≡0 = antisym∣ (∣-zeroʳ (gcd 0 0) ) (gcd-greatest (∣-zeroʳ 0) (∣-zeroʳ 0))
+gcd[0,0]≡0 = refl
 
 gcd[m,n]≢0 : ∀ (m n : ℕ) → (¬ (m ≡ 0)) ⊎ (¬ (n ≡ 0)) → ¬ (gcd m n ≡ 0)
 gcd[m,n]≢0 m n (inl m≢0) gcd0 =
-  m≢0 (sym (∣-zeroˡ (transport (cong (λ a → a ∣ m) gcd0) (gcd[m,n]∣m m n))))
+  m≢0 $ sym $ ∣-zeroˡ $ subst (_∣ m) gcd0 $ gcd[m,n]∣m m n
 gcd[m,n]≢0 m n (inr n≢0) gcd0 =
-  n≢0 (sym (∣-zeroˡ (transport ((cong (λ a → a ∣ n) gcd0)) (gcd[m,n]∣n m n))))
+  n≢0 $ sym $ ∣-zeroˡ $ subst (_∣ n) gcd0 $ gcd[m,n]∣n m n
 
 gcd[m,n]≡0⇒m≡0 : gcd m n ≡ 0 → m ≡ 0
-gcd[m,n]≡0⇒m≡0 {zero} {n} gmn = refl
-gcd[m,n]≡0⇒m≡0 {suc m} {n} gmn =
-  ⊥.elim {A = λ bot → suc m ≡ 0} (gcd[m,n]≢0 (suc m) n (inl snotz) gmn)
+gcd[m,n]≡0⇒m≡0 {zero}  {n} _ = refl
+gcd[m,n]≡0⇒m≡0 {suc m} {n}   = ⊥.rec ∘ gcd[m,n]≢0 (suc m) n (inl snotz)
 
 gcd[m,n]≡0⇒n≡0 : ∀ {m n} → gcd m n ≡ 0 → n ≡ 0
-gcd[m,n]≡0⇒n≡0 {m}{n} gmn = gcd[m,n]≡0⇒m≡0 {n}{m}
-  (transport (cong (λ a → a ≡ 0) (gcdSym m n)) gmn)
+gcd[m,n]≡0⇒n≡0 {m} {n} gmn = gcd[m,n]≡0⇒m≡0 {n} {m} (gcdSym n m ∙ gmn)
 
 -- Inequality for strict divisibility
 
