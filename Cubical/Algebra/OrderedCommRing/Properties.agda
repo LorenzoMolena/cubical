@@ -339,11 +339,11 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     0≤→abs·≤ : ∀ k x → 0r ≤ k → abs (k · x) ≤ k · abs x
     0≤→abs·≤ k x 0≤k = ⊔LUB
       (begin≤
-        k · x ≤⟨ ·MonoL≤ x (abs x) k 0≤k (≤abs x) ⟩
+        k · x     ≤⟨ [ k , 0≤k ]·≤ ≤abs x ⟩
         k · abs x ◾)
       (begin≤
         - (k · x) ≡→≤⟨ solve! RCR ⟩
-        k · (- x)   ≤⟨ ·MonoL≤ (- x) (abs x) k 0≤k (-≤abs x) ⟩
+        k · (- x)   ≤⟨ [ k , 0≤k ]·≤ -≤abs x ⟩
         k · abs x   ◾)
 
     abs²≡² : ∀ x → abs x · abs x ≡ x · x
@@ -372,10 +372,12 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
 
     0≤→<→²<² : ∀ x y → 0r ≤ x → x < y → x · x < y · y
     0≤→<→²<² x y 0≤x x<y = begin<
-      x · x ≤⟨ ·MonoR≤ x y x 0≤x (<-≤-weaken x y x<y) ⟩
-      y · x ≡→≤⟨ ·Comm y x ⟩
-      x · y <⟨ ·MonoR< x y y (≤-<-trans 0r x y 0≤x x<y) x<y ⟩
+      x · x ≤⟨ [ x , 0≤x ]·≤ <-≤-weaken x y x<y ⟩
+      x · y <⟨ x<y <·[ y , ≤-<-trans 0r x y 0≤x x<y ] ⟩
       y · y ◾
+
+    0≤→²≤²→≤ : ∀ x y → 0r ≤ y → x · x ≤ y · y → x ≤ y
+    0≤→²≤²→≤ x y 0≤y = ¬<→≥ y x ∘ (_∘ 0≤→<→²<² y x 0≤y) ∘ ≤→¬> (x · x) (y · y)
 
     0≤→abs·≡ : ∀ k x → 0r ≤ k → abs (k · x) ≡ k · abs x
     0≤→abs·≡ k x 0≤k = is-antisym (abs (k · x)) (k · abs x)
@@ -383,9 +385,9 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       (¬<→≥ (abs (k · x)) (k · abs x) λ ∣kx∣<k∣x∣ →
           is-irrefl ((k · abs x) · (k · abs x)) (begin<
             (k · abs x) · (k · abs x)   ≡→≤⟨ solve! RCR ⟩
-            (k · k) · (abs x · abs x) ≡→≤⟨ cong ((k · k) ·_) (abs²≡² x) ⟩
-            (k · k) · (x · x)         ≡→≤⟨ solve! RCR ⟩
-            (k · x) · (k · x)         ≡→≤⟨ sym (abs²≡² (k · x)) ⟩
+            (k · k) · (abs x · abs x)   ≡→≤⟨ cong ((k · k) ·_) (abs²≡² x) ⟩
+            (k · k) · (x · x)           ≡→≤⟨ solve! RCR ⟩
+            (k · x) · (k · x)           ≡→≤⟨ sym (abs²≡² (k · x)) ⟩
             abs (k · x) · abs (k · x)
               <⟨ 0≤→<→²<² (abs (k · x)) (k · abs x) (0≤abs (k · x)) ∣kx∣<k∣x∣ ⟩
             (k · abs x) · (k · abs x)   ◾))
