@@ -370,6 +370,26 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     abs²≡²' : ∀ x → abs(x · x) ≡ x · x
     abs²≡²' x = 0≤→abs≡id (x · x) (0≤² x)
 
+    0≤→<→²<² : ∀ x y → 0r ≤ x → x < y → x · x < y · y
+    0≤→<→²<² x y 0≤x x<y = begin<
+      x · x ≤⟨ ·MonoR≤ x y x 0≤x (<-≤-weaken x y x<y) ⟩
+      y · x ≡→≤⟨ ·Comm y x ⟩
+      x · y <⟨ ·MonoR< x y y (≤-<-trans 0r x y 0≤x x<y) x<y ⟩
+      y · y ◾
+
+    0≤→abs·≡ : ∀ k x → 0r ≤ k → abs (k · x) ≡ k · abs x
+    0≤→abs·≡ k x 0≤k = is-antisym (abs (k · x)) (k · abs x)
+      (0≤→abs·≤ k x 0≤k)
+      (¬<→≥ (abs (k · x)) (k · abs x) λ ∣kx∣<k∣x∣ →
+          is-irrefl ((k · abs x) · (k · abs x)) (begin<
+            (k · abs x) · (k · abs x)   ≡→≤⟨ solve! RCR ⟩
+            (k · k) · (abs x · abs x) ≡→≤⟨ cong ((k · k) ·_) (abs²≡² x) ⟩
+            (k · k) · (x · x)         ≡→≤⟨ solve! RCR ⟩
+            (k · x) · (k · x)         ≡→≤⟨ sym (abs²≡² (k · x)) ⟩
+            abs (k · x) · abs (k · x)
+              <⟨ 0≤→<→²<² (abs (k · x)) (k · abs x) (0≤abs (k · x)) ∣kx∣<k∣x∣ ⟩
+            (k · abs x) · (k · abs x)   ◾))
+
     triangularInequality : ∀ x y → abs (x + y) ≤ abs x + abs y
     triangularInequality x y = ⊔LUB
       (begin≤
