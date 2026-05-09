@@ -671,6 +671,9 @@ isContrDep = isOfHLevelDep 0
 isPropDep : {A : Type ℓ} (B : A → Type ℓ') → Type (ℓ-max ℓ ℓ')
 isPropDep = isOfHLevelDep 1
 
+isSetDep : {A : Type ℓ} (B : A → Type ℓ') → Type (ℓ-max ℓ ℓ')
+isSetDep = isOfHLevelDep 2
+
 isContrDep∘
   : {A' : Type ℓ} (f : A' → A) → isContrDep B → isContrDep (B ∘ f)
 isContrDep∘ f cB {a} = λ where
@@ -698,6 +701,18 @@ isOfHLevel→isOfHLevelDep (suc (suc n)) {A = A} {B} h {a0} {a1} b0 b1 =
     isOfHLevel (suc n) (PathP (λ i → B (p i)) b0 b1)
   helper p = J (λ a1 p → ∀ b1 → isOfHLevel (suc n) (PathP (λ i → B (p i)) b0 b1))
                      (λ _ → h _ _ _) p b1
+
+isContr→isContrDep :
+ {A : Type ℓ} {B : A → Type ℓ'} (h : (a : A) → isContr (B a)) → isContrDep {A = A} B
+isContr→isContrDep = isOfHLevel→isOfHLevelDep 0
+
+isProp→isPropDep :
+ {A : Type ℓ} {B : A → Type ℓ'} (h : (a : A) → isProp (B a)) → isPropDep {A = A} B
+isProp→isPropDep = isOfHLevel→isOfHLevelDep 1
+
+isSet→isSetDep :
+ {A : Type ℓ} {B : A → Type ℓ'} (h : (a : A) → isSet (B a)) → isSetDep {A = A} B
+isSet→isSetDep = isOfHLevel→isOfHLevelDep 2
 
 isContrDep→isPropDep : isOfHLevelDep 0 B → isOfHLevelDep 1 B
 isContrDep→isPropDep {B = B} Bctr {a0 = a0} b0 b1 p i
