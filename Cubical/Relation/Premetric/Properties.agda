@@ -143,6 +143,13 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
                  → x ≈[ ε ] y
     begin≈[ ε ]⟨ p ⟩ ≈step+ x≈y _ = subst≈ _ _ p x≈y
 
+    infix 1 begin≈[_]⟨⟩_
+    begin≈[_]⟨⟩_ : ∀ ε {x y}
+                → (r : x ≈ y ≈ y [ ε :+ 1 ])
+                → {is≈Step+ r}
+                → x ≈[ ε ] y
+    begin≈[ ε ]⟨⟩ ≈step+ x≈y _ = x≈y
+
   open PremetricReasoning
 
   -- Cauchy Approximations/Sequences
@@ -158,10 +165,10 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
 
   isCauchySeq→isCauchy : ∀ x → isCauchySeq x → Σ[ y ∈ (ℚ₊ → M) ] isCauchy y
   isCauchySeq→isCauchy x (N , N≤→≈) .fst ε   = x (N ε)
-  isCauchySeq→isCauchy x (N , N≤→≈) .snd ε δ =
-    isTriangular≈ _ (x (ℕ.max (N ε) (N δ))) _ ε δ
-    (N≤→≈ ε (N ε) (ℕ.max (N ε) (N δ)) (ℕ.≤-refl) (N.L≤∨ {N ε}))
-    (N≤→≈ δ (ℕ.max (N ε) (N δ)) (N δ) (N.R≤∨ {N ε}) (ℕ.≤-refl))
+  isCauchySeq→isCauchy x (N , N≤→≈) .snd ε δ = begin≈[ ε +₊ δ ]⟨⟩
+    x (N ε)               ≈[ ε ]⟨ N≤→≈ ε _ _ (ℕ.≤-refl) (N.L≤∨ {N ε}) ⟩
+    x (ℕ.max (N ε) (N δ)) ≈[ δ ]⟨ N≤→≈ δ _ _ (N.R≤∨ {N ε}) (ℕ.≤-refl) ⟩
+    x (N δ)               ≈∎
 
   -- this formalizes "WLOG assume m < n"
   isCauchySeq<→isCauchySeq : ∀ x → isCauchySeq< x → isCauchySeq x
