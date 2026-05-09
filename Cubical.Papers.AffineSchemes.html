@@ -58,7 +58,7 @@ ArXiv version: https://arxiv.org/abs/2212.02902
 
 <a id="2099" class="Comment">-- 4: Category Theory</a>
 <a id="2121" class="Comment">-- background theory not explicitly mentioned</a>
-<a id="2167" class="Keyword">import</a> <a id="2174" href="Cubical.Categories.Category.Base.html" class="Module">Cubical.Categories.Category.Base</a>                            <a id="2234" class="Symbol">as</a> <a id="2237" class="Module">CatTheory</a>
+<a id="2167" class="Keyword">import</a> <a id="2174" href="Cubical.Categories.Instances.FullSubcategory.html" class="Module">Cubical.Categories.Instances.FullSubcategory</a>                <a id="2234" class="Symbol">as</a> <a id="2237" class="Module">CatTheory</a>
 <a id="2247" class="Keyword">import</a> <a id="2254" href="Cubical.Categories.Limits.html" class="Module">Cubical.Categories.Limits</a>                                   <a id="2314" class="Symbol">as</a> <a id="2317" class="Module">GeneralLimits</a>
 <a id="2331" class="Keyword">import</a> <a id="2338" href="Cubical.Categories.Limits.RightKan.html" class="Module">Cubical.Categories.Limits.RightKan</a>                          <a id="2398" class="Symbol">as</a> <a id="2401" class="Module">GeneralKanExtension</a>
 
@@ -66,7 +66,7 @@ ArXiv version: https://arxiv.org/abs/2212.02902
 <a id="2508" class="Keyword">import</a> <a id="2515" href="Cubical.Categories.DistLatticeSheaf.Base.html" class="Module">Cubical.Categories.DistLatticeSheaf.Base</a>                    <a id="2575" class="Symbol">as</a> <a id="2578" class="Module">Sheaves</a>
 
 <a id="2587" class="Keyword">import</a> <a id="2594" href="Cubical.Categories.DistLatticeSheaf.Extension.html" class="Module">Cubical.Categories.DistLatticeSheaf.Extension</a>               <a id="2654" class="Symbol">as</a> <a id="2657" class="Module">E</a>
-<a id="2659" class="Keyword">module</a> <a id="SheafExtension"></a><a id="2666" href="Cubical.Papers.AffineSchemes.html#2666" class="Module">SheafExtension</a> <a id="2681" class="Symbol">=</a> <a id="2683" href="Cubical.Categories.DistLatticeSheaf.Extension.html#1797" class="Module">E.PreSheafExtension</a>
+<a id="2659" class="Keyword">module</a> <a id="SheafExtension"></a><a id="2666" href="Cubical.Papers.AffineSchemes.html#2666" class="Module">SheafExtension</a> <a id="2681" class="Symbol">=</a> <a id="2683" href="Cubical.Categories.DistLatticeSheaf.Extension.html#1854" class="Module">E.PreSheafExtension</a>
 
 
 <a id="2705" class="Comment">-- 5: The Structure Sheaf</a>
@@ -170,24 +170,24 @@ ArXiv version: https://arxiv.org/abs/2212.02902
 <a id="5509" class="Keyword">open</a> <a id="5514" href="Cubical.Papers.AffineSchemes.html#2051" class="Module">ZariskiLatUnivProp</a> <a id="5533" class="Keyword">using</a> <a id="5539" class="Symbol">(</a><a id="5540" href="Cubical.AlgebraicGeometry.ZariskiLattice.UniversalProperty.html#8180" class="Function">ZLHasUniversalProp</a><a id="5558" class="Symbol">)</a>
 
 <a id="5561" class="Comment">-- D(g) ≤ D(f) ⇔ isContr (R-Hom R[1/f] R[1/g])</a>
-<a id="5608" class="Keyword">open</a> <a id="5613" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="5628" class="Keyword">using</a> <a id="5634" class="Symbol">(</a><a id="5635" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#4782" class="Function">contrHoms</a><a id="5644" class="Symbol">)</a>
+<a id="5608" class="Keyword">open</a> <a id="5613" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="5628" class="Keyword">using</a> <a id="5634" class="Symbol">(</a><a id="5635" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#4839" class="Function">contrHoms</a><a id="5644" class="Symbol">)</a>
 
 <a id="5647" class="Comment">-- basic opens</a>
-<a id="5662" class="Keyword">open</a> <a id="5667" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="5682" class="Keyword">using</a> <a id="5688" class="Symbol">(</a><a id="5689" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#4012" class="Function">BasicOpens</a> <a id="5700" class="Symbol">;</a> <a id="5702" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#4089" class="Function">BO</a><a id="5704" class="Symbol">)</a>
+<a id="5662" class="Keyword">open</a> <a id="5667" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="5682" class="Keyword">using</a> <a id="5688" class="Symbol">(</a><a id="5689" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#4069" class="Function">BasicOpens</a> <a id="5700" class="Symbol">;</a> <a id="5702" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#4146" class="Function">BO</a><a id="5704" class="Symbol">)</a>
 
 <a id="5707" class="Comment">-- basic opens form basis</a>
 <a id="5733" class="Keyword">open</a> <a id="5738" href="Cubical.Papers.AffineSchemes.html#2051" class="Module">ZariskiLatUnivProp</a> <a id="5757" class="Keyword">using</a> <a id="5763" class="Symbol">(</a><a id="5764" href="Cubical.AlgebraicGeometry.ZariskiLattice.UniversalProperty.html#12885" class="Function">ZLUniversalPropCorollary</a> <a id="5789" class="Symbol">;</a> <a id="5791" href="Cubical.AlgebraicGeometry.ZariskiLattice.UniversalProperty.html#13296" class="Function">⋁D≡</a><a id="5794" class="Symbol">)</a>
-<a id="5796" class="Keyword">open</a> <a id="5801" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="5816" class="Keyword">using</a> <a id="5822" class="Symbol">(</a><a id="5823" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#4139" class="Function">basicOpensAreBasis</a><a id="5841" class="Symbol">)</a>
+<a id="5796" class="Keyword">open</a> <a id="5801" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="5816" class="Keyword">using</a> <a id="5822" class="Symbol">(</a><a id="5823" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#4196" class="Function">basicOpensAreBasis</a><a id="5841" class="Symbol">)</a>
 
 
 
 <a id="5846" class="Comment">---------- 4: Category Theory  ----------</a>
 
 <a id="5889" class="Comment">-- Σ-subcategories</a>
-<a id="5908" class="Keyword">open</a> <a id="5913" href="Cubical.Categories.Category.Base.html" class="Module">CatTheory</a> <a id="5923" class="Keyword">using</a> <a id="5929" class="Symbol">(</a><a id="5930" href="Cubical.Categories.Category.Base.html#4835" class="Function">ΣPropCat</a><a id="5938" class="Symbol">)</a>
+<a id="5908" class="Keyword">open</a> <a id="5913" href="Cubical.Categories.Instances.FullSubcategory.html" class="Module">CatTheory</a> <a id="5923" class="Keyword">using</a> <a id="5929" class="Symbol">(</a><a id="5930" href="Cubical.Categories.Instances.FullSubcategory.html#5204" class="Function">ΣPropCat</a><a id="5938" class="Symbol">)</a>
 
 <a id="5941" class="Comment">-- Kan-extension for distributive lattices</a>
-<a id="5984" class="Keyword">open</a> <a id="5989" href="Cubical.Papers.AffineSchemes.html#2666" class="Module">SheafExtension</a> <a id="6004" class="Keyword">using</a> <a id="6010" class="Symbol">(</a><a id="6011" href="Cubical.Categories.DistLatticeSheaf.Extension.html#2285" class="Function">DLRan</a> <a id="6017" class="Symbol">;</a> <a id="6019" href="Cubical.Categories.DistLatticeSheaf.Extension.html#2705" class="Function">DLRanNatIso</a><a id="6030" class="Symbol">)</a>
+<a id="5984" class="Keyword">open</a> <a id="5989" href="Cubical.Papers.AffineSchemes.html#2666" class="Module">SheafExtension</a> <a id="6004" class="Keyword">using</a> <a id="6010" class="Symbol">(</a><a id="6011" href="Cubical.Categories.DistLatticeSheaf.Extension.html#2342" class="Function">DLRan</a> <a id="6017" class="Symbol">;</a> <a id="6019" href="Cubical.Categories.DistLatticeSheaf.Extension.html#2762" class="Function">DLRanNatIso</a><a id="6030" class="Symbol">)</a>
 
 <a id="6033" class="Comment">-- Definition 4</a>
 <a id="6049" class="Keyword">open</a> <a id="6054" href="Cubical.Categories.DistLatticeSheaf.Diagram.html" class="Module">SheafDiagShapes</a> <a id="6070" class="Keyword">using</a> <a id="6076" class="Symbol">(</a><a id="6077" href="Cubical.Categories.DistLatticeSheaf.Diagram.html#1167" class="Datatype">DLShfDiagOb</a> <a id="6089" class="Symbol">;</a> <a id="6091" href="Cubical.Categories.DistLatticeSheaf.Diagram.html#1292" class="Datatype">DLShfDiagHom</a> <a id="6104" class="Symbol">;</a> <a id="6106" href="Cubical.Categories.DistLatticeSheaf.Diagram.html#4441" class="Function">DLShfDiag</a><a id="6115" class="Symbol">)</a>
@@ -199,20 +199,20 @@ ArXiv version: https://arxiv.org/abs/2212.02902
 <a id="6229" class="Keyword">open</a> <a id="6234" href="Cubical.Categories.DistLatticeSheaf.Diagram.html" class="Module">SheafDiagShapes</a> <a id="6250" class="Keyword">using</a> <a id="6256" class="Symbol">(</a><a id="6257" href="Cubical.Categories.DistLatticeSheaf.Diagram.html#6689" class="Function">FinVec→Diag</a><a id="6268" class="Symbol">)</a>
 
 <a id="6271" class="Comment">-- Definition 6</a>
-<a id="6287" class="Keyword">open</a> <a id="6292" href="Cubical.Categories.DistLatticeSheaf.Base.html" class="Module">Sheaves</a> <a id="6300" class="Keyword">using</a> <a id="6306" class="Symbol">(</a><a id="6307" href="Cubical.Categories.DistLatticeSheaf.Base.html#3460" class="Function">isDLSheaf</a><a id="6316" class="Symbol">)</a>
+<a id="6287" class="Keyword">open</a> <a id="6292" href="Cubical.Categories.DistLatticeSheaf.Base.html" class="Module">Sheaves</a> <a id="6300" class="Keyword">using</a> <a id="6306" class="Symbol">(</a><a id="6307" href="Cubical.Categories.DistLatticeSheaf.Base.html#3517" class="Function">isDLSheaf</a><a id="6316" class="Symbol">)</a>
 
 <a id="6319" class="Comment">-- Definition 7</a>
-<a id="6335" class="Keyword">open</a> <a id="6340" href="Cubical.Categories.DistLatticeSheaf.Base.html#22001" class="Module">Sheaves.SheafOnBasis</a> <a id="6361" class="Keyword">using</a> <a id="6367" class="Symbol">(</a><a id="6368" href="Cubical.Categories.DistLatticeSheaf.Base.html#25723" class="Function">isDLBasisSheaf</a><a id="6382" class="Symbol">)</a>
+<a id="6335" class="Keyword">open</a> <a id="6340" href="Cubical.Categories.DistLatticeSheaf.Base.html#22058" class="Module">Sheaves.SheafOnBasis</a> <a id="6361" class="Keyword">using</a> <a id="6367" class="Symbol">(</a><a id="6368" href="Cubical.Categories.DistLatticeSheaf.Base.html#25780" class="Function">isDLBasisSheaf</a><a id="6382" class="Symbol">)</a>
 
 <a id="6385" class="Comment">-- Lemma 8</a>
-<a id="6396" class="Keyword">open</a> <a id="6401" href="Cubical.Categories.DistLatticeSheaf.Base.html" class="Module">Sheaves</a> <a id="6409" class="Keyword">using</a> <a id="6415" class="Symbol">(</a><a id="6416" href="Cubical.Categories.DistLatticeSheaf.Base.html#2739" class="Function">isDLSheafPullback</a><a id="6433" class="Symbol">)</a>
-<a id="6435" class="Keyword">open</a> <a id="6440" href="Cubical.Categories.DistLatticeSheaf.Base.html#4117" class="Module">Sheaves.EquivalenceOfDefs</a> <a id="6466" class="Keyword">using</a> <a id="6472" class="Symbol">(</a><a id="6473" href="Cubical.Categories.DistLatticeSheaf.Base.html#4843" class="Function">L→P</a> <a id="6477" class="Symbol">;</a> <a id="6479" href="Cubical.Categories.DistLatticeSheaf.Base.html#9368" class="Function">P→L</a><a id="6482" class="Symbol">)</a>
+<a id="6396" class="Keyword">open</a> <a id="6401" href="Cubical.Categories.DistLatticeSheaf.Base.html" class="Module">Sheaves</a> <a id="6409" class="Keyword">using</a> <a id="6415" class="Symbol">(</a><a id="6416" href="Cubical.Categories.DistLatticeSheaf.Base.html#2796" class="Function">isDLSheafPullback</a><a id="6433" class="Symbol">)</a>
+<a id="6435" class="Keyword">open</a> <a id="6440" href="Cubical.Categories.DistLatticeSheaf.Base.html#4174" class="Module">Sheaves.EquivalenceOfDefs</a> <a id="6466" class="Keyword">using</a> <a id="6472" class="Symbol">(</a><a id="6473" href="Cubical.Categories.DistLatticeSheaf.Base.html#4900" class="Function">L→P</a> <a id="6477" class="Symbol">;</a> <a id="6479" href="Cubical.Categories.DistLatticeSheaf.Base.html#9425" class="Function">P→L</a><a id="6482" class="Symbol">)</a>
 
 <a id="6485" class="Comment">-- Lemma 9</a>
-<a id="6496" class="Keyword">open</a> <a id="6501" href="Cubical.Papers.AffineSchemes.html#2666" class="Module">SheafExtension</a> <a id="6516" class="Keyword">using</a> <a id="6522" class="Symbol">(</a><a id="6523" href="Cubical.Categories.DistLatticeSheaf.Extension.html#25920" class="Function">coverLemma</a><a id="6533" class="Symbol">)</a>
+<a id="6496" class="Keyword">open</a> <a id="6501" href="Cubical.Papers.AffineSchemes.html#2666" class="Module">SheafExtension</a> <a id="6516" class="Keyword">using</a> <a id="6522" class="Symbol">(</a><a id="6523" href="Cubical.Categories.DistLatticeSheaf.Extension.html#25977" class="Function">coverLemma</a><a id="6533" class="Symbol">)</a>
 
 <a id="6536" class="Comment">-- Theorem 10</a>
-<a id="6550" class="Keyword">open</a> <a id="6555" href="Cubical.Papers.AffineSchemes.html#2666" class="Module">SheafExtension</a> <a id="6570" class="Keyword">using</a> <a id="6576" class="Symbol">(</a><a id="6577" href="Cubical.Categories.DistLatticeSheaf.Extension.html#57583" class="Function">isDLSheafDLRan</a><a id="6591" class="Symbol">)</a>
+<a id="6550" class="Keyword">open</a> <a id="6555" href="Cubical.Papers.AffineSchemes.html#2666" class="Module">SheafExtension</a> <a id="6570" class="Keyword">using</a> <a id="6576" class="Symbol">(</a><a id="6577" href="Cubical.Categories.DistLatticeSheaf.Extension.html#57640" class="Function">isDLSheafDLRan</a><a id="6591" class="Symbol">)</a>
 
 
 
@@ -222,23 +222,23 @@ ArXiv version: https://arxiv.org/abs/2212.02902
 <a id="6654" class="Keyword">open</a> <a id="6659" href="Cubical.Algebra.CommAlgebra.AsModule.html" class="Module">R-Algs</a> <a id="6666" class="Keyword">using</a> <a id="6672" class="Symbol">(</a><a id="6673" href="Cubical.Algebra.CommAlgebra.AsModule.Properties.html#11187" class="Function">recPT→CommAlgebra</a><a id="6690" class="Symbol">)</a>
 
 <a id="6693" class="Comment">-- Lemma 12</a>
-<a id="6705" class="Keyword">open</a> <a id="6710" href="Cubical.Categories.Instances.CommAlgebras.html#24158" class="Module">R-AlgConstructions.PreSheafFromUniversalProp</a> <a id="6755" class="Keyword">renaming</a> <a id="6764" class="Symbol">(</a><a id="6765" href="Cubical.Categories.Instances.CommAlgebras.html#25172" class="Function">universalPShf</a> <a id="6779" class="Symbol">to</a> <a id="6782" class="Function">𝓟ᵤ</a><a id="6784" class="Symbol">)</a>
+<a id="6705" class="Keyword">open</a> <a id="6710" href="Cubical.Categories.Instances.CommAlgebras.html#24215" class="Module">R-AlgConstructions.PreSheafFromUniversalProp</a> <a id="6755" class="Keyword">renaming</a> <a id="6764" class="Symbol">(</a><a id="6765" href="Cubical.Categories.Instances.CommAlgebras.html#25225" class="Function">universalPShf</a> <a id="6779" class="Symbol">to</a> <a id="6782" class="Function">𝓟ᵤ</a><a id="6784" class="Symbol">)</a>
 
 <a id="6787" class="Comment">-- definition of structure sheaf</a>
-<a id="6820" class="Keyword">open</a> <a id="6825" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="6840" class="Keyword">using</a> <a id="6846" class="Symbol">(</a> <a id="6848" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#6245" class="Function">𝓞ᴮ</a> <a id="6851" class="Symbol">;</a> <a id="6853" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#6478" class="Function">𝓞</a> <a id="6855" class="Symbol">)</a>
+<a id="6820" class="Keyword">open</a> <a id="6825" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="6840" class="Keyword">using</a> <a id="6846" class="Symbol">(</a> <a id="6848" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#6302" class="Function">𝓞ᴮ</a> <a id="6851" class="Symbol">;</a> <a id="6853" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#6535" class="Function">𝓞</a> <a id="6855" class="Symbol">)</a>
 
 <a id="6858" class="Comment">-- Proposition 13</a>
-<a id="6876" class="Keyword">open</a> <a id="6881" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="6896" class="Keyword">using</a> <a id="6902" class="Symbol">(</a><a id="6903" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#7818" class="Function">baseSections</a><a id="6915" class="Symbol">)</a>
+<a id="6876" class="Keyword">open</a> <a id="6881" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="6896" class="Keyword">using</a> <a id="6902" class="Symbol">(</a><a id="6903" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#7875" class="Function">baseSections</a><a id="6915" class="Symbol">)</a>
 
 <a id="6918" class="Comment">-- Corollary 14</a>
-<a id="6934" class="Keyword">open</a> <a id="6939" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="6954" class="Keyword">using</a> <a id="6960" class="Symbol">(</a><a id="6961" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#7918" class="Function">globalSection</a><a id="6974" class="Symbol">)</a>
+<a id="6934" class="Keyword">open</a> <a id="6939" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="6954" class="Keyword">using</a> <a id="6960" class="Symbol">(</a><a id="6961" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#7975" class="Function">globalSection</a><a id="6974" class="Symbol">)</a>
 
 <a id="6977" class="Comment">-- Lemma 15</a>
 <a id="6989" class="Keyword">open</a> <a id="6994" href="Cubical.Algebra.CommRing.Localisation.Limit.html" class="Module">LocalizationLimit</a> <a id="7012" class="Keyword">using</a> <a id="7018" class="Symbol">(</a><a id="7019" href="Cubical.Algebra.CommRing.Localisation.Limit.html#22378" class="Function">isLimConeLocCone</a><a id="7035" class="Symbol">)</a>
 
 <a id="7038" class="Comment">-- Theorem 16</a>
-<a id="7052" class="Keyword">open</a> <a id="7057" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="7072" class="Keyword">using</a> <a id="7078" class="Symbol">(</a><a id="7079" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#8201" class="Function">isSheaf𝓞ᴮ</a><a id="7088" class="Symbol">)</a>
+<a id="7052" class="Keyword">open</a> <a id="7057" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="7072" class="Keyword">using</a> <a id="7078" class="Symbol">(</a><a id="7079" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#8258" class="Function">isSheaf𝓞ᴮ</a><a id="7088" class="Symbol">)</a>
 
 <a id="7091" class="Comment">-- Corollary 17</a>
-<a id="7107" class="Keyword">open</a> <a id="7112" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="7127" class="Keyword">using</a> <a id="7133" class="Symbol">(</a><a id="7134" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#17039" class="Function">isSheaf𝓞</a><a id="7142" class="Symbol">)</a>
+<a id="7107" class="Keyword">open</a> <a id="7112" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html" class="Module">StructureSheaf</a> <a id="7127" class="Keyword">using</a> <a id="7133" class="Symbol">(</a><a id="7134" href="Cubical.AlgebraicGeometry.ZariskiLattice.StructureSheaf.html#17096" class="Function">isSheaf𝓞</a><a id="7142" class="Symbol">)</a>
 </pre></body></html>
