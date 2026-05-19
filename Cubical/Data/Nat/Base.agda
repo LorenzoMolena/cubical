@@ -76,6 +76,10 @@ isZero : ℕ → Bool
 isZero zero = true
 isZero (suc n) = false
 
+NonZero : ℕ → Type
+NonZero zero = ⊥
+NonZero (ℕ.suc n) = Unit
+
 -- exponential
 
 _^_ : ℕ → ℕ → ℕ
