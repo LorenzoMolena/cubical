@@ -18,6 +18,7 @@ open import Cubical.Data.Rationals.Order as ℚ
 open import Cubical.Data.Sigma
 
 open import Cubical.HITs.PropositionalTruncation as PT
+open import Cubical.HITs.PropositionalTruncation.Monad
 
 open import Cubical.Relation.Binary.Order.Poset.Instances.Nat
 open import Cubical.Relation.Binary.Order.Pseudolattice
@@ -222,9 +223,9 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
   isCauchySeqΣ→isCauchy x icsΣ .fst = x ∘ fst ∘ icsΣ
   isCauchySeqΣ→isCauchy x icsΣ .snd = λ ε δ → let N = fst ∘ icsΣ in
     begin≈[ ε +₊ δ ]⟨⟩
-    x (N ε)               ≈[ ε ]⟨ snd (icsΣ ε) _ _ (ℕ.≤-refl) (N.L≤∨ {N ε}) ⟩
-    x (ℕ.max (N ε) (N δ)) ≈[ δ ]⟨ snd (icsΣ δ) _ _ (N.R≤∨ {N ε}) (ℕ.≤-refl) ⟩
-    x (N δ)               ≈∎
+    x (N ε)             ≈[ ε ]⟨ snd (icsΣ ε) _ _ (≤-refl) (N.L≤∨ {N ε}) ⟩
+    x (max (N ε) (N δ)) ≈[ δ ]⟨ snd (icsΣ δ) _ _ (N.R≤∨ {N ε}) (≤-refl) ⟩
+    x (N δ)             ≈∎
 
   isCauchySeqΣ<→isCauchy : ∀ x → isCauchySeqΣ< x → Σ[ y ∈ (ℚ₊ → M) ] isCauchy y
   isCauchySeqΣ<→isCauchy x = isCauchySeqΣ→isCauchy x ∘ isCauchySeqΣ<→isCauchySeqΣ x
@@ -244,6 +245,25 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
       l         ≈≡[ ε /2₊ ]⟨ /4+/4≡/2 ⟨ ε ⟩₊ ⟩⟨ ≈⁻ l-lim (ε /4₊) (ε /4₊) ⟩
       x (ε /4₊) ≈≡[ ε /2₊ ]⟨ /4+/4≡/2 ⟨ ε ⟩₊ ⟩⟨   l'-lim (ε /4₊) (ε /4₊) ⟩
       l'        ≈∎
+
+  isLimitSeq : (ℕ → M) → M → Type ℓ'
+  isLimitSeq x l = ∀ ε → ∃[ N ∈ ℕ ] (∀ n → N ≤ℕ n → x n ≈[ ε ] l)
+
+  isPropIsLimitSeq : ∀ x l → isProp (isLimitSeq x l)
+  isPropIsLimitSeq x l = isPropΠ λ _ → squash₁
+
+  limitSeq : (ℕ → M) → Type (ℓ-max ℓ ℓ')
+  limitSeq x = Σ[ l ∈ M ] isLimitSeq x l
+
+  isPropLimitSeq : ∀ x → isProp (limitSeq x)
+  isPropLimitSeq x (l , l-lim) (l' , l'-lim) = Σ≡Prop (isPropIsLimitSeq x) $
+    isSeparated≈ l l' λ ε → proof _ , isProp≈ l l' ε by do
+      N , N≤→≈ ← l-lim  (ε /2₊)
+      M , M≤→≈ ← l'-lim (ε /2₊)
+      return (begin≈[ ε ]⟨ /2+/2≡id ⟨ ε ⟩₊ ⟩
+        l           ≈[ ε /2₊ ]⟨ ≈⁻ N≤→≈ _ N.L≤∨ ⟩
+        x (max N M) ≈[ ε /2₊ ]⟨ M≤→≈ _ (N.R≤∨ {N}) ⟩
+        l'          ≈∎)
 
   isComplete : Type (ℓ-max ℓ ℓ')
   isComplete = ∀ x → isCauchy x → limit x
@@ -290,3 +310,22 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
     (ε -₊ (δ +₊ η)) ℚ.+ ⟨ δ +₊ η ⟩₊       ≡⟨ minusPlus₊ ε (δ +₊ η) ⟩
     ⟨ ε ⟩₊                                ∎)
     ∘ isLim≈+₂ x y l l' (ε -₊ (δ +₊ η) , Δ) δ η l-lim l'-lim
+
+  limit→limitSeq : ∀ x xcsΣ → limit (fst (isCauchySeqΣ→isCauchy x xcsΣ)) → limitSeq x
+  limit→limitSeq x xcsΣ (l , l-lim) .fst   = l
+  limit→limitSeq x xcsΣ (l , l-lim) .snd ε =
+    let N , N≤→≈ = xcsΣ (ε /2₊) ; y , yc = isCauchySeqΣ→isCauchy x xcsΣ
+    in return λ where
+      .fst       → N
+      .snd n N≤n → subst≈ _ _ (/2+/2≡id ⟨ ε ⟩₊) (
+        isLim≈+ (x n) y l (ε /2₊) (ε /2₊) l-lim (N≤→≈ n N N≤n ≤-refl))
+
+  isComplete→isSeqΣComplete : isComplete → ∀ x → isCauchySeqΣ x → limitSeq x
+  isComplete→isSeqΣComplete complete x xcsΣ =
+    limit→limitSeq x xcsΣ (uncurry complete (isCauchySeqΣ→isCauchy x xcsΣ))
+
+  -- with countable choice, we could assume instead `isCauchySeq x`,
+  -- as it would be equivalent to ∥ isCauchySeqΣ x ∥₁.
+  isComplete→is∥SeqΣ∥₁Complete : isComplete → ∀ x → ∥ isCauchySeqΣ x ∥₁ → limitSeq x
+  isComplete→is∥SeqΣ∥₁Complete complete x =
+    PT.rec (isPropLimitSeq x) (isComplete→isSeqΣComplete complete x)
