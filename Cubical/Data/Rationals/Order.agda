@@ -665,5 +665,8 @@ m ≟ n with discreteℚ m n
 ... | no _    | yes 0<n = inr 0<n
 ... | yes 0<m | _ = inl 0<m
 
+≤ℤ→≤ℚ : ∀ m n k → m ℤ.≤ n → [ m / k ] ≤ [ n / k ]
+≤ℤ→≤ℚ m n (1+ k) m≤n = inj (ℤ.≤-·o {m} m≤n)
+
 <ℤ→<ℚ : ∀ m n k → m ℤ.< n → [ m / k ] < [ n / k ]
 <ℤ→<ℚ m n (1+ k) m<n = inj (ℤ.<-·o {m} m<n)
