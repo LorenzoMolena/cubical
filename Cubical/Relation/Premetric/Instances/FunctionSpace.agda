@@ -94,7 +94,9 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN ℓN') where
     M   = ⟨ M' ⟩
     N   = ⟨ N' ⟩
 
-    module M = PremetricStr (snd M')
+    module M where
+      open PremetricStr (snd M') public
+      open PremetricTheory M' public
 
     module N where
       open PremetricStr (snd N') public
@@ -127,6 +129,35 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN ℓN') where
     SubSpace.⊆PremetricSpace M→N.→PremetricSpace
     (λ f → isLipschitz (snd M') f (snd N'))
     (λ f → isPropIsLipschitz (snd M') f (snd N'))
+
+  module _ (Ncomp : N.isComplete) where
+
+    limNE : ∀ s sc → (∀ ε → IsNonExpansive (snd M') (s ε) (snd N'))
+          → IsNonExpansive (snd M') (fst (M→N.isComplete→ Ncomp s sc)) (snd N')
+    IsNonExpansive.pres≈ (limNE s sc s-ne) x y ε x≈y = let
+        l , l-lim = M→N.isComplete→ Ncomp s sc
+        s⟶l : ∀ z → N.isLimit (λ ε → s ε z) (l z)
+        s⟶l z ε θ = M→N.≈→→pointwise (s ε) l (ε +₊ θ) (l-lim ε θ) z
+      in
+        proof l x N.≈[ ε ] l y , N.isProp≈ (l x) (l y) ε by
+      do
+        ((δ , Δ) , δ+Δ≡ε , x≈[δ]y) ← M.isRounded≈Gap ε x≈y
+        let
+          Δ/2+Δ/2+δ≡ε : ⟨ Δ /2₊ +₊ (Δ /2₊ +₊ δ) ⟩₊ ≡ ⟨ ε ⟩₊
+          Δ/2+Δ/2+δ≡ε =
+            ⟨ Δ /2₊ +₊ (Δ /2₊ +₊ δ) ⟩₊ ≡⟨ ℚ.+Assoc ⟨ Δ /2₊ ⟩₊ _ _ ⟩
+            ⟨ (Δ /2₊ +₊ Δ /2₊) +₊ δ ⟩₊ ≡⟨ cong (ℚ._+ _) (/2+/2≡id ⟨ Δ ⟩₊) ⟩
+            ⟨ Δ +₊ δ ⟩₊                ≡⟨ ℚ.+Comm ⟨ Δ ⟩₊ ⟨ δ ⟩₊ ∙ δ+Δ≡ε ⟩
+            ⟨ ε ⟩₊                     ∎
+
+        return (N.subst≈ _ _ Δ/2+Δ/2+δ≡ε
+          (N.isLim≈+₂ _ _ (l x) (l y) δ (Δ /2₊) (Δ /2₊) (s⟶l x) (s⟶l y)
+            (IsNonExpansive.pres≈ (s-ne (Δ /2₊)) x y δ x≈[δ]y)))
+
+    isCompleteNE : PremetricTheory.isComplete NE[_,_]PrSpace
+    isCompleteNE = SubSpace.lim∈→isComplete
+      M→N.→PremetricSpace _ (λ f → isPropIsNonExpansive (snd M') f (snd N'))
+      (M→N.isComplete→ Ncomp) λ x xs → limNE (fst ∘ x) xs (snd ∘ x)
 
   module EquiLipschitz where
 

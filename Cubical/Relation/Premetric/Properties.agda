@@ -67,6 +67,16 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
   ... | eq ε≡δ = subst≈ x y ε≡δ x≈y
   ... | gt δ<ε = ⊥.rec (ℚ.isIrrefl< ⟨ ε ⟩₊ (ℚ.isTrans≤< ⟨ ε ⟩₊ ⟨ δ ⟩₊ ⟨ ε ⟩₊ ε≤δ δ<ε))
 
+  -- immediate consequence of isRounded≈, but with the gap as part of the data:
+  isRounded≈Gap : ∀ {x y} ε → x ≈[ ε ] y
+                → ∃[ (δ , Δ) ∈ ℚ₊ × ℚ₊ ] (⟨ δ +₊ Δ ⟩₊ ≡ ⟨ ε ⟩₊) × (x ≈[ δ ] y)
+  isRounded≈Gap ε = PT.map isRounded≈GapΣ ∘ isRounded≈ _ _ _ where
+    isRounded≈GapΣ : _ → Σ (ℚ₊ × ℚ₊) λ _ → _ × _
+    isRounded≈GapΣ (δ , δ<ε , x≈[δ]y) .fst .fst = δ
+    isRounded≈GapΣ (δ , δ<ε , x≈[δ]y) .fst .snd = [ ε -₊ δ ]⟨ δ<ε ⟩
+    isRounded≈GapΣ (δ , δ<ε , x≈[δ]y) .snd .fst = ℚ.+Comm ⟨ δ ⟩₊ _ ∙ minusPlus₊ ε δ
+    isRounded≈GapΣ (δ , δ<ε , x≈[δ]y) .snd .snd = x≈[δ]y
+
   module PremetricReasoning where
 
     private

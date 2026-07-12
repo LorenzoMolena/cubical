@@ -9,10 +9,11 @@ open import Cubical.Algebra.OrderedCommRing.Instances.Rationals
 
 open import Cubical.Data.Sigma
 
-open import Cubical.Relation.Premetric.Base
+open import Cubical.Relation.Premetric
 open import Cubical.Relation.Premetric.Mappings
 
 open PositiveRationals
+open PremetricTheory
 
 private
   variable
@@ -56,3 +57,9 @@ module SubSpace
 
   ι⊆ᴸ : L[ ⊆PremetricSpace , M' ]
   ι⊆ᴸ = NE→L ι⊆ⁿ
+
+  module _ (M-com : isComplete M') where
+    lim∈→isComplete : (∀ x xs → P (fst (M-com (fst ∘ x) xs))) → isComplete ⊆PremetricSpace
+    lim∈→isComplete lim∈ x xs .fst .fst = fst (M-com (fst ∘ x) xs)
+    lim∈→isComplete lim∈ x xs .fst .snd = lim∈ x xs
+    lim∈→isComplete lim∈ x xs .snd      = snd (M-com (fst ∘ x) xs)

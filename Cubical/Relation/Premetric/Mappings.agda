@@ -29,7 +29,7 @@ open ℚ₊Inverse
 
 private
   variable
-    ℓ ℓ' ℓM ℓM' ℓN ℓN' : Level
+    ℓ ℓ' ℓM ℓM' ℓN ℓN' ℓO ℓO' : Level
 
 module _
   {A : Type ℓM} {B : Type ℓN}
@@ -240,7 +240,10 @@ module _ {M : PremetricSpace ℓM ℓM'} where
   snd idᴸ = isNonExpansive→isLipschitz _ _ _ (idⁿ .snd)
 
 -- Composiontions of mappings:
-module _ {M N O : PremetricSpace ℓM ℓM'} where
+module _
+  {M : PremetricSpace ℓM ℓM'}
+  {N : PremetricSpace ℓN ℓN'}
+  {O : PremetricSpace ℓO ℓO'} where
 
   _∘NE_ : NE[ N , O ] → NE[ M , N ] → NE[ M , O ]
   fst (g ∘NE f) = fst g ∘ fst f
