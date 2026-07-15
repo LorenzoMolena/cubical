@@ -26,7 +26,7 @@ open PositiveHalvesℚ
 
 private
   variable
-    ℓA ℓM ℓM' ℓN ℓN' : Level
+    ℓA ℓM ℓM' ℓN ℓN' ℓX ℓX' : Level
 
 module FunctionSpace (A : Type ℓA) (N' : PremetricSpace ℓN ℓN') where
   private
@@ -206,3 +206,98 @@ module _ (M' : PremetricSpace ℓM ℓM') (N' : PremetricSpace ℓN ℓN') where
       → isLipschitz (snd M') (fst (M→N.isComplete→ Ncomp s sc)) (snd N')
     limEquiLipschitz Ncomp s sc = PT.map
       (uncurry λ L isELip → L , limEquiLipschitzWith Ncomp s sc L isELip)
+
+-- easier way to construct a binary nonexpansive mapping
+module _
+  (M : PremetricSpace ℓM ℓM')
+  (N : PremetricSpace ℓN ℓN')
+  (X : PremetricSpace ℓX ℓX') where
+  open IsNonExpansive
+  open PremetricStr (snd M)
+
+  private
+    open module M→X = FunctionSpace ⟨ M ⟩ X
+    open module N→X = FunctionSpace ⟨ N ⟩ X
+    ℓM'' = ℓ-max ℓM ℓM'
+    ℓN'' = ℓ-max ℓN ℓN'
+    ℓX'' = ℓ-max ℓX ℓX'
+    ℓNE2 = ℓ-max ℓM'' (ℓ-max ℓN'' ℓX'')
+
+  record NE₂[_,_,_] : Type ℓNE2 where
+    no-eta-equality
+    field
+      fun : ⟨ M ⟩ → ⟨ N ⟩ → ⟨ X ⟩
+      lNE : ∀ y → IsNonExpansive (snd M) (flip fun y) (snd X)
+      rNE : ∀ x → IsNonExpansive (snd N) (fun x)      (snd X)
+
+    makeNE₂ : NE[ M , NE[ N , X ]PrSpace ]
+    fst (fst makeNE₂ x) = fun x
+    snd (fst makeNE₂ x) = rNE x
+    pres≈ (snd makeNE₂) x y ε = PT.map pres≈L ∘ isRounded≈ x y ε where
+      pres≈L : Σ ℚ₊ (λ _ → _ × _) → Σ ℚ₊ (λ _ → _ × _)
+      pres≈L = map-snd (map-snd λ x≈y z → pres≈ (lNE z) x y _ x≈y)
+
+  open NE₂[_,_,_]
+  NE→NE₂ : NE[ M , NE[ N , X ]PrSpace ] → NE₂[_,_,_]
+  fun (NE→NE₂ f) = fst ∘ (fst f)
+  pres≈ (lNE (NE→NE₂ f) y) a b ε = flip (N→X.≈→→pointwise _ _ ε) y ∘ pres≈ (snd f) a b ε
+  rNE (NE→NE₂ f) x = snd (fst f x)
+
+flipNE : {M : PremetricSpace ℓM ℓM'}
+         {N : PremetricSpace ℓN ℓN'}
+         {X : PremetricSpace ℓX ℓX'}
+       → NE[ M , NE[ N , X ]PrSpace ] → NE[ N , NE[ M , X ]PrSpace ]
+flipNE f = NE₂[_,_,_].makeNE₂ flipNE₂ module flipⁿ where
+  open NE₂[_,_,_]
+  flipNE₂ : NE₂[ _ , _ , _ ]
+  flipNE₂ .fun = flip (fst ∘ (fst f))
+  flipNE₂ .lNE = rNE (NE→NE₂ _ _ _ f)
+  flipNE₂ .rNE = lNE (NE→NE₂ _ _ _ f)
+
+evalⁿ : {M : PremetricSpace ℓM ℓM'} {N : PremetricSpace ℓN ℓN'}
+      → NE[ M , NE[ NE[ M , N ]PrSpace , N ]PrSpace ]
+evalⁿ = flipNE idⁿ
+
+module ∘Properties (X' : PremetricSpace ℓX ℓX') where
+  module _ {M' : PremetricSpace ℓM ℓM'} {N' : PremetricSpace ℓN ℓN'} where
+
+    open IsNonExpansive
+    open IsLipschitzWith
+    open IsContinuousAt
+    open IsUContinuous
+
+    -- pre-composition of any kind of mappings is nonexpansive :
+
+    -∘ⁿ_ : NE[ M' , N' ] → NE[ NE[ N' , X' ]PrSpace , NE[ M' , X' ]PrSpace ]
+    fst (-∘ⁿ f)         = _∘NE f
+    pres≈ (snd (-∘ⁿ f)) = λ _ _ _ → PT.map (map-snd (map-snd (_∘ fst f)))
+
+    -∘ᴸ_ : L[ M' , N' ] → NE[ L[ N' , X' ]PrSpace , L[ M' , X' ]PrSpace ]
+    fst (-∘ᴸ f)         = _∘L f
+    pres≈ (snd (-∘ᴸ f)) = λ _ _ _ → PT.map (map-snd (map-snd (_∘ fst f)))
+
+    -∘ᵘᶜ_ : UC[ M' , N' ] → NE[ UC[ N' , X' ]PrSpace , UC[ M' , X' ]PrSpace ]
+    fst (-∘ᵘᶜ f)         = _∘UC f
+    pres≈ (snd (-∘ᵘᶜ f)) = λ _ _ _ → PT.map (map-snd (map-snd (_∘ fst f)))
+
+    -∘ᶜ_ : C[ M' , N' ] → NE[ C[ N' , X' ]PrSpace , C[ M' , X' ]PrSpace ]
+    fst (-∘ᶜ f)         = _∘C f
+    pres≈ (snd (-∘ᶜ f)) = λ _ _ _ → PT.map (map-snd (map-snd (_∘ fst f)))
+
+    -- post-composition with a nonexpansive mappings is nonexpansive :
+
+    _ⁿ∘ⁿ- : NE[ M' , N' ] → NE[ NE[ X' , M' ]PrSpace , NE[ X' , N' ]PrSpace ]
+    fst (f ⁿ∘ⁿ-)         = f ∘NE_
+    pres≈ (snd (f ⁿ∘ⁿ-)) = λ _ _ _ → PT.map (map-snd (map-snd (pres≈ (snd f) _ _ _ ∘_)))
+
+    _ⁿ∘ᴸ- : NE[ M' , N' ] → NE[ L[ X' , M' ]PrSpace , L[ X' , N' ]PrSpace ]
+    fst (f ⁿ∘ᴸ-)         = (NE→L f) ∘L_
+    pres≈ (snd (f ⁿ∘ᴸ-)) = λ _ _ _ → PT.map (map-snd (map-snd (pres≈ (snd f) _ _ _ ∘_)))
+
+    _ⁿ∘ᵘᶜ- : NE[ M' , N' ] → NE[ UC[ X' , M' ]PrSpace , UC[ X' , N' ]PrSpace ]
+    fst (f ⁿ∘ᵘᶜ-)         = (NE→UC f) ∘UC_
+    pres≈ (snd (f ⁿ∘ᵘᶜ-)) = λ _ _ _ → PT.map (map-snd (map-snd (pres≈ (snd f) _ _ _ ∘_)))
+
+    _ⁿ∘ᶜ- : NE[ M' , N' ] → NE[ C[ X' , M' ]PrSpace , C[ X' , N' ]PrSpace ]
+    fst (f ⁿ∘ᶜ-)         = (NE→C f) ∘C_
+    pres≈ (snd (f ⁿ∘ᶜ-)) = λ _ _ _ → PT.map (map-snd (map-snd (pres≈ (snd f) _ _ _ ∘_)))
