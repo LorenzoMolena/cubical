@@ -74,12 +74,18 @@ module PositiveRationals where
   private
     opaque
       0<+Closed : ∀ x y → 0 <ℚ x → 0 <ℚ y → 0 <ℚ x +ℚ y
-      0<+Closed = SQ.elimProp2 (λ _ _ → isProp→ (isProp→ (isProp< 0 _))) λ
-        { (pos (suc n) , _) (pos (suc m) , _) (pos<pos p) (pos<pos q) → pos<pos tt }
+      0<+Closed = SQ.elimProp2 (λ _ _ → isProp→ (isProp→ (isProp< 0 _))) onFrac where
+        onFrac : ∀ x y → 0 <ℚ [ x ] → 0 <ℚ [ y ] → 0 <ℚ [ x ] ℚ.+ [ y ]
+        onFrac (pos zero , _)    (pos _ , _) (pos<pos ())
+        onFrac (pos (suc n) , _) (pos zero , _) _ (pos<pos ())
+        onFrac (pos (suc n) , _) (pos (suc m) , _) _ _ = pos<pos tt
 
       0<·Closed : ∀ x y → 0 <ℚ x → 0 <ℚ y → 0 <ℚ x ·ℚ y
-      0<·Closed = SQ.elimProp2 (λ _ _ → isProp→ (isProp→ (isProp< 0 _))) λ
-        { (pos (suc n) , _) (pos (suc m) , _) (pos<pos p) (pos<pos q) → pos<pos tt }
+      0<·Closed = SQ.elimProp2 (λ _ _ → isProp→ (isProp→ (isProp< 0 _))) onFrac where
+        onFrac : ∀ x y → 0 <ℚ [ x ] → 0 <ℚ [ y ] → 0 <ℚ [ x ] ℚ.· [ y ]
+        onFrac (pos zero , _)    (pos _ , _) (pos<pos ())
+        onFrac (pos (suc n) , _) (pos zero , _) _ (pos<pos ())
+        onFrac (pos (suc n) , _) (pos (suc m) , _) _ _ = pos<pos tt
 
   open Units ℚCommRing
   open CommRingTheory ℚCommRing
