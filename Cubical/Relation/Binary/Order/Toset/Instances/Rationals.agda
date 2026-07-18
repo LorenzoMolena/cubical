@@ -21,11 +21,10 @@ _≤_ (snd ℚ≤Toset) = _≤ℚ_
 isToset (snd ℚ≤Toset) = isTosetℚ≤
   where
     open IsToset
-    abstract
-      isTosetℚ≤ : IsToset _≤ℚ_
-      isTosetℚ≤ .is-set         = isSetℚ
-      isTosetℚ≤ .is-prop-valued = isProp≤
-      isTosetℚ≤ .is-refl        = isRefl≤
-      isTosetℚ≤ .is-trans       = isTrans≤
-      isTosetℚ≤ .is-antisym     = isAntisym≤
-      isTosetℚ≤ .is-total       = isTotal≤
+    isTosetℚ≤ : IsToset _≤ℚ_
+    isTosetℚ≤ .is-set         = isSetℚ
+    isTosetℚ≤ .is-prop-valued = isProp≤
+    isTosetℚ≤ .is-refl        = isRefl≤
+    isTosetℚ≤ .is-trans       = isTrans≤
+    isTosetℚ≤ .is-antisym     = isAntisym≤
+    isTosetℚ≤ .is-total       = isTotal≤

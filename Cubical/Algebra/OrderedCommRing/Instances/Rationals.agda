@@ -165,16 +165,20 @@ module PositiveRationals where
   module ℚ₊Inverse where
 
     Σinverseℚ₊ : ((ε , 0<ε) : ℚ₊) → Σ[ δ ∈ ℚ ] (ε ℚ.· δ ≡ 1)
-    Σinverseℚ₊ = uncurry $ SQ.elimProp (λ ε → isPropΠ λ _ → inverseUniqueness ε) λ
-      { (pos (suc n) , 1+ d) (pos<pos p) .fst → [ pos (suc d) , 1+ n ]
-      ; (pos (suc n) , 1+ d) (pos<pos p) .snd →
-        eq/ _ _ (ℤ.·IdR _ ∙∙ ℤ.·Comm (pos (suc n)) (pos (suc d)) ∙∙ sym (ℤ.·IdL _)) }
+    Σinverseℚ₊ = uncurry $ SQ.elimProp (λ ε → isPropΠ λ _ → inverseUniqueness ε) onFrac
+      module Σinverseℚ₊ where
+        onFrac : ∀ x → 0 <ℚ [ x ] → Σ[ δ ∈ ℚ ] ([ x ] ℚ.· δ ≡ 1)
+        onFrac (pos zero , 1+ _) (ℚ.inj 0<[x]) = ⊥.rec (ℤ.¬-pos<-zero 0<[x])
+        fst (onFrac (pos (suc n) , 1+ d) _) = [ pos (suc d) , 1+ n ]
+        snd (onFrac (pos (suc n) , 1+ d) _) = eq/ _ _
+          (ℤ.·IdR _ ∙∙ ℤ.·Comm (pos (suc n)) (pos (suc d)) ∙∙ sym (ℤ.·IdL _))
 
     infixl 7 _⁻¹₊
 
     0<inverseℚ⁺ : ∀ ε → 0 <ℚ fst (Σinverseℚ₊ ε)
     0<inverseℚ⁺ = uncurry $ SQ.elimProp (λ ε → isPropΠ λ p → isProp< 0 _) λ
-      { (pos (suc n) , 1+ d) (pos<pos x) → pos<pos tt }
+      { (pos zero    , _) (pos<pos ())
+      ; (pos (suc n) , 1+ d) _ → pos<pos tt }
 
     _⁻¹₊ : ℚ₊ → ℚ₊
     fst (ε ⁻¹₊) = fst (Σinverseℚ₊ ε)

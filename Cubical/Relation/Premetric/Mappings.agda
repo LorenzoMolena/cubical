@@ -197,6 +197,13 @@ NE[_,_] : PremetricSpace ℓM ℓM' → PremetricSpace ℓN ℓN' → Type _
 NE[ M , N ] = Σ[ f ∈ (M .fst → N .fst) ] IsNonExpansive (M .snd) f (N .snd)
 
 module _ {M : PremetricSpace ℓM ℓM'} {N : PremetricSpace ℓN ℓN'} where
+  private
+    module M where
+      open PremetricStr (snd M) public
+      open PremetricTheory M    public
+    module N where
+      open PremetricStr (snd N) public
+      open PremetricTheory N    public
 
   NE→L : NE[ M , N ] → L[ M , N ]
   fst (NE→L f) = fst f
@@ -219,6 +226,28 @@ module _ {M : PremetricSpace ℓM ℓM'} {N : PremetricSpace ℓN ℓN'} where
 
   L→C : L[ M , N ] → C[ M , N ]
   L→C = UC→C ∘ L→UC
+
+  NE→presLim : (f : NE[ M , N ]) → ∀ x l → M.isLimit x l → N.isLimit (fst f ∘ x) (fst f l)
+  NE→presLim f x l l-lim ε θ = IsNonExpansive.pres≈ (snd f) (x ε) l (ε +₊ θ) (l-lim ε θ)
+
+  C→seqContinuous : (f : C[ M , N ]) → ∀ x l
+                  → M.isLimitSeq x l → N.isLimitSeq (fst f ∘ x) (fst f l)
+  C→seqContinuous f x l l-lim ε = do
+    (δ , l≈→fl≈) ← IsContinuousAt.pres≈ (snd f l) ε
+    (N , N≤→≈l ) ← l-lim δ
+    return (N , λ n → N.isSym≈ _ _ _ ∘ (l≈→fl≈ (x n)) ∘ M.isSym≈ _ _ _ ∘ (N≤→≈l n))
+
+  NE→seqContinuous : (f : NE[ M , N ]) → ∀ x l
+                   → M.isLimitSeq x l → N.isLimitSeq (fst f ∘ x) (fst f l)
+  NE→seqContinuous = C→seqContinuous ∘ NE→C
+
+  L→seqContinuous : (f : L[ M , N ]) → ∀ x l
+                  → M.isLimitSeq x l → N.isLimitSeq (fst f ∘ x) (fst f l)
+  L→seqContinuous = C→seqContinuous ∘ L→C
+
+  UC→seqContinuous : (f : UC[ M , N ]) → ∀ x l
+                   → M.isLimitSeq x l → N.isLimitSeq (fst f ∘ x) (fst f l)
+  UC→seqContinuous = C→seqContinuous ∘ UC→C
 
 -- The identity function is NonExpansive, Continuous, UContinuous and Lipschitz:
 module _ {M : PremetricSpace ℓM ℓM'} where
