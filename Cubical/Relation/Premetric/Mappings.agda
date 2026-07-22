@@ -205,6 +205,18 @@ module _ {M : PremetricSpace ℓM ℓM'} {N : PremetricSpace ℓN ℓN'} where
       open PremetricStr (snd N) public
       open PremetricTheory N    public
 
+  C≡ : {f g : C[ M , N ]} → fst f ≡ fst g → f ≡ g
+  C≡ = ΣPathPProp (flip (isPropIsContinuous _) _)
+
+  UC≡ : {f g : UC[ M , N ]} → fst f ≡ fst g → f ≡ g
+  UC≡ = ΣPathPProp (flip (isPropIsUContinuous _) _)
+
+  L≡ : {f g : L[ M , N ]} → fst f ≡ fst g → f ≡ g
+  L≡ = ΣPathPProp λ _ → squash₁
+
+  NE≡ : {f g : NE[ M , N ]} → fst f ≡ fst g → f ≡ g
+  NE≡ = ΣPathPProp (flip (isPropIsNonExpansive _) _)
+
   NE→L : NE[ M , N ] → L[ M , N ]
   fst (NE→L f) = fst f
   snd (NE→L f) = isNonExpansive→isLipschitz _ (fst f) _ (snd f)
@@ -315,17 +327,6 @@ module _
       open IsLipschitzWith
       open PremetricTheory O
 
-C≡ : ∀ {M N : PremetricSpace ℓM ℓM'} → {f g : C[ M , N ]} → fst f ≡ fst g → f ≡ g
-C≡ = ΣPathPProp (flip (isPropIsContinuous _) _)
-
-UC≡ : ∀ {M N : PremetricSpace ℓM ℓM'} → {f g : UC[ M , N ]} → fst f ≡ fst g → f ≡ g
-UC≡ = ΣPathPProp (flip (isPropIsUContinuous _) _)
-
-L≡ : ∀ {M N : PremetricSpace ℓM ℓM'} → {f g : L[ M , N ]} → fst f ≡ fst g → f ≡ g
-L≡ = ΣPathPProp λ _ → squash₁
-
-NE≡ : ∀ {M N : PremetricSpace ℓM ℓM'} → {f g : NE[ M , N ]} → fst f ≡ fst g → f ≡ g
-NE≡ = ΣPathPProp (flip (isPropIsNonExpansive _) _)
 
 record IsIsometry {A : Type ℓM} {B : Type ℓN}
   (M : PremetricStr ℓM' A) (e : A ≃ B) (N : PremetricStr ℓN' B)
