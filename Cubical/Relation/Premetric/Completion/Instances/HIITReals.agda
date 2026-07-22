@@ -23,6 +23,8 @@ open import  Cubical.Relation.Premetric.Completion.Properties _ ℚPremetricSpac
 
 open LiftCompleteCodomain ℚPremetricSpace ℝPremetricSpace isCompleteℝ
 open LiftCompleteCodomain₂ ℚPremetricSpace ℚPremetricSpace ℝPremetricSpace isCompleteℝ
+open ∘Properties ℚPremetricSpace using (_ⁿ∘ⁿ-)
+open ∘Properties ℝPremetricSpace using (-∘ⁿ_)
 
 pattern Δrat< p = rat-rat (ℚ.pos<pos p)
 
@@ -34,14 +36,12 @@ pattern Δrat< p = rat-rat (ℚ.pos<pos p)
 
 +ⁿ : NE[ ℝPremetricSpace , NE[ ℝPremetricSpace , ℝPremetricSpace ]PrSpace ]
 +ⁿ = liftNE₂ ((ratⁿ ⁿ∘ⁿ-) ∘NE ℚ.+ⁿ)
-  where open ∘Properties ℚPremetricSpace
 
 _+_ : ℝ → ℝ → ℝ
 _+_ = fst ∘ (fst +ⁿ)
 
 -₂ⁿ : NE[ ℝPremetricSpace , NE[ ℝPremetricSpace , ℝPremetricSpace ]PrSpace ]
 -₂ⁿ = (-∘ⁿ -ⁿ) ∘NE +ⁿ
-  where open ∘Properties ℝPremetricSpace
 
 _-_ : ℝ → ℝ → ℝ
 _-_ = fst ∘ (fst -₂ⁿ)
@@ -53,12 +53,7 @@ _-_ = fst ∘ (fst -₂ⁿ)
 +IdR = nonExpansive≡ _ _ (fst (flipNE +ⁿ) (rat 0)) idⁿ (cong rat ∘ ℚ.+IdR)
 
 +Comm : ∀ x y → x + y ≡ y + x
-+Comm =
-  funExt⁻ ∘ (cong fst) ∘ (nonExpansive≡ _ _ +ⁿ (flipNE +ⁿ) (NE≡ ∘ funExt ∘ +CommRat))
-  where
-  +CommRat : ∀ x y → (rat x) + y ≡ y + (rat x)
-  +CommRat x =
-    nonExpansive≡ _ _ (fst +ⁿ (rat x)) (fst (flipNE +ⁿ) (rat x)) (cong rat ∘ ℚ.+Comm x)
++Comm = nonExpansive₂≡ _ _ _ +ⁿ (flipNE +ⁿ) ((cong rat ∘_) ∘ ℚ.+Comm)
 
 
 -- Natural number and negative integer literals for ℝ

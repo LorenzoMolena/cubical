@@ -143,7 +143,7 @@ module _ (M : PremetricSpace ℓM (ℓ-max ℓM ℓM')) (N : PremetricSpace ℓN
       isLimitN : ∀ x xc → N.isLimit x (limN x xc)
       isLimitN = (snd ∘_) ∘ N-com
 
-    liftNonExpansive : NE[ M , N ] → NE[ ℭM , N ]
+    liftNonExpansive liftNE : NE[ M , N ] → NE[ ℭM , N ]
     liftNonExpansive (f , is-ne) = RecℭSym.go r , isnonexpansive λ _ _ _ → RecℭSym.go∼ r
       module liftNonExpansive where
       open RecℭSym
@@ -218,42 +218,25 @@ module _ {ℓA ℓA' ℓB ℓB'}
   (B : PremetricSpace ℓB (ℓ-max ℓB ℓB'))
   (N : PremetricSpace ℓN' ℓN) where
 
-  module LiftCompleteCodomain₂ (N-com : isComplete N) where
+  private
+    ℭA = ℭ ℓA' A
+    ℭB = ℭ ℓB' B
 
-    private
-      ℭA = ℭ ℓA' A
-      ℭB = ℭ ℓB' B
-      module A where
-        open PremetricStr (str A) public
-        open PremetricTheory A public
-        open PremetricReasoning public
-      module CA where
-        open PremetricStr (str ℭA) public
-        open PremetricTheory ℭA public
-        open PremetricReasoning public
-        open ℭProperties ℓA' A public
-      module B where
-        open PremetricStr (str B) public
-        open PremetricTheory B public
-        open PremetricReasoning public
-      module CB where
-        open PremetricStr (str ℭB) public
-        open PremetricTheory ℭB public
-        open PremetricReasoning public
-        open ℭProperties ℓB' B public
-      module N where
-        open PremetricStr (str N) public
-        open PremetricTheory N public
-        open PremetricReasoning public
-      -- open import Cubical.Relation.Premetric.Completion.Elim M
+  nonExpansive₂≡ : (f g : NE[ ℭA , NE[ ℭB , N ]PrSpace ])
+                 → (∀ x y → fst (fst f (ι x)) (ι y) ≡ fst (fst g (ι x)) (ι y))
+                 → ∀ x y → fst (fst f x) y ≡ fst (fst g x) y
+  nonExpansive₂≡ f g fιι≡gιι =
+    funExt⁻ ∘ (cong fst) ∘ nonExpansive≡ A NE[ ℭB , N ]PrSpace f g
+    (NE≡ ∘ funExt ∘ λ x → nonExpansive≡ B N (fst f (ι x)) (fst g (ι x)) (fιι≡gιι x))
+
+  module LiftCompleteCodomain₂ (N-com : isComplete N) where
 
     open LiftCompleteCodomain {ℓM' = ℓB'} B N N-com using (liftNEⁿ)
     open LiftCompleteCodomain {ℓM' = ℓA'} A NE[ ℭB , N ]PrSpace (isCompleteNE ℭB N N-com)
-      using (liftNE)
+      using (liftNonExpansive)
 
-    open import Cubical.Relation.Premetric.Instances.FunctionSpace
-    liftNonExpansive₂ : NE[ A , NE[ B , N ]PrSpace ] → NE[ ℭA , NE[ ℭB , N ]PrSpace ]
-    liftNonExpansive₂ = liftNE ∘ liftNEⁿ ∘NE_
+    liftNonExpansive₂ liftNE₂ : NE[ A , NE[ B , N ]PrSpace ] → NE[ ℭA , NE[ ℭB , N ]PrSpace ]
+    liftNonExpansive₂ = liftNonExpansive ∘ liftNEⁿ ∘NE_
 
     liftNE₂ = liftNonExpansive₂
 
