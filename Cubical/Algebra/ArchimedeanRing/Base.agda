@@ -12,8 +12,9 @@ open import Cubical.Algebra.OrderedCommRing.Base
 open import Cubical.Algebra.OrderedCommRing.Instances.Fast.Int
 open import Cubical.Algebra.OrderedCommRing.Morphisms
 
-open import Cubical.Data.Nat as ℕ using (ℕ ; suc)
-open import Cubical.Data.Int as ℤ using (ℤ ; pos)
+open import Cubical.Data.Nat        as ℕ   using (ℕ ; suc)
+open import Cubical.Data.NatPlusOne as ℕ₊₁ using (ℕ₊₁ ; ℕ₊₁→ℕ)
+open import Cubical.Data.Int        as ℤ   using (ℤ ; pos)
 open import Cubical.Data.Sigma
 
 open import Cubical.HITs.PropositionalTruncation as PT
@@ -39,19 +40,20 @@ record IsArchimedeanRing
     ·CancelR<           : ∀ x y z → 0r < z → (x · z) < (y · z) → x < y
     isMonomorphism      : IsOrderedCommRingMono (str ℤOrderedCommRing) ι
                             (orderedcommringstr _ _ _ _ _ _ _ isOrderedCommRing)
-    archimedeanProperty : ∀ x y → 0r < x → 0r < y → ∃[ k ∈ ℕ ] x < (ι (pos (suc k)) · y)
+    archimedeanProperty : ∀ x y → 0r < y → ∃[ k ∈ ℤ ] x < (ι k · y)
 
   ι₀₊ : ℕ → R
   ι₀₊ = ι ∘ pos
 
-  ι₊₁ : ℕ → R
-  ι₊₁ = ι ∘ pos ∘ suc
+  ι₊₁ : ℕ₊₁ → R
+  ι₊₁ = ι ∘ pos ∘ ℕ₊₁→ℕ
 
   open IsOrderedCommRing isOrderedCommRing public
   open IsOrderedCommRingMono isMonomorphism public renaming (
       isOrderedCommRingHom to isOrderedCommRingHomι ; isCommRingHom to isCommRingHomι
     ; pres0 to ιpres0 ; pres1 to ιpres1 ; pres+ to ιpres+ ; pres· to ιpres·
     ; pres- to ιpres- ; pres≤ to ιpres≤ ; reflect< to ιreflect< ; pres< to ιpres<)
+  ιreflect≤ = isOrderedCommRingMono→reflect≤ isMonomorphism
 
 unquoteDecl IsArchimedeanRingIsoΣ = declareRecordIsoΣ IsArchimedeanRingIsoΣ (quote IsArchimedeanRing)
 
@@ -93,4 +95,4 @@ isPropIsArchimedeanRing 0r 1r _+_ _·_ -_ _<_ _≤_ ι = isOfHLevelRetractFromIs
       (IsOrderedCommRing.isStrictOrder isOCR) x y)
     (isPropIsOrderedCommRingMono
       (str ℤOrderedCommRing) ι (orderedcommringstr _ _ _ _ _ _ _ isOCR))
-    (isPropΠ4 λ x y _ _ → squash₁)
+    (isPropΠ3 λ x y _ → squash₁)
