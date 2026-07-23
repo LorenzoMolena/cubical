@@ -19,12 +19,13 @@ fst ℚ<Loset = ℚ
 _<_ (snd ℚ<Loset) = _<ℚ_
 isLoset (snd ℚ<Loset) = isLosetℚ<
   where
-    open IsLoset
-    isLosetℚ< : IsLoset _<ℚ_
-    isLosetℚ< .is-set           = isSetℚ
-    isLosetℚ< .is-prop-valued   = isProp<
-    isLosetℚ< .is-irrefl        = isIrrefl<
-    isLosetℚ< .is-trans         = isTrans<
-    isLosetℚ< .is-asym          = isAsym<
-    isLosetℚ< .is-weakly-linear = isWeaklyLinear<
-    isLosetℚ< .is-connected     = isConnected<
+    opaque
+      open IsLoset
+      isLosetℚ< : IsLoset _<ℚ_
+      isLosetℚ< .is-set           = isSetℚ
+      isLosetℚ< .is-prop-valued   = isProp<
+      isLosetℚ< .is-irrefl        = isIrrefl<
+      isLosetℚ< .is-trans         = isTrans<
+      isLosetℚ< .is-asym          = isAsym<
+      isLosetℚ< .is-weakly-linear = isWeaklyLinear<
+      isLosetℚ< .is-connected     = isConnected<
