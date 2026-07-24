@@ -6,6 +6,7 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Equiv
 
 open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Sum   as ⊎
 
 open import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.HITs.SetQuotients as SQ renaming (_/_ to _//_)
@@ -90,6 +91,7 @@ module PositiveRationals where
   open Units ℚCommRing
   open CommRingTheory ℚCommRing
   open OrderedCommRingReasoning ℚOrderedCommRing
+  open PseudolatticeTheory ℚ≤Pseudolattice
 
   open Positive ℚOrderedCommRing 0<+Closed 0<·Closed public renaming (
       R₊ to ℚ₊ ; isSetR₊ to isSetℚ₊ ; R₊≡ to ℚ₊≡ ; ≡₊→R₊ to ≡₊→ℚ₊
@@ -128,6 +130,12 @@ module PositiveRationals where
       (sym $ cong (pos ∘ (ℕ._· 1)) $ maxSuc {predℕ (1+n ℕ.· 1+b)} {predℕ (1+m ℕ.· 1+a)})
       (ℤ.pos<pos tt))) })
     (fst x) (fst y) (snd x) (snd y)
+
+  max₊LUB< : ∀ δ η ε → δ <₊ ε → η <₊ ε → max₊ δ η <₊ ε
+  max₊LUB< δ η ε δ<ε η<ε = PT.rec (ℚ.isProp< _ _) proof (ℚ.isTotal≤ ⟨ δ ⟩₊ ⟨ η ⟩₊) where
+    proof : (δ ≤₊ η) ⊎ (η ≤₊ δ) → max₊ δ η <₊ ε
+    proof (inl δ≤η) = ℚ.recompute< $ subst (ℚ._< ⟨ ε ⟩₊) (sym (≤→∨≡Right δ≤η)) η<ε
+    proof (inr η≤δ) = ℚ.recompute< $ subst (ℚ._< ⟨ ε ⟩₊) (sym (≥→∨≡Left  η≤δ)) δ<ε
 
   min₊ : ℚ₊ → ℚ₊ → ℚ₊
   fst (min₊ x y) = ℚ.min (fst x) (fst y)
