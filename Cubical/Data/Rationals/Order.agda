@@ -58,13 +58,13 @@ private
     onFrac .Rec2SymHProp.symS (a , b) (c , d) = sym
     onFrac .Rec2SymHProp.eql  (a , b) (c , d) (e , f) ad≡cb =
         ℤ.<-·o-cancel
-      ∘ subst2 ℤ._<_ (·CommR a _ _ ∙ cong (ℤ._· _) ad≡cb ∙ ·CommR c _ _)
+      ∘ subst2 ℤ._<_ (·CommR a _ _ ∙∙ cong (ℤ._· _) ad≡cb ∙∙ ·CommR c _ _)
                      (·CommR e (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ d))
       ∘ ℤ.<-·o
     onFrac .Rec2SymHProp.eqr  (a , b) (c , d) (e , f) cf≡ed =
         ℤ.<-·o-cancel
       ∘ subst2 ℤ._<_ (·CommR a (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ f))
-                     (·CommR c _ _ ∙ cong (ℤ._· _) cf≡ed ∙ ·CommR e _ _)
+                     (·CommR c _ _ ∙∙ cong (ℤ._· _) cf≡ed ∙∙ ·CommR e _ _)
       ∘ ℤ.<-·o
 
 record _≤_ (m n : ℚ ) : Type₀ where
@@ -133,6 +133,41 @@ module _ where
 
   recompute¬# : ∀ {a b} → ¬ (a # b) → ¬ (a # b)
   recompute¬# r = ⊎.rec (recompute¬< (r ∘ inl)) (recompute¬< (r ∘ inr))
+
+  -- if the proof p : x ≡ x' is computationaly heavy, then
+  -- subst (_≤ _) p q will normalize slowly for concrete rationals,
+  -- and the situation applies as well for < and # in place of ≤.
+  -- However, we can always recompute and avoid the actual transports, and since
+  -- this pattern is quite common, here below we introduce the following helpers:
+
+  subst≤ : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x ≤ y → x' ≤ y'
+  subst≤ = ((recompute≤ ∘_) ∘_) ∘ subst2 _≤_
+
+  subst≤L : ∀ {x x' y} → x ≡ x' → x ≤ y → x' ≤ y
+  subst≤L = (recompute≤ ∘_) ∘ subst (_≤ _)
+
+  subst≤R : ∀ {x y y'} → y ≡ y' → x ≤ y → x ≤ y'
+  subst≤R = (recompute≤ ∘_) ∘ subst (_ ≤_)
+
+  subst< : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x < y → x' < y'
+  subst< = ((recompute< ∘_) ∘_) ∘ subst2 _<_
+
+  subst<L : ∀ {x x' y} → x ≡ x' → x < y → x' < y
+  subst<L = (recompute< ∘_) ∘ subst (_< _)
+
+  subst<R : ∀ {x y y'} → y ≡ y' → x < y → x < y'
+  subst<R = (recompute< ∘_) ∘ subst (_ <_)
+
+  subst# : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x # y → x' # y'
+  subst# = ((recompute# ∘_) ∘_) ∘ subst2 _#_
+
+  subst#L : ∀ {x x' y} → x ≡ x' → x # y → x' # y
+  subst#L = (recompute# ∘_) ∘ subst (_# _)
+
+  subst#R : ∀ {x y y'} → y ≡ y' → x # y → x # y'
+  subst#R = (recompute# ∘_) ∘ subst (_ #_)
+
+  -- properties of ≤ , < , and #
 
   isRefl≤ : isRefl _≤_
   isRefl≤ = elimProp {P = λ x → x ≤ x} (λ x → isProp≤ x x) λ _ → inj ℤ.isRefl≤
@@ -232,7 +267,7 @@ module _ where
     where
       lem : (a b c : ℤ.ℤ × ℕ₊₁) → [ a ] < [ b ] → ([ a ] < [ c ]) ⊔′ ([ c ] < [ b ])
       lem a b c a<b with discreteℚ [ a ] [ c ]
-      ... | yes a≡c = ∣ inr (recompute< (subst (_< [ b ]) a≡c a<b)) ∣₁
+      ... | yes a≡c = ∣ inr (subst<L a≡c a<b) ∣₁
       ... | no a≢c = ∣ ⊎.map (λ a<c → a<c)
                              (λ c<a → isTrans< [ c ] [ a ] [ b ] c<a a<b)
                              (inequalityImplies# [ a ] [ c ] a≢c) ∣₁
@@ -245,7 +280,7 @@ module _ where
       where
         lem : (a b c : ℤ.ℤ × ℕ₊₁) → [ a ] # [ b ] → ([ a ] # [ c ]) ⊔′ ([ b ] # [ c ])
         lem a b c a#b with discreteℚ [ b ] [ c ]
-        ... | yes b≡c = ∣ inl (recompute# (subst ([ a ] #_) b≡c a#b)) ∣₁
+        ... | yes b≡c = ∣ inl (subst#R b≡c a#b) ∣₁
         ... | no  b≢c = ∣ inr (inequalityImplies# [ b ] [ c ] b≢c) ∣₁
 
 ≤-+o : ∀ m n o → m ≤ n → m ℚ.+ o ≤ n ℚ.+ o
@@ -289,7 +324,7 @@ module _ where
                        (ℤ.≤-+o (ℤ.≤-·o ad≤cb)) }
 
 ≤-o+ : ∀ m n o →  m ≤ n → o ℚ.+ m ≤ o ℚ.+ n
-≤-o+ m n o = recompute≤ ∘ subst2 _≤_ (+Comm m o) (+Comm n o) ∘ ≤-+o m n o
+≤-o+ m n o = subst≤ (+Comm m o) (+Comm n o) ∘ ≤-+o m n o
 
 ≤Monotone+ : ∀ m n o s → m ≤ n → o ≤ s → m ℚ.+ o ≤ n ℚ.+ s
 ≤Monotone+ m n o s m≤n o≤s
@@ -300,16 +335,16 @@ module _ where
               (≤-o+ o s n o≤s)
 
 ≤-o+-cancel : ∀ m n o →  o ℚ.+ m ≤ o ℚ.+ n → m ≤ n
-≤-o+-cancel m n o = recompute≤ ∘
-  subst2 _≤_ (+Assoc (- o) o m ∙ cong (ℚ._+ m) (+InvL o) ∙ +IdL m)
-             (+Assoc (- o) o n ∙ cong (ℚ._+ n) (+InvL o) ∙ +IdL n) ∘
-        ≤-o+ (o ℚ.+ m) (o ℚ.+ n) (- o)
+≤-o+-cancel m n o = subst≤
+  (+Assoc (- o) o m ∙ cong (ℚ._+ m) (+InvL o) ∙ +IdL m)
+  (+Assoc (- o) o n ∙ cong (ℚ._+ n) (+InvL o) ∙ +IdL n) ∘
+  ≤-o+ (o ℚ.+ m) (o ℚ.+ n) (- o)
 
 ≤-+o-cancel : ∀ m n o → m ℚ.+ o ≤ n ℚ.+ o → m ≤ n
-≤-+o-cancel m n o = recompute≤ ∘
-    subst2 _≤_ (sym (+Assoc m o (- o)) ∙ cong (λ x → m ℚ.+ x) (+InvR o) ∙ +IdR m)
-               (sym (+Assoc n o (- o)) ∙ cong (λ x → n ℚ.+ x) (+InvR o) ∙ +IdR n) ∘
-          ≤-+o (m ℚ.+ o) (n ℚ.+ o) (- o)
+≤-+o-cancel m n o = subst≤
+  (sym (+Assoc m o (- o)) ∙ cong (λ x → m ℚ.+ x) (+InvR o) ∙ +IdR m)
+  (sym (+Assoc n o (- o)) ∙ cong (λ x → n ℚ.+ x) (+InvR o) ∙ +IdR n) ∘
+  ≤-+o (m ℚ.+ o) (n ℚ.+ o) (- o)
 
 <-+o : ∀ m n o → m < n → m ℚ.+ o < n ℚ.+ o
 <-+o =
@@ -352,23 +387,23 @@ module _ where
                        (ℤ.<-+o (ℤ.<-·o ad<cb)) }
 
 <-o+ : ∀ m n o → m < n → o ℚ.+ m < o ℚ.+ n
-<-o+ m n o = recompute< ∘ subst2 _<_ (+Comm m o) (+Comm n o) ∘ <-+o m n o
+<-o+ m n o = subst< (+Comm m o) (+Comm n o) ∘ <-+o m n o
 
 <Monotone+ : ∀ m n o s → m < n → o < s → m ℚ.+ o < n ℚ.+ s
 <Monotone+ m n o s m<n o<s
   = isTrans< (m ℚ.+ o) (n ℚ.+ o) (n ℚ.+ s) (<-+o m n o m<n) (<-o+ o s n o<s)
 
 <-o+-cancel : ∀ m n o → o ℚ.+ m < o ℚ.+ n → m < n
-<-o+-cancel m n o = recompute< ∘
-  subst2 _<_ (+Assoc (- o) o m ∙ cong (ℚ._+ m) (+InvL o) ∙ +IdL m)
-             (+Assoc (- o) o n ∙ cong (ℚ._+ n) (+InvL o) ∙ +IdL n) ∘
-        <-o+ (o ℚ.+ m) (o ℚ.+ n) (- o)
+<-o+-cancel m n o = subst<
+  (+Assoc (- o) o m ∙ cong (ℚ._+ m) (+InvL o) ∙ +IdL m)
+  (+Assoc (- o) o n ∙ cong (ℚ._+ n) (+InvL o) ∙ +IdL n) ∘
+  <-o+ (o ℚ.+ m) (o ℚ.+ n) (- o)
 
 <-+o-cancel : ∀ m n o → m ℚ.+ o < n ℚ.+ o → m < n
-<-+o-cancel m n o = recompute< ∘
-  subst2 _<_ (sym (+Assoc m o (- o)) ∙ cong (λ x → m ℚ.+ x) (+InvR o) ∙ +IdR m)
-             (sym (+Assoc n o (- o)) ∙ cong (λ x → n ℚ.+ x) (+InvR o) ∙ +IdR n) ∘
-        <-+o (m ℚ.+ o) (n ℚ.+ o) (- o)
+<-+o-cancel m n o = subst<
+  (sym (+Assoc m o (- o)) ∙ cong (λ x → m ℚ.+ x) (+InvR o) ∙ +IdR m)
+  (sym (+Assoc n o (- o)) ∙ cong (λ x → n ℚ.+ x) (+InvR o) ∙ +IdR n) ∘
+  <-+o (m ℚ.+ o) (n ℚ.+ o) (- o)
 
 <Weaken≤ : ∀ m n → m < n → m ≤ n
 <Weaken≤ m n = elimProp2 {P = λ x y → x < y → x ≤ y}
@@ -570,7 +605,7 @@ m ≟ n with discreteℚ m n
         (≤max (ℚ.max m o) (ℚ.max n s))
 
 ≡Weaken≤ : ∀ m n → m ≡ n → m ≤ n
-≡Weaken≤ m n m≡n = recompute≤ $ subst (m ≤_) m≡n (isRefl≤ m)
+≡Weaken≤ m n m≡n = subst≤R m≡n (isRefl≤ m)
 
 ≤→≯ : ∀ m n →  m ≤ n → ¬ (m > n)
 ≤→≯ m n m≤n = recompute¬< $
