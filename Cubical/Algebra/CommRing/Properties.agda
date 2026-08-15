@@ -59,7 +59,11 @@ module Units (R' : CommRing ℓ) where
  _⁻¹ : (r : R) → ⦃ r ∈ Rˣ ⦄ → R
  _⁻¹ r ⦃ r∈Rˣ ⦄ = r∈Rˣ .fst
 
+ _/_ : (x y : R) → ⦃ y ∈ Rˣ ⦄ → R
+ _/_ x y = x · y ⁻¹
+
  infix 9 _⁻¹
+ infixl 9 _/_
 
  -- some results about inverses
  ·-rinv : (r : R) ⦃ r∈Rˣ : r ∈ Rˣ ⦄ → r · r ⁻¹ ≡ 1r
@@ -67,6 +71,12 @@ module Units (R' : CommRing ℓ) where
 
  ·-linv : (r : R) ⦃ r∈Rˣ : r ∈ Rˣ ⦄ → r ⁻¹ · r ≡ 1r
  ·-linv r ⦃ r∈Rˣ ⦄ = ·Comm _ _ ∙ r∈Rˣ .snd
+
+ divideMultiply : ∀ x y ⦃ _ : y ∈ Rˣ ⦄ → x / y · y ≡ x
+ divideMultiply x y = sym (·Assoc x _ _) ∙∙ congR _·_ (·-linv y) ∙∙ ·IdR x
+
+ multiplyDivide : ∀ x y ⦃ _ : y ∈ Rˣ ⦄ → (x · y) / y ≡ x
+ multiplyDivide x y = sym (·Assoc x _ _) ∙∙ congR _·_ (·-rinv y) ∙∙ ·IdR x
 
 
  RˣMultClosed : (r r' : R) ⦃ r∈Rˣ : r ∈ Rˣ ⦄ ⦃ r'∈Rˣ : r' ∈ Rˣ ⦄
@@ -145,6 +155,15 @@ module Units (R' : CommRing ℓ) where
                                   ∙ congR _·_ (·-rinv _)
                                   ∙ ·IdR _
 
+ ⁻¹-eq-elim' : {r r' r'' : R} ⦃ r∈Rˣ : r ∈ Rˣ ⦄ → r' ≡ r · r'' → r' · r ⁻¹ ≡ r''
+ ⁻¹-eq-elim' = ⁻¹-eq-elim ∘ (_∙ ·Comm _ _)
+
+ ⁻¹≡ : {r r' : R} → ⦃ r∈Rˣ : r ∈ Rˣ ⦄ → r · r' ≡ 1r → r ⁻¹ ≡ r'
+ ⁻¹≡ ⦃ r∈Rˣ ⦄ rr'≡1 = cong fst (inverseUniqueness _ r∈Rˣ (_ , rr'≡1))
+
+ cross-multiply : ∀ {r r' r'' r'''} ⦃ r''∈Rˣ : r'' ∈ Rˣ ⦄ ⦃ r'''∈Rˣ : r''' ∈ Rˣ ⦄
+                 → r'' · r' ≡ r''' · r → r / r'' ≡ r' / r'''
+ cross-multiply = ⁻¹-eq-elim' ∘ sym ∘ (·Assoc _ _ _ ∙_) ∘ ⁻¹-eq-elim'
 
 -- some convenient notation
 _ˣ : (R' : CommRing ℓ) → ℙ (R' .fst)
