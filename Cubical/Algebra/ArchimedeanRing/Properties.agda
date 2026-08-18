@@ -11,9 +11,11 @@ open import Cubical.Algebra.Ring
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat as ℕ using (ℕ ; zero ; suc)
 open import Cubical.Data.NatPlusOne as ℕ₊₁ using (ℕ₊₁ ; 1+_ ; ℕ₊₁→ℕ)
-open import Cubical.Data.Fast.Int as ℤ using (ℤ ; pos ; negsuc ; neg)
+open import Cubical.Data.Fast.Int.Base as ℤ hiding (_+_ ; _·_ ; -_ ; _-_)
+import Cubical.Data.Fast.Int.Properties as ℤ
 import Cubical.Data.Fast.Int.Order as ℤ
 open import Cubical.Data.Sigma
+open import Cubical.Data.Sum as ⊎
 
 open import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.HITs.PropositionalTruncation.Monad
@@ -111,3 +113,39 @@ module _ (R' : ArchimedeanRing ℓ ℓ') where
     ∃ℤLowerBound x = do
       (k , -x<ιk) ← ∃ℤUpperBound (- x)
       return (ℤ.- k , subst2 _<_ (sym (ιpres- k)) (solve! RCR) (-Flip< (- x) (ι k) -x<ιk))
+
+    private
+      1<Δ-lemma : ∀ x y l d → x + 1r < y → ι l < x → x < ι (pos d ℤ.+ l)
+                → ∃[ k ∈ ℤ ] ((x < ι k) × (ι k < y))
+      1<Δ-lemma x y (pos    l) zero x+1<y = (⊥.rec ∘_) ∘S is-asym _ _
+      1<Δ-lemma x y (negsuc l) zero x+1<y = (⊥.rec ∘_) ∘S is-asym _ _
+      1<Δ-lemma x y l (suc d) x+1<y ιl<x x<ι[1+d+l] = do
+        let
+          +d = pos d ; 1+d = pos (suc d)
+        (inl x+1<ι[1+d+l]) ← is-weakly-linear (x + 1r) y (ι (1+d ℤ.+ l)) x+1<y
+          where
+          (inr ι[1+d+l]<y) → return (1+d ℤ.+ l , x<ι[1+d+l] , ι[1+d+l]<y)
+        let
+          ι[1+d+l]-1≡ι[d+l] : ι (1+d ℤ.+ l) - 1r ≡ ι (+d ℤ.+ l)
+          ι[1+d+l]-1≡ι[d+l] =
+            ι (1+d ℤ.+ l)        - 1r ≡⟨ sym $ congL _+_ $ cong ι $ ℤ.+Assoc 1 +d l ⟩
+            ι (1 ℤ.+ (+d ℤ.+ l)) - 1r ≡⟨ congL _+_ (ιpres+ 1 _ ∙ congL _+_ ιpres1) ⟩
+            1r + ι (+d ℤ.+ l)    - 1r ≡⟨ solve! RCR ⟩
+            ι (+d ℤ.+ l)              ∎
+
+        1<Δ-lemma x y l d x+1<y ιl<x
+          (subst2 _<_ (solve! RCR) ι[1+d+l]-1≡ι[d+l] (x+1<ι[1+d+l] <+[ - 1r ])
+          :> x < ι (+d ℤ.+ l))
+
+    1<Δ→∃ℤ∈[_,_] : ∀ x y → 1r < y - x → ∃[ k ∈ ℤ ] ((x < ι k) × (ι k < y))
+    1<Δ→∃ℤ∈[ x , y ] 1<Δ = do
+      (l , ιl<x) ← ∃ℤLowerBound x
+      (u , x<ιu) ← ∃ℤUpperBound x
+      let
+        (k , p) = ℤ.<→Σℕ (ιreflect< l u (is-trans< _ _ _ ιl<x x<ιu))
+      1<Δ-lemma x y l (suc k)
+        (subst (x + 1r <_) (solve! RCR) ([ x ]+< 1<Δ)
+        :> x + 1r < y)
+        ιl<x
+        (subst (x <_) (cong ι (sym p ∙ ℤ.+Comm l _)) x<ιu
+        :> x < ι (pos (suc k) ℤ.+ l))

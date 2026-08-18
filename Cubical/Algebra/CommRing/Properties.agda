@@ -161,6 +161,9 @@ module Units (R' : CommRing ℓ) where
  ⁻¹≡ : {r r' : R} → ⦃ r∈Rˣ : r ∈ Rˣ ⦄ → r · r' ≡ 1r → r ⁻¹ ≡ r'
  ⁻¹≡ ⦃ r∈Rˣ ⦄ rr'≡1 = cong fst (inverseUniqueness _ r∈Rˣ (_ , rr'≡1))
 
+ isInvol⁻¹ : (r : R) → ⦃ r∈Rˣ : r ∈ Rˣ ⦄ ⦃ r⁻¹∈Rˣ : r ⁻¹ ∈ Rˣ ⦄ → r ⁻¹ ⁻¹ ≡ r
+ isInvol⁻¹ r = ⁻¹≡ (·-linv r)
+
  cross-multiply : ∀ {r r' r'' r'''} ⦃ r''∈Rˣ : r'' ∈ Rˣ ⦄ ⦃ r'''∈Rˣ : r''' ∈ Rˣ ⦄
                  → r'' · r' ≡ r''' · r → r / r'' ≡ r' / r'''
  cross-multiply = ⁻¹-eq-elim' ∘ sym ∘ (·Assoc _ _ _ ∙_) ∘ ⁻¹-eq-elim'

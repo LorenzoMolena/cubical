@@ -14,6 +14,7 @@ open import Cubical.Algebra.Ring
 open import Cubical.Algebra.Semigroup
 
 open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Nat   as ℕ using (ℕ ; zero ; suc)
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum
 
@@ -57,6 +58,7 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     RCR = OrderedCommRing→CommRing R'
   open RingTheory (OrderedCommRing→Ring R')
   open OrderedCommRingStr (snd R')
+  open Exponentiation RCR
 
   module OrderedCommRingReasoning where
     open <-≤-Reasoning
@@ -235,6 +237,16 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
       in
         subst (_≤ x · x) (0LeftAnnihilates x) (∘diag (·MonoR≤ _ _ _) 0≤x)
 
+    isTight# : ∀ x y → ¬ x # y → x ≡ y
+    isTight# x y ¬x#y = is-antisym x y (¬<→≥ y x (¬x#y ∘ inr)) (¬<→≥ x y (¬x#y ∘ inl))
+
+    ≡→¬# : ∀ x y → x ≡ y → ¬ (x # y)
+    ≡→¬# x y = flip $ isApartness→ImpliesInequality isApartness x y
+      where open ApartnessStr (str (OrderedCommRing→Apartness R'))
+
+    isSeparated : Separated R
+    isSeparated x y = isTight# x y ∘ Stable¬ ∘ _∘ _∘ (≡→¬# x y)
+
     #→0<² : ∀ x → x # 0r → 0r < x · x
     #→0<² x (inl x<0) =
       subst2 _<_ (0LeftAnnihilates _) (solve! RCR) (∘diag (·MonoR< _ _ _) (<0→0<- x x<0))
@@ -354,6 +366,16 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     abs1 : abs 1r ≡ 1r
     abs1 = 0≤→abs≡id 1r 0≤1
 
+    0<→0<^ : ∀ x n → 0r < x → 0r < x ^ n
+    0<→0<^ x zero    0<x = 0<1
+    0<→0<^ x (suc n) 0<x =
+      subst (_< x ^ suc n) (0RightAnnihilates x) ([ x , 0<x ]·< 0<→0<^ x n 0<x)
+
+    0≤→0≤^ : ∀ x n → 0r ≤ x → 0r ≤ x ^ n
+    0≤→0≤^ x zero    0≤x = 0≤1
+    0≤→0≤^ x (suc n) 0≤x =
+      subst (_≤ x ^ suc n) (0RightAnnihilates x) ([ x , 0≤x ]·≤ 0≤→0≤^ x n 0≤x)
+
   open OrderedCommRingTheory
 
   module AdditiveSubType
@@ -459,6 +481,10 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     (x ⊔₊ y) .fst = ⟨ x ⟩₊ ⊔ ⟨ y ⟩₊
     (x ⊔₊ y) .snd = begin< 0r <⟨ snd x ⟩ ⟨ x ⟩₊ ≤⟨ L≤⊔ ⟩ ⟨ x ⟩₊ ⊔ ⟨ y ⟩₊ ◾
 
+    _₊^_ : R₊ → ℕ → R₊
+    (x ₊^ n) .fst = ⟨ x ⟩₊ ^ n
+    (x ₊^ n) .snd = 0<→0<^ ⟨ x ⟩₊ n (snd x)
+
     plusMinus₊ : ∀ x y → (x +₊ y) -₊ y ≡ ⟨ x ⟩₊
     plusMinus₊ (x , _) (y , _) = solve! RCR
 
@@ -538,6 +564,10 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     _⊓₀₊_ : R₀₊ → R₀₊ → R₀₊
     (x ⊓₀₊ y) .fst = ⟨ x ⟩₀₊ ⊓ ⟨ y ⟩₀₊
     (x ⊓₀₊ y) .snd = ⊓GLB (snd x) (snd y)
+
+    _₀₊^_ : R₀₊ → ℕ → R₀₊
+    (x ₀₊^ n) .fst = ⟨ x ⟩₀₊ ^ n
+    (x ₀₊^ n) .snd = 0≤→0≤^ ⟨ x ⟩₀₊ n (snd x)
 
     plusMinus₀₊ : ∀ x y → (x +₀₊ y) -₀₊ y ≡ ⟨ x ⟩₀₊
     plusMinus₀₊ (x , _) (y , _) = solve! RCR

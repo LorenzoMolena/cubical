@@ -108,6 +108,15 @@ module FieldTheory (F : HeytingField ℓ ℓ') where
   ·CancelL : ∀ x y z → z # 0r → z · x ≡ z · y → x ≡ y
   ·CancelL x y z = contrapos#→≡ _ _ _ _ ∘ ·Respect#L x y z
 
+  ·L/ : ∀ x y ⦃ _ : x # 0r ⦄ → (x · y) / x ≡ y
+  ·L/ x y = congL _·_ (·Comm x y) ∙ multiplyDivide y x
+
+  ·R/ : ∀ x y ⦃ _ : y # 0r ⦄ → (x · y) / y ≡ x
+  ·R/ x y = multiplyDivide x y
+
+  /1≡id : ∀ x ⦃ 1#0 : 1r # 0r ⦄ → x / 1r ≡ x
+  /1≡id x = congR _·_ 1⁻¹≡1 ∙ ·IdR x
+
   is#BinSumLocalField : ∀ x y → x + y # 0r → (x # 0r) ⊔′ (y # 0r)
   is#BinSumLocalField x y = PT.map
     (⊎.map
