@@ -380,7 +380,7 @@ CW↪CommSubComplex C m k with (m ≟ᵗ k) | (suc m ≟ᵗ k)
   help (suc m) (suc k) x y (gt z) a =
     cong (CW↪ C (suc m))
       λ i → CW↑Gen C (suc k) (suc m)
-              (Trichotomyᵗ-suc (m ≟ᵗ suc k)) (isProp<ᵗ {k} {m} x z i) a
+              (suc m ≟ᵗ suc (suc k)) (isProp<ᵗ {k} {m} x z i) a
 
 CW↪SubComplexCharac : ∀ {ℓ} (C : CWskel ℓ) (m k : ℕ) (q : m <ᵗ k) →
     CW↪ (subComplex C k) m
@@ -456,12 +456,12 @@ subComplex→comm C m (suc n) (eq y) (lt z) x =
            (<ᵗ-trans {m} {suc m} {suc n} (<ᵗsucm {m}) z)))
 subComplex→comm C m (suc n) (eq y) (eq z) x =
   ⊥.rec ( falseDichotomies.eq-eq (sym y , sym z))
-subComplex→comm C m (suc n) (eq y) (gt z) x with (m ≟ᵗ suc n)
+subComplex→comm C m (suc n) (eq y) (gt z) x with suc m ≟ᵗ suc (suc n)
 ... | lt x₃ = ⊥.rec (¬squeeze {n} {m} (z , x₃))
-... | eq x₃ = cong (CW↪ C m) (sym (cong (subst (fst C) (sym x₃))
+... | eq x₃ = cong (CW↪ C m) (sym (cong (subst (fst C) (sym (cong predℕ x₃)))
                 (transportRefl _
-                ∙ cong (λ p → subst (fst C) p x) (isSetℕ _ _ y x₃))
-                ∙ subst⁻Subst (fst C) x₃ x))
+                ∙ cong (λ p → subst (fst C) p x) (isSetℕ _ _ y (cong predℕ x₃)))
+                ∙ subst⁻Subst (fst C) (cong predℕ x₃) x))
 ... | gt x₃ = ⊥.rec (¬m<ᵗm {suc n} (subst (suc n <ᵗ_) y x₃))
 subComplex→comm C m (suc n) (gt y) (lt z) x =
   ⊥.rec (¬squeeze {m} {n}
@@ -470,12 +470,12 @@ subComplex→comm C m (suc n) (gt y) (lt z) x =
 subComplex→comm C m (suc n) (gt y) (eq z) x = (⊥.rec
        (¬m<ᵗm {suc n} (transport (λ i → suc n <ᵗ z i)
          (<ᵗ-trans {suc n} {m} {suc m} y ( <ᵗsucm {m})))))
-subComplex→comm C (suc m) (suc n) (gt y) (gt z) x with m ≟ᵗ n
-... | lt x₃ = ⊥.rec (¬squeeze {n} {suc m} (z , x₃))
-... | eq x₃ = ⊥.rec (¬m<ᵗm {n} (subst (n <ᵗ_) x₃ y))
-... | gt x₃ = cong (CW↪ C (suc m))
+subComplex→comm C (suc m) (suc n) (gt y) (gt z) x with suc (suc m) ≟ᵗ suc (suc n)
+... | lt x₄ = ⊥.rec (¬squeeze (z , x₄))
+... | eq x₄ = ⊥.rec (¬m<ᵗm (subst (suc (suc n) <ᵗ_) x₄ y))
+... | gt x₄ = cong (CW↪ C (suc m))
   λ j → CW↑Gen C (suc n) (suc m)
-          (Trichotomyᵗ-suc (m ≟ᵗ suc n)) (isProp<ᵗ {n} {m} y x₃ j) x
+          (suc m ≟ᵗ suc (suc n)) (isProp<ᵗ {n} {m} y x₄ j) x
 
 subComplex→Full : ∀ {ℓ} (C : CWskel ℓ) (m : ℕ) → cellMap (subComplex C m) C
 SequenceMap.map (subComplex→Full C n) = subComplex→map C n
@@ -516,7 +516,7 @@ subComplex→map'Charac C m (eq y) (eq x) =
   ⊥.rec (falseDichotomies.eq-eq (refl , sym y))
 subComplex→map'Charac C zero (gt y) (eq x) =
   funExt (λ q → ⊥.rec (C .snd .snd .snd .fst q))
-subComplex→map'Charac C (suc m) (gt y) (eq x) with (m ≟ᵗ m)
+subComplex→map'Charac C (suc m) (gt y) (eq x) with (suc (suc m) ≟ᵗ suc (suc m))
 ... | lt z =  ⊥.rec (¬m<ᵗm {m} z)
 ... | eq z = funExt λ x
   → cong (CW↪ C (suc m)) (cong (λ p → subst (fst C) p x) (isSetℕ _ _ _ _)

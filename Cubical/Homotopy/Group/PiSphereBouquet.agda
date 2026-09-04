@@ -110,10 +110,16 @@ isConnected⋁Sphere→ΠSphere {n = n} {k = suc k} =
     g≡inr ((zero , t) , q) (zero , p) = refl
     g≡inr ((zero , t) , q) (suc x , p) = refl
     g≡inr ((suc s , t) , q) (zero , p) = refl
-    g≡inr ((suc s , t) , q) (suc x , p) with (x ≟ᵗ s)
-    ... | lt x₁ = refl
-    ... | eq x₁ = refl
-    ... | gt x₁ = refl
+    g≡inr ((suc s , t) , q) (suc x , p) with (x ≟ᵗ s) | (suc x ≟ᵗ suc s)
+    ... | lt x₁ | lt x₂ = refl
+    ... | lt x₁ | eq x₂ = ⊥.rec (¬m<ᵗm (subst (_<ᵗ suc s) x₂ x₁))
+    ... | lt x₁ | gt x₂ = ⊥.rec (<ᵗ-asym' x₁ x₂)
+    ... | eq x₁ | lt x₂ = ⊥.rec (¬m<ᵗm (subst (_<ᵗ s) x₁ x₂))
+    ... | eq x₁ | eq x₂ = refl
+    ... | eq x₁ | gt x₂ = ⊥.rec (¬m<ᵗm (subst (s <ᵗ_) x₁ x₂))
+    ... | gt x₁ | lt x₂ = ⊥.rec (<ᵗ-asym' x₁ x₂)
+    ... | gt x₁ | eq x₂ = ⊥.rec (¬m<ᵗm (subst (suc s <ᵗ_) x₂ x₁))
+    ... | gt x₁ | gt x₂ = refl
 
     g≡inlr : (x : _) (y : _)
       → Square (λ i → g (push x i) y) (λ i → ⋁Sphere→ΠSphere (push x i) y)
@@ -121,10 +127,16 @@ isConnected⋁Sphere→ΠSphere {n = n} {k = suc k} =
     g≡inlr (zero , t) (zero , p) = refl
     g≡inlr (suc s , t) (zero , p) = refl
     g≡inlr (zero , t) (suc x , p) = refl
-    g≡inlr (suc s , t) (suc x , p) with (x ≟ᵗ s)
-    ... | lt x₁ = refl
-    ... | eq x₁ = refl
-    ... | gt x₁ = refl
+    g≡inlr (suc s , t) (suc x , p) with (x ≟ᵗ s) | (suc x ≟ᵗ suc s)
+    ... | lt x₁ | lt x₂ = refl
+    ... | lt x₁ | eq x₂ = ⊥.rec (¬m<ᵗm (subst (_<ᵗ suc s) x₂ x₁))
+    ... | lt x₁ | gt x₂ = ⊥.rec (<ᵗ-asym' x₁ x₂)
+    ... | eq x₁ | lt x₂ = ⊥.rec (¬m<ᵗm (subst (_<ᵗ s) x₁ x₂))
+    ... | eq x₁ | eq x₂ = refl
+    ... | eq x₁ | gt x₂ = ⊥.rec (¬m<ᵗm (subst (s <ᵗ_) x₁ x₂))
+    ... | gt x₁ | lt x₂ = ⊥.rec (<ᵗ-asym' x₁ x₂)
+    ... | gt x₁ | eq x₂ = ⊥.rec (¬m<ᵗm (subst (suc s <ᵗ_) x₂ x₁))
+    ... | gt x₁ | gt x₂ = refl
 
     g≡ : (x : _) (y : _) → g x y ≡ ⋁Sphere→ΠSphere x y
     g≡ (inl x) = g≡inl

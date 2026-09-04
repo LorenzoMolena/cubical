@@ -413,11 +413,11 @@ Trichotomy-suc (eq m=n) = eq (cong suc m=n)
 Trichotomy-suc (gt n<m) = gt (suc-≤-suc n<m)
 
 _≟_ : ∀ m n → Trichotomy m n
-m ≟ n with m <ᵇ? n | n <ᵇ? m
-... | yes p | yes q = ⊥.rec $ <-irrefl {m} $ <-trans (<ᵇ→< p) (<ᵇ→< q)
-... | yes p | no ¬q = lt (<ᵇ→< p)
-... | no ¬p | yes q = gt (<ᵇ→< q)
-... | no ¬p | no ¬q = eq (≤-antisym (≤ᵇ→≤ (¬<ᵇ→≥ᵇ n m ¬q)) (≤ᵇ→≤ (¬<ᵇ→≥ᵇ m n ¬p)))
+m ≟ n with m <ᵇ? n
+... | yes p = lt (<ᵇ→< p)
+... | no ¬p with n <ᵇ? m
+... | yes q = gt (<ᵇ→< q)
+... | no ¬q = eq (≤-antisym (≤ᵇ→≤ (¬<ᵇ→≥ᵇ n m ¬q)) (≤ᵇ→≤ (¬<ᵇ→≥ᵇ m n ¬p)))
 
 --  Alternative version of ≟, defined without builtin primitives
 

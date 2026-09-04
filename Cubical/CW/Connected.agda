@@ -1308,7 +1308,10 @@ makeConnectedCW {ℓ = ℓ} (suc n) {C = C} (cwsk , eqv) cA with
               card' m (m ≟ᵗ 2+n) (m ≟ᵗ 3+n)
             fst (snd (fst (snd C'-connectedCWskel))) m = α' m _ _
             fst (snd (snd (fst (snd C'-connectedCWskel)))) ()
-            snd (snd (snd (fst (snd C'-connectedCWskel)))) m = e' m _ _
+            snd (snd (snd (fst (snd C'-connectedCWskel)))) m =
+              subst (λ r → C' (suc m) r ≃ Pushout (α' m (m ≟ᵗ 2+n) (m ≟ᵗ 3+n)) fst)
+              (isPropTrichotomyᵗ (Trichotomyᵗ-suc (m ≟ᵗ 2+n)) (suc m ≟ᵗ 3+n))
+              (e' m _ _)
             fst (snd (snd C'-connectedCWskel)) = refl
             snd (snd (snd C'-connectedCWskel)) m ineq = C'-connected m ineq _ _
 
