@@ -45,7 +45,7 @@ module SansReflection (crs : CommRingSolverConfig) where
  open HomomorphismProperties R  R` (snd commAlg)
 
  mb≟ : ∀ x y → Maybe (x ≡ y)
- mb≟ x y = mbDiscreteScalars <* x <* y >>= decToMaybe
+ mb≟ x y = Mb.rec nothing (λ d → decToMaybe (d x y)) mbDiscreteScalars
 
  infix 9 _^'_
 

@@ -46,6 +46,7 @@ import Cubical.HITs.SetQuotients as SetQuotient
 
 open import Cubical.Tactics.CommRingSolver.Specialised.FastIntPlus
 
+open import Cubical.Tactics.CommRingSolver.Specialised.RationalsEqElims
 open EqElims
 
 _ : Q[ ℕ.suc 3 ℕ.+ 12 ]≡ lit (nat 16)
@@ -157,7 +158,7 @@ _,ℚ_ : ℚ → ℚ → ℚ × ℚ
 _,ℚ_ = _,_
 
 doNotUnfoldsℚ : List Name
-doNotUnfoldsℚ = quote ℚ.abs ∷ quote ℚ.max ∷ quote ℚ.min ∷ []
+doNotUnfoldsℚ = quote ℚ.max ∷ quote ℚ.min ∷ []
 
 
 
@@ -166,7 +167,7 @@ wrdℕ = withReduceDefs
    (false , ((quote ℕ._·_) ∷
     (quote ℕ._+_) ∷ (quote ℤ._+_) ∷ (quote (ℤ.-_)) ∷ (quote ℤ._·_) ∷ (quote _ℕ-_)
      -- ∷ []))
-     ∷ (quote _+₁_) ∷ (quote _·₊₁_) ∷ (quote ℕ₊₁→ℕ) ∷ (quote ℤ.ℕ₊₁→ℤ)
+     ∷ (quote _+₁_) ∷ (quote _·₊₁_) ∷ (quote ℕ₊₁→ℕ) ∷ (quote ℚ.ℕ₊₁→ℤ)
       ∷ (quote ℤ.0<→ℕ₊₁-fst) ∷ []))
 
 
@@ -190,7 +191,7 @@ module _ (dbg : Bool) where
   wrdℚ : ∀ {a} {A : Type a} → TC A → TC A
   wrdℚ = withReduceDefs ( false , ((quoteDefsfNames
       (ℚ._+_ ω∷ ℚ.-_ ω∷ _·_ ω∷ ℕ._·_ ω∷ ℕ._+_ ω∷ ℤ._+_ ω∷ (ℤ.-_)
-      ω∷ ℤ._·_ ω∷ _ℕ-_ ω∷ _+₁_ ω∷ _·₊₁_ ω∷ ℕ₊₁→ℕ ω∷ ℤ.ℕ₊₁→ℤ
+      ω∷ ℤ._·_ ω∷ _ℕ-_ ω∷ _+₁_ ω∷ _·₊₁_ ω∷ ℕ₊₁→ℕ ω∷ ℚ.ℕ₊₁→ℤ
        ω∷ ℤ.0<→ℕ₊₁-fst ω∷ ω[])) ++ doNotUnfoldsℚ))
 
 
@@ -232,7 +233,7 @@ module _ (dbg : Bool) where
         -- FastℤPlusRingSolver.solve!-macro h2 -- IPR.solve!-macro h2
         FastℤPlusRingSolver.solve!-macro h2
         debugPrint' "ratSolver" 20 [ "ints solved!" ]ₑ
-        pure (def (quote ℚ.eqℚ) (h2 v∷ []))
+        pure (def (quote eqℚ) (h2 v∷ []))
 
       let solveℚTm = def (quote EllimEqₛ) ((sigTm v∷ lrhs v∷ v[ sbi ]) ++
                map (λ (i , _) → varg (var i []))  sigℚ)

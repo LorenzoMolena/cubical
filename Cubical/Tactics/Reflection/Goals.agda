@@ -1,4 +1,3 @@
-{-# OPTIONS --quote-metas #-}
 module Cubical.Tactics.Reflection.Goals where
 
 open import Cubical.Foundations.Prelude hiding (Type)
@@ -78,33 +77,3 @@ satisfySomeTC tactic' hole = do
      (unify (con (quote DL._∷_) (holeL v∷ v[ holeR ])) tm)
      maybeSolveMaybe tactic' holeL
      go fuel holeR
-
-
-
-
-
-macro
- testSatisfySomeTC' : Term → Term → TC Unit
- testSatisfySomeTC' lemHole hole = do
-   lemHole' ← satisfySomeTC
-     (λ h _ → pure false)
-     hole
-   unify lemHole' lemHole
-
-
-
-zzz' : ListP (idfun _) ((2 ≡ 2) ∷ (1 ≡ 1) ∷ (3 ≡ 3) ∷ [])
-zzz' = testSatisfySomeTC' (refl ∷ refl ∷ P[ refl ])
-
-macro
- testSatisfySomeTC : Term → Term → TC Unit
- testSatisfySomeTC lemHole hole = do
-   lemHole' ← satisfySomeTC
-     (λ h _ → sucesfullM? (unify h (def (quote refl) [])))
-     hole
-   unify lemHole' lemHole
-
-
-module _ (p : _) (q : _) where
- zzz : ListP (idfun _) ((2 ≡ 3) ∷ (1 ≡ 1) ∷ (1 ≡ 3) ∷ [])
- zzz = testSatisfySomeTC (p ∷ q ∷ [])

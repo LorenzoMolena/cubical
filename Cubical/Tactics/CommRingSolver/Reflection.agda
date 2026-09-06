@@ -420,9 +420,6 @@ mbNegℤ : (x : Fastℤ.ℤ) → Maybe (Σ Fastℤ.ℤ (λ -x → Fastℤ.- -x �
 mbNegℤ (Fastℤ.pos n) = nothing
 mbNegℤ (Fastℤ.negsuc n) = just (Fastℤ.pos (ℕ.suc n) ,  refl)
 
-cdℤ : (a b : Fastℤ.ℤ) → Σ[ (a' , b' , c ) ∈ _ × _ × _ ]
-                (a ≡ a' Fastℤ.· c) × (b ≡ b' Fastℤ.· c)
-cdℤ a b = _ , snd (Fastℤ.gcdℤ a b)
 
 ·lCancelℤ : ∀ c m n → c Fastℤ.· m ≡ c Fastℤ.· n → ¬ c ≡ 0 → m ≡ n
 ·lCancelℤ = Fastℤ.·lCancel
@@ -437,7 +434,7 @@ module SolveOverℤ {ℓ} (cring : CommRing ℓ) where
   config .CommRingSolverConfig.commAlg = cring , _ , Fastℤ'.CanonicalHomFromℤ.isHomFromℤ _
   config .CommRingSolverConfig.mbDiscreteScalars = just Fastℤ.discreteℤ
   config .CommRingSolverConfig.mbNeg?Scalar = just mbNegℤ
-  config .CommRingSolverConfig.mbCommonDenom = just cdℤ
+  config .CommRingSolverConfig.mbCommonDenom = nothing
   config .CommRingSolverConfig.mb·`lCancel = mb·`lCancel
   config .CommRingSolverConfig.mbNotZeroRing = mbNotZeroRing
   config .CommRingSolverConfig.mb≢0r→≢0r` = mb≢0r→≢0r`
@@ -597,7 +594,7 @@ module FastℤRingSolver where
   Fastℤ'.ℤCommRing , idCommRingHom _
  config .CommRingSolverConfig.mbDiscreteScalars = just Fastℤ.discreteℤ
  config .CommRingSolverConfig.mbNeg?Scalar = just mbNegℤ
- config .CommRingSolverConfig.mbCommonDenom = just cdℤ
+ config .CommRingSolverConfig.mbCommonDenom = nothing
  config .CommRingSolverConfig.mb·`lCancel = just ·lCancelℤ
  config .CommRingSolverConfig.mbNotZeroRing = just (Slowℤ.0≢1-ℤ ∘S sym)
  config .CommRingSolverConfig.mb≢0r→≢0r` = just λ _ z → z

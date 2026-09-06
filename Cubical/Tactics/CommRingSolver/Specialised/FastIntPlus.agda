@@ -20,6 +20,7 @@ open import Cubical.Data.Nat.Literals
 open import Cubical.Data.Int as Slowℤ using (fromNegℤ; fromNatℤ)
 open import Cubical.Data.Nat using (ℕ; discreteℕ) renaming (_+_ to _+ℕ_)
 open import Cubical.Data.NatPlusOne
+open import Cubical.Data.Rationals.Base using (ℕ₊₁→ℤ)
 import Cubical.Data.Nat as ℕ
 open import Cubical.Data.Bool
 open import Cubical.Data.Vec using (Vec) renaming ([] to emptyVec; _∷_ to _∷vec_)
@@ -58,6 +59,11 @@ import Cubical.Algebra.AbGroup.Base as AbGroup
 
 open import Cubical.Tactics.CommRingSolver.Config
 open import Cubical.Tactics.CommRingSolver.Reflection
+import Cubical.Data.Fast.Int.GCD as FastℤGCD
+
+cdℤ : (a b : Fastℤ.ℤ) → Σ[ (a' , b' , c ) ∈ _ × _ × _ ]
+                (a ≡ a' Fastℤ.· c) × (b ≡ b' Fastℤ.· c)
+cdℤ a b = _ , snd (FastℤGCD.gcdℤ a b)
 
 -- module _ (k : ℕ₊₁) where
 --  _ : Q[ pos (Fastℤ.abs (ℕ₊₁→ℤ k)) ]≡
