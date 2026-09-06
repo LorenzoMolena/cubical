@@ -15,6 +15,7 @@ open import Cubical.Data.Sigma
 open import Cubical.Data.Sum
 
 open import Cubical.Data.Nat as ℕ
+open import Cubical.Data.NatPlusOne
 open import Cubical.Data.Nat.Order as ℕ using ()
 open import Cubical.Data.Nat.Order.Inductive as ℕ
 open import Cubical.Data.Fast.Int as ℤ
@@ -633,6 +634,16 @@ min≤ {negsuc (suc m)} {negsuc (suc n)} with m ℕ.<ᵇ? n
       ∙ cong₂ ℤ.max (≤→max p) (≤→max q))
     ≤max
 
+
+0<→ℕ₊₁-fst : ℤ → ℕ₊₁
+0<→ℕ₊₁-fst (pos zero) = 1
+0<→ℕ₊₁-fst (pos (suc n)) = 1+ n
+0<→ℕ₊₁-fst (negsuc n) = 1
+
+0<→ℕ₊₁ : ∀ n → 0 < n → Σ ℕ₊₁ λ m → n ≡ pos (ℕ₊₁→ℕ m)
+0<→ℕ₊₁ n p .fst = 0<→ℕ₊₁-fst n
+0<→ℕ₊₁ n (pos<pos {y = suc y} x) .snd = refl
+
 0<+ : ∀ m n → 0 < m ℤ.+ n → (0 < m) ⊎ (0 < n)
 0<+ (pos zero)    (pos (suc n)) (pos<pos p) = inr zero-<possuc
 0<+ (pos (suc m)) (pos zero)    (pos<pos p) = inl zero-<possuc
@@ -646,6 +657,23 @@ min≤ {negsuc (suc m)} {negsuc (suc n)} with m ℕ.<ᵇ? n
 Σℕ→< : Σ[ k ∈ ℕ ] m ℤ.+ pos (suc k) ≡ n → m < n
 Σℕ→< = recompute< ∘ uncurry λ _ → flip (subst (_ <_)) <SumLeftPosSuc
 
+ℕ≤→pos-≤-pos : ∀ m n → m ℕ.≤ n → pos m ≤ pos n
+ℕ≤→pos-≤-pos m n p = pos≤pos (ℕ.≤→≤ᵇ p)
+
+ℕ<→pos-<-pos : ∀ m n → m ℕ.< n → pos m < pos n
+ℕ<→pos-<-pos m n p = pos<pos (ℕ.<→<ᵗ p)
+
+ℕ≥→negsuc-≤-negsuc : ∀ m n → m ℕ.≤ n → negsuc n ≤ negsuc m
+ℕ≥→negsuc-≤-negsuc m n p = negsuc≤negsuc (ℕ.≤→≤ᵇ p)
+
+pos-≤-pos→ℕ≤ : ∀ m n → pos m ≤ pos n → m ℕ.≤ n
+pos-≤-pos→ℕ≤ m n (pos≤pos x) = ℕ.≤ᵇ→≤ x
+
+pos-≤-pos≃ℕ≤ : ∀ m n → (pos m ≤ pos n) ≃ (m ℕ.≤ n)
+pos-≤-pos≃ℕ≤ m n = propBiimpl→Equiv isProp≤ ℕ.isProp≤
+                (pos-≤-pos→ℕ≤ _ _) (ℕ≤→pos-≤-pos _ _)
+
+
 -- the first component will normalize quickly, but not the path itself
 ≤→Σℕ : m ≤ n → Σ[ k ∈ ℕ ] m ℤ.+ pos k ≡ n
 ≤→Σℕ {m} {n} p .fst = abs (n - m)
@@ -658,6 +686,12 @@ min≤ {negsuc (suc m)} {negsuc (suc n)} with m ℕ.<ᵇ? n
 -- the first component will normalize quickly, but not the path itself
 <→Σℕ : m < n → Σ[ k ∈ ℕ ] m ℤ.+ pos (suc k) ≡ n
 <→Σℕ {m} = map-snd (sym (+sucℤ m _) ∙∙ sucℤ+ m _ ∙∙_) ∘ ≤→Σℕ ∘ <→suc≤
+
+
+0≤x² : ∀ n → 0 ≤ n ℤ.· n
+0≤x² (pos n) = subst (0 ≤_) (pos·pos n n) zero-≤pos
+0≤x² (negsuc n) = subst (0 ≤_) (pos·pos (suc n) (suc n)
+  ∙ sym (negsuc·negsuc n n)) zero-≤pos
 
 data Trichotomy m n : Type where
   lt : m < n → Trichotomy m n
