@@ -14,7 +14,7 @@ open import Cubical.Algebra.CommRing.Instances.Rationals
 open import Cubical.Algebra.Field
 
 open import Cubical.Data.Empty as Empty
-open import Cubical.Data.Int as ℤ
+open import Cubical.Data.Fast.Int as ℤ
 open import Cubical.Data.Nat as ℕ using (ℕ ; zero ; suc)
 open import Cubical.Data.NatPlusOne
 open import Cubical.Data.Rationals as ℚ
@@ -42,36 +42,9 @@ hasInverseℚ = SetQuotients.elimProp
   q (ℤ.pos zero , b) p =
     Empty.rec (p (numerator0→0 ((ℤ.pos zero , b)) refl))
   q (ℤ.pos (suc n) , (1+ m)) _ =
-    eq/ ((ℤ.pos (suc n) ℤ.· (ℕ₊₁→ℤ (1+ m)) , (1+ m) ·₊₁ (1+ n))) ((1 , 1)) q'
-    where
-    q' = (ℤ.pos (suc n) ℤ.· (ℕ₊₁→ℤ (1+ m))) ℤ.· 1
-           ≡⟨ ℤ.·IdR _ ⟩
-         ℤ.pos (suc n) ℤ.· ℤ.pos (suc m)
-           ≡⟨ sym $ ℤ.pos·pos (suc n) (suc m) ⟩
-         ℤ.pos ((suc n) ℕ.· (suc m))
-           ≡⟨ cong ℤ.pos (ℕ.·-comm (suc n) (suc m)) ⟩
-         ℤ.pos ((suc m) ℕ.· (suc n))
-           ≡⟨ refl ⟩
-         ℕ₊₁→ℤ ((1+ m) ·₊₁ (1+ n))
-           ≡⟨ sym (ℤ.·IdL _) ⟩
-         1 ℤ.· (ℕ₊₁→ℤ ((1+ m) ·₊₁ (1+ n))) ∎
+    eq/ _ _ (ℤ.·IdR _ ∙∙ ℤ.·Comm (pos (suc n)) (pos (suc m)) ∙∙ sym (ℤ.·IdL _))
   q (ℤ.negsuc n , (1+ m)) _ =
-    eq/ ((ℤ.negsuc n ℤ.· ℤ.negsuc m) , ((1+ m) ·₊₁ (1+ n))) ((1 , 1)) q'
-    where
-    q' : (ℤ.negsuc n ℤ.· ℤ.negsuc m , (1+ m) ·₊₁ (1+ n)) ∼ (1 , 1)
-    q' = (ℤ.negsuc n ℤ.· ℤ.negsuc m) ℤ.· 1
-           ≡⟨ ℤ.·IdR _ ⟩
-         (ℤ.negsuc n ℤ.· ℤ.negsuc m)
-           ≡⟨ negsuc·negsuc n m ⟩
-         (ℤ.pos (suc n) ℤ.· ℤ.pos (suc m))
-           ≡⟨ sym $ ℤ.pos·pos (suc n) (suc m) ⟩
-         ℤ.pos ((suc n) ℕ.· (suc m))
-           ≡⟨ cong ℤ.pos (ℕ.·-comm (suc n) (suc m)) ⟩
-         ℤ.pos ((suc m) ℕ.· (suc n))
-           ≡⟨ refl ⟩
-         ℕ₊₁→ℤ ((1+ m) ·₊₁ (1+ n))
-           ≡⟨ sym (ℤ.·IdL _) ⟩
-         1 ℤ.· (ℕ₊₁→ℤ ((1+ m) ·₊₁ (1+ n))) ∎
+    eq/ _ _ (ℤ.·IdR _ ∙∙ ℤ.·Comm (pos (suc n)) (pos (suc m)) ∙∙ sym (ℤ.·IdL _))
 
 0≢1-ℚ : ¬ Path ℚ 0 1
 0≢1-ℚ p = 0≢1-ℤ (effective (λ _ _ → isSetℤ _ _) isEquivRel∼ _ _ p)
