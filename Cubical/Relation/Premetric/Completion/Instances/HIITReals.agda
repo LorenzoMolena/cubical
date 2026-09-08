@@ -30,6 +30,9 @@ private
 
 pattern Δrat< p = rat-rat (ℚ.pos<pos p)
 
+infix  8 -_
+infixl 6 _+_ _-_
+
 -ⁿ : NE[ ℝPremetricSpace , ℝPremetricSpace ]
 -ⁿ = liftNE (ratⁿ ∘NE ℚ.-ⁿ)
 
