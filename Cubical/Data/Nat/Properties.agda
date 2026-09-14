@@ -259,6 +259,9 @@ m+n≡1→m≡0×n≡1⊎m≡1n≡0 {suc m} {n} x =
 ·-identityʳ zero = refl
 ·-identityʳ (suc m) = cong suc (·-identityʳ m)
 
+·2≡∘diag+ : ∀ m → 2 · m ≡ m + m
+·2≡∘diag+ m = cong (m +_) (·-identityˡ m)
+
 0≡n·sm→0≡n : 0 ≡ n · suc m → 0 ≡ n
 0≡n·sm→0≡n {n = zero} p = refl
 0≡n·sm→0≡n {n = suc n} p = ⊥.rec (znots p)
