@@ -34,18 +34,18 @@ module IncreasingDec (dec : ∀ n → Dec (P n)) (P≤ : ∀ {m n} → m ≤ᵗ 
       subst (Δ + a ≤_) (sym $ +-assoc (Δ / 2) _ (suc a) ∙ +-suc _ a) (≤-+ʳ (≤1+/2+/2 Δ))
 
     -- lemma needed to pass termination checking
-    ≤ᵗf : ∀ {Δ f} → Δ ≤ᵗ f → suc Δ / 2 ≤ᵗ f
-    ≤ᵗf {Δ} {f} = <ᵗ≤ᵗ-trans {suc Δ / 2} {suc Δ} {suc f} (<→<ᵗ (quotient<id Δ 0))
+    ≤ᵗf : ∀ Δ' {f} → Δ' ≤ᵗ f → suc Δ' / 2 ≤ᵗ f
+    ≤ᵗf Δ' {f} = <ᵗ≤ᵗ-trans {suc Δ' / 2} {suc Δ'} {suc f} (<→<ᵗ (quotient<id Δ' 0))
 
     helper : ∀ a Δ f → Δ ≤ᵗ f → ¬ (P a) → P (Δ + a) → Σ[ m ∈ ℕ ] Least P m
-    helper a zero    f       _   ¬Pa Pa     = ⊥.rec (¬Pa Pa)
-    helper a Δ@(suc Δ') (suc f) Δ≤f ¬Pa PΔ+a with dec (suc a)
-    ... | yes P1+a = (suc a) , P1+a , λ _ → (¬Pa ∘_) ∘ P≤
+    helper a zero       f       _    ¬Pa Pa   = ⊥.rec (¬Pa Pa)
+    helper a Δ@(suc Δ') (suc f) Δ'≤f ¬Pa PΔ+a with dec (suc a)
+    ... | yes P1+a = suc a , P1+a , λ _ → (¬Pa ∘_) ∘ P≤
     ... | no ¬P1+a with dec (mid a Δ)
     ... | yes Pm =
-      helper (suc a)   (Δ / 2) f (≤ᵗf {Δ'} Δ≤f) ¬P1+a Pm
+      helper (suc a)   (Δ / 2) f (≤ᵗf Δ' Δ'≤f) ¬P1+a Pm
     ... | no ¬Pm =
-      helper (mid a Δ) (Δ / 2) f (≤ᵗf {Δ'} Δ≤f) ¬Pm (P≤ (sum≤gap/2+mid Δ) PΔ+a)
+      helper (mid a Δ) (Δ / 2) f (≤ᵗf Δ' Δ'≤f) ¬Pm   (P≤ (sum≤gap/2+mid Δ) PΔ+a)
 
   -- if for a : ℕ we know already know that ¬ P a, then we can start searching from there
 
