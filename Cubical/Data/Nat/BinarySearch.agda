@@ -96,9 +96,7 @@ module example where
   _² = ∘diag _·_
 
   ≤→≤² : ∀ {m n} → m ≤ n → m ² ≤ n ²
-  ≤→≤² {zero}  {n}     = λ _ → zero-≤
-  ≤→≤² {suc m} {zero}  = ⊥.rec ∘ ¬-<-zero
-  ≤→≤² {suc m} {suc n} = λ m≤n → ≤-trans (≤-·ˡ {k = suc m} m≤n) (≤-·ʳ {k = suc n} m≤n)
+  ≤→≤² {m} {n} = λ m≤n → ≤-trans (≤-·ˡ {k = m} m≤n) (≤-·ʳ {k = n} m≤n)
 
   id≤² : ∀ n → n ≤ n ²
   id≤²    zero   = zero-≤
