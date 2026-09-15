@@ -118,29 +118,13 @@ module BiggestImage≤ (f : ℕ → ℕ) (inc : isIncreasing f) (f0=0 : f 0 ≡ 
 -- as an example, we can implement the floor of the square root on natural numbers;
 -- as shown below, the use of binary search makes the implementation reasonably efficient
 module example where
-  _² = ∘diag _·_
-
-  ≤→≤² : ∀ {m n} → m ≤ n → m ² ≤ n ²
-  ≤→≤² {m} {n} = λ m≤n → ≤-trans (≤-·ˡ {k = m} m≤n) (≤-·ʳ {k = n} m≤n)
-
-  id≤² : ∀ n → n ≤ n ²
-  id≤²    zero   = zero-≤
-  id≤² n@(suc _) = subst (_≤ n · n) (·-identityʳ n) (≤-·ˡ {k = n} (suc-≤-suc zero-≤))
-
-  Σ<suc² : ∀ n → Σ[ k ∈ ℕ ] n <ᵗ k ²
-  Σ<suc² n = (suc n , <→<ᵗ (id≤² (suc n)))
-
   module _ (n : ℕ) where
-    open BiggestImage≤.→Biggest _² ≤→≤² refl n (Σ<suc² n)
+    private
+      Σ<suc² : Σ[ k ∈ ℕ ] n <ᵗ k ^ 2
+      Σ<suc² = (suc n , <→<ᵗ (L≤^suc (suc n) 1))
 
-    ⌊√_⌋ : ℕ
-    ⌊√_⌋ = preimage
-
-    <⌊√1+_⌋ : n < suc ⌊√_⌋ ²
-    <⌊√1+_⌋ = <imageSuc
-
-    ⌊√_⌋≤ : ⌊√_⌋ ² ≤ n
-    ⌊√_⌋≤ = image≤
+    open BiggestImage≤.→Biggest (_^ 2) (≤-^ʳ {k = 2}) refl n Σ<suc² public renaming
+      (preimage to ⌊√_⌋ ; <imageSuc to <⌊√1+_⌋ ; image≤ to ⌊√_⌋≤)
 
   √2Digits : ℕ → ℕ × ℕ
   √2Digits n = toDigits n ⌊√ 2 · 100 ^ n ⌋ where
