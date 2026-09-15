@@ -120,10 +120,10 @@ module BiggestImage≤ (f : ℕ → ℕ) (inc : isIncreasing f) (f0=0 : f 0 ≡ 
 module example where
   module _ (n : ℕ) where
     private
-      Σ<suc² : Σ[ k ∈ ℕ ] n <ᵗ k ^ 2
-      Σ<suc² = (suc n , <→<ᵗ (L≤^suc (suc n) 1))
+      Σ<² : Σ[ k ∈ ℕ ] n <ᵗ k ^ 2
+      Σ<² = (suc n , <→<ᵗ (L≤^suc (suc n) 1))
 
-    open BiggestImage≤.→Biggest (_^ 2) (≤-^ʳ {k = 2}) refl n Σ<suc² public renaming
+    open BiggestImage≤.→Biggest (_^ 2) (≤-^ʳ {k = 2}) refl n Σ<² public renaming
       (preimage to ⌊√_⌋ ; <imageSuc to <⌊√1+_⌋ ; image≤ to ⌊√_⌋≤)
 
   √2Digits : ℕ → ℕ × ℕ
