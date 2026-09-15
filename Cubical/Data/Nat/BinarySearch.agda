@@ -74,21 +74,46 @@ module IncreasingDec (dec : ∀ n → Dec (P n)) (P≤ : ∀ {m n} → m ≤ᵗ 
 -- an increasing function which is below a given k : ℕ
 module BiggestImage≤ (f : ℕ → ℕ) (inc : isIncreasing f) (f0=0 : f 0 ≡ 0) (k : ℕ) where
   open IncreasingDec
-    ((k <ᵗ?_) ∘ f ∘ suc)
-    (λ {m} {n} → flip (<ᵗ≤ᵗ-trans {k} {f (suc m)} {f (suc n)}) ∘ ≤→≤ᵇ ∘ inc ∘ ≤ᵇ→≤)
+    ((k <ᵗ?_) ∘ f)
+    (λ {m} {n} → flip (<ᵗ≤ᵗ-trans {k} {f m} {f n}) ∘ ≤→≤ᵇ ∘ inc ∘ ≤ᵇ→≤)
     public hiding (mid)
 
-  module _ (ΣP : Σ[ n ∈ ℕ ] k <ᵗ f (suc n)) where
-    biggestImage≤ : ℕ
-    biggestImage≤ = fst (→Least ΣP)
+  private
+    module withLeast where
+      preimage : Σ ℕ (Least ((k <ᵗ_) ∘ f)) → ℕ
+      preimage = predℕ ∘ fst
 
-    <funSuc : k < f (suc biggestImage≤)
-    <funSuc = <ᵗ→< $ fst $ snd $ →Least ΣP
+      <imageSuc : ∀ ΣLeast → k < f (suc (preimage ΣLeast))
+      <imageSuc (zero  , k<f0  , _) = <≤-trans (<ᵗ→< k<f0) (inc zero-≤)
+      <imageSuc (suc n , k<fsn , _) = <ᵗ→< k<fsn
 
-    fun≤ : f biggestImage≤ ≤ k
-    fun≤ with →Least ΣP
-    ... | zero  , k<fsn , r<n→¬k<fsr = subst (_≤ k) (sym f0=0) zero-≤
-    ... | suc r , k<fsn , r<n→¬k<fsr = <-asym' $ r<n→¬k<fsr r (<ᵗsuc {r}) ∘ <→<ᵗ
+      image≤ : ∀ ΣLeast → f (preimage ΣLeast) ≤ k
+      image≤ (zero  , k<f0  , r<n→¬k<fsr) = subst (_≤ k) (sym f0=0) zero-≤
+      image≤ (suc n , k<fsn , r<n→¬k<fsr) = <-asym' $ r<n→¬k<fsr n (<ᵗsuc {n}) ∘ <→<ᵗ
+
+  module →Biggest[_,_] (a n : ℕ) (a≤n : a ≤ n) (fa≤k : f a ≤ᵗ k) (k<fn : k <ᵗ f n) where
+    private
+      ΣLeast : Σ ℕ (Least ((k <ᵗ_) ∘ f))
+      ΣLeast = →Least[ a , n ] a≤n (flip (<ᵗ-asym {k} {f a}) (≤ᵗ→≤ fa≤k)) k<fn
+
+    preimage : ℕ
+    preimage = withLeast.preimage ΣLeast
+
+    <imageSuc : k < f (suc preimage)
+    <imageSuc = withLeast.<imageSuc ΣLeast
+
+    image≤ : f preimage ≤ k
+    image≤ = withLeast.image≤ ΣLeast
+
+  module →Biggest (ΣP : Σ[ n ∈ ℕ ] k <ᵗ f n) where
+    preimage : ℕ
+    preimage = withLeast.preimage (→Least ΣP)
+
+    <imageSuc : k < f (suc preimage)
+    <imageSuc = withLeast.<imageSuc (→Least ΣP)
+
+    image≤ : f preimage ≤ k
+    image≤ = withLeast.image≤ (→Least ΣP)
 
 -- as an example, we can implement the floor of the square root on natural numbers;
 -- as shown below, the use of binary search makes the implementation reasonably efficient
@@ -102,19 +127,20 @@ module example where
   id≤²    zero   = zero-≤
   id≤² n@(suc _) = subst (_≤ n · n) (·-identityʳ n) (≤-·ˡ {k = n} (suc-≤-suc zero-≤))
 
-  Σ<suc² : ∀ n → Σ[ k ∈ ℕ ] n <ᵗ (suc k) ²
-  Σ<suc² n = (n , <→<ᵗ (id≤² (suc n)))
+  Σ<suc² : ∀ n → Σ[ k ∈ ℕ ] n <ᵗ k ²
+  Σ<suc² n = (suc n , <→<ᵗ (id≤² (suc n)))
 
-  open BiggestImage≤ _² ≤→≤² refl
+  module _ (n : ℕ) where
+    open BiggestImage≤.→Biggest _² ≤→≤² refl n (Σ<suc² n)
 
-  ⌊√_⌋ : ℕ → ℕ
-  ⌊√ n ⌋ = biggestImage≤ n (Σ<suc² n)
+    ⌊√_⌋ : ℕ
+    ⌊√_⌋ = preimage
 
-  <⌊√1+_⌋ : ∀ n → n < suc ⌊√ n ⌋ ²
-  <⌊√1+ n ⌋ = <funSuc n (Σ<suc² n)
+    <⌊√1+_⌋ : n < suc ⌊√_⌋ ²
+    <⌊√1+_⌋ = <imageSuc
 
-  ⌊√_⌋≤ : ∀ n → ⌊√ n ⌋ ² ≤ n
-  ⌊√ n ⌋≤ = fun≤ n (Σ<suc² n)
+    ⌊√_⌋≤ : ⌊√_⌋ ² ≤ n
+    ⌊√_⌋≤ = image≤
 
   √2Digits : ℕ → ℕ × ℕ
   √2Digits n = toDigits n ⌊√ 2 · 100 ^ n ⌋ where
