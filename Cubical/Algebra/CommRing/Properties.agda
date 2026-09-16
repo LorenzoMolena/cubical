@@ -289,6 +289,19 @@ module Exponentiation (R' : CommRing ℓ) where
  ^-presUnit f zero f∈Rˣ = RˣContainsOne
  ^-presUnit f (suc n) f∈Rˣ = RˣMultClosed f (f ^ n) ⦃ f∈Rˣ ⦄ ⦃ ^-presUnit f n f∈Rˣ ⦄
 
+ ^-⁻¹ : ∀ (f : R) (n : ℕ) → ⦃ f∈Rˣ : f ∈ Rˣ ⦄ ⦃ fⁿ∈Rˣ : f ^ n ∈ Rˣ ⦄
+      → (f ⁻¹) ^ n ≡ (f ^ n) ⁻¹
+ ^-⁻¹ f n = sym $ ⁻¹≡ $ isInvf⁻¹^ n where
+  isInvf⁻¹^ : ∀ n → (f ^ n) · (f ⁻¹) ^ n ≡ 1r
+  isInvf⁻¹^ zero    = ·IdL _
+  isInvf⁻¹^ (suc n) =
+    f · f ^ n · (f ⁻¹ · (f ⁻¹) ^ n) ≡⟨ congL _·_ (·Comm f _) ⟩
+    f ^ n · f · (f ⁻¹ · (f ⁻¹) ^ n) ≡⟨ ·Assoc _ _ _ ∙ sym(congL _·_ (·Assoc _ f _)) ⟩
+    f ^ n · (f · f ⁻¹) · (f ⁻¹) ^ n ≡⟨ congL _·_ $ congR _·_ $ ·-rinv f ⟩
+    f ^ n · 1r · (f ⁻¹) ^ n         ≡⟨ congL _·_ (·IdR _) ⟩
+    f ^ n · (f ⁻¹) ^ n              ≡⟨ isInvf⁻¹^ n ⟩
+    1r                              ∎
+
 module CommRingHomTheory {A' B' : CommRing ℓ} (φ : CommRingHom A' B') where
  open Units A' renaming (Rˣ to Aˣ ; _⁻¹ to _⁻¹ᵃ ; ·-rinv to ·A-rinv ; ·-linv to ·A-linv)
  open Units B' renaming (Rˣ to Bˣ ; _⁻¹ to _⁻¹ᵇ ; ·-rinv to ·B-rinv)

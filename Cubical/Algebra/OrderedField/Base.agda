@@ -18,7 +18,7 @@ open import Cubical.Relation.Nullary
 
 private
   variable
-    ℓ ℓ' ℓ<≤ ℓ<≤' : Level
+    ℓ ℓ' ℓ'' ℓ<≤ ℓ<≤' ℓ<≤'' : Level
 
 record IsOrderedField
   {F : Type ℓ}
@@ -63,10 +63,8 @@ OrderedField→Apartness : OrderedField ℓ ℓ' → Apartness ℓ ℓ'
 OrderedField→Apartness = OrderedCommRing→Apartness ∘ OrderedField→OrderedCommRing
 
 -- The naïve definition of "OCR + invertible iff apart from zero",
--- with apartness derived from the stric order, is sufficient to satisfy
+-- with apartness derived from the strict order, is sufficient to satisfy
 -- the conditions of Anshwad10's presentation of Heyting Fields.
--- TO DO: show that `·CancelR<` is derivable, and that such presentation satisfies
--- all the axioms in the HoTT book / A. Booij PhD Thesis definition of Ordered Field.
 OrderedField→HeytingField : OrderedField ℓ ℓ' → HeytingField ℓ ℓ'
 fst (OrderedField→HeytingField F) = fst F
 snd (OrderedField→HeytingField F) = heytingfieldstr _ _ _ _ _ _ isHF where
@@ -91,63 +89,18 @@ module _ {A : Type ℓ} {B : Type ℓ'} where
     f
     (snd (OrderedField→OrderedCommRing (_ , K)))
 
-{-
--- ??
-module _ {ℓA ℓA' ℓB ℓB'} {A : Type ℓA} {B : Type ℓB} where
-  IsOrderedFieldHom : (OrderedFieldStr ℓA' A) → (A → B) → (OrderedFieldStr ℓB' B) → Type _
-  IsOrderedFieldHom F f K = IsOrderedCommRingHom
-    (snd (OrderedField→OrderedCommRing (_ , F)))
-    f
-    (snd (OrderedField→OrderedCommRing (_ , K)))
-
--- record IsOrderedFieldHom {A : Type ℓ} {B : Type ℓ'}
---   (F : OrderedFieldStr ℓ<≤ A)
---   (f : A → B)
---   (K : OrderedFieldStr ℓ<≤' B)
---   : Type (ℓ-max ℓ (ℓ-max ℓ' (ℓ-max ℓ<≤ ℓ<≤')))
---   where
---   no-eta-equality
---   private
---     module F = OrderedFieldStr F
---     module K = OrderedFieldStr K
---     Focring = str (OrderedField→OrderedCommRing (_ , F))
---     Kocring = str (OrderedField→OrderedCommRing (_ , K))
---
---   field
---     isOrderedCommRingHom : IsOrderedCommRingHom Focring f Kocring
---
---   open IsOrderedCommRingHom isOrderedCommRingHom public
-
--- OrderedFieldHom : OrderedField ℓ ℓ<≤ → OrderedField ℓ' ℓ<≤' → Type _
--- OrderedFieldHom F K = Σ[ f ∈ (⟨ F ⟩ → ⟨ K ⟩) ] IsOrderedFieldHom (F .snd) f (K .snd)
 OrderedFieldHom : OrderedField ℓ ℓ<≤ → OrderedField ℓ' ℓ<≤' → Type _
-OrderedFieldHom F K =
-  OrderedCommRingHom (OrderedField→OrderedCommRing F) (OrderedField→OrderedCommRing K)
+OrderedFieldHom F K = Σ[ f ∈ (⟨ F ⟩ → ⟨ K ⟩) ] IsOrderedFieldHom (F .snd) f (K .snd)
 
-module _ {A : OrderedField ℓ ℓ<≤} {B : OrderedField ℓ' ℓ<≤'} where
+idOFHom : (F : OrderedField ℓ ℓ<≤) → OrderedFieldHom F F
+idOFHom = idOCRMono ∘ OrderedField→OrderedCommRing
 
-  open IsOrderedCommRingMono
+module _
+  {F : OrderedField ℓ ℓ<≤} {K : OrderedField ℓ' ℓ<≤'} {H : OrderedField ℓ'' ℓ<≤''}
+  where
 
-  private
-    A' = OrderedField→OrderedCommRing A
-    B' = OrderedField→OrderedCommRing B
+  compOFHom : OrderedFieldHom F K → OrderedFieldHom K H → OrderedFieldHom F H
+  compOFHom = compOCRMono
 
-  OrderedFieldHom→OrderedCommRingHom : OrderedFieldHom A B → OrderedCommRingHom A' B'
-  fst (OrderedFieldHom→OrderedCommRingHom f) = fst f
-  snd (OrderedFieldHom→OrderedCommRingHom f) = snd f
-    -- isOrderedCommRingHom
-    -- where open IsOrderedFieldHom (snd f)
-
-  OrderedFieldHom→OrderedCommRingMono : OrderedFieldHom A B → OrderedCommRingMono A' B'
-  fst (OrderedFieldHom→OrderedCommRingMono f) = fst f
-  snd (OrderedFieldHom→OrderedCommRingMono f) .isOrderedCommRingHom = snd f
-  snd (OrderedFieldHom→OrderedCommRingMono f) .pres< x y x<y = {!   !}
-  -- x<y → 0<y-x → Σ z = (y-x)⁻¹
-  -- 1 = f 1 = f ((y-x) · z) = f (y - x) · f z
-  -- → Σ w = (f y - f x)⁻¹
-  -- → (f y - f x)⁻¹ # 0
-  -- 1) 0 < f y - f x → f x < f y
-  -- 2) f y - f x < 0 → f y < f x
-  --    → y < x ⇒⇐
-    -- where open IsOrderedFieldHom (snd f)
--- -}
+  _∘of_ : OrderedFieldHom K H → OrderedFieldHom F K → OrderedFieldHom F H
+  _∘of_ = _∘ocr↪_

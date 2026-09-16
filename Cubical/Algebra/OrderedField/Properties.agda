@@ -65,10 +65,11 @@ module _ (F' : OrderedField ℓ ℓ') where
   open OrderedFieldStr (snd F')
   open HeytingFieldStr (snd (OrderedField→HeytingField F')) using (_#_)
 
+  open Exponentiation FCR
+
   module OrderedFieldTheory where
     open OrderedCommRingTheory FOCR hiding (_#_) public
     open FieldTheory (OrderedField→HeytingField F') public
-    open Exponentiation FCR
 
     0<→∈Fˣ : {x : F} {0< : 0f < x} → x ∈ Fˣ
     0<→∈Fˣ {x} {0<} = #0→isInv x (inr 0<)
@@ -147,16 +148,5 @@ module _ (F' : OrderedField ℓ ℓ') where
     <₊1→1<₊⁻¹ : ∀ x → x <₊ 1₊ → 1₊ <₊ x ⁻¹₊
     <₊1→1<₊⁻¹ x = subst (_< ⟨ x ⁻¹₊ ⟩₊) (1⁻¹≡1 ⦃ 0<→∈Fˣ ⦄) ∘ ⁻¹Flip<₊ x 1₊
 
-    ₊^∘⁻¹₊≡⁻¹₊∘₊^ : ∀ x n → ⟨ (x ⁻¹₊) ₊^ n ⟩₊ ≡ ⟨ (x ₊^ n) ⁻¹₊ ⟩₊
-    ₊^∘⁻¹₊≡⁻¹₊∘₊^ x zero    = sym $ 1⁻¹≡1 ⦃ 0<→∈Fˣ ⦄
-    ₊^∘⁻¹₊≡⁻¹₊∘₊^ x (suc n) =
-      let
-        x⁻¹ = x ⁻¹₊ ; _ⁿ = ⟨_⟩₊ ∘ (_₊^ n) ; _¹⁺ⁿ = ⟨_⟩₊ ∘ (_₊^ suc n)
-      in
-        sym $ ⁻¹≡ $
-        x ¹⁺ⁿ · x⁻¹ ¹⁺ⁿ                  ≡⟨⟩
-        ⟨ x ⟩₊ · x ⁿ · (⟨ x⁻¹ ⟩₊ · x⁻¹ ⁿ) ≡⟨ solve! FCR ⟩
-        ⟨ x ⟩₊ · ⟨ x⁻¹ ⟩₊ · (x ⁿ · x⁻¹ ⁿ) ≡⟨ congL _·_ (·-rinv ⟨ x ⟩₊) ∙ ·IdL _ ⟩
-        x ⁿ · x⁻¹ ⁿ                      ≡⟨ congR _·_ (₊^∘⁻¹₊≡⁻¹₊∘₊^ x n) ⟩
-        x ⁿ · ⟨ (x ₊^ n) ⁻¹₊ ⟩₊           ≡⟨ ·-rinv (x ⁿ) ⟩
-        1f                               ∎
+    ₊^-⁻¹₊ : ∀ x n → ⟨ (x ⁻¹₊) ₊^ n ⟩₊ ≡ ⟨ (x ₊^ n) ⁻¹₊ ⟩₊
+    ₊^-⁻¹₊ x n = ^-⁻¹ ⟨ x ⟩₊ n
