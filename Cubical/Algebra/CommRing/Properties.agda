@@ -296,7 +296,7 @@ module Exponentiation (R' : CommRing ℓ) where
   isInvf⁻¹^ zero    = ·IdL _
   isInvf⁻¹^ (suc n) =
     f · f ^ n · (f ⁻¹ · (f ⁻¹) ^ n) ≡⟨ congL _·_ (·Comm f _) ⟩
-    f ^ n · f · (f ⁻¹ · (f ⁻¹) ^ n) ≡⟨ ·Assoc _ _ _ ∙ sym(congL _·_ (·Assoc _ f _)) ⟩
+    f ^ n · f · (f ⁻¹ · (f ⁻¹) ^ n) ≡⟨ ·Assoc _ _ _ ∙ sym (congL _·_ (·Assoc _ f _)) ⟩
     f ^ n · (f · f ⁻¹) · (f ⁻¹) ^ n ≡⟨ congL _·_ $ congR _·_ $ ·-rinv f ⟩
     f ^ n · 1r · (f ⁻¹) ^ n         ≡⟨ congL _·_ (·IdR _) ⟩
     f ^ n · (f ⁻¹) ^ n              ≡⟨ isInvf⁻¹^ n ⟩
