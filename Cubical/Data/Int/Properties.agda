@@ -11,7 +11,7 @@ open import Cubical.Relation.Nullary
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Bool
 open import Cubical.Data.Nat
-  hiding   (+-assoc ; min ; max ; minComm ; maxComm)
+  hiding   (+-assoc ; min ; max ; minComm ; maxComm ; _≡ᵇ_ ; _<ᵇ_)
   renaming (_·_ to _·ℕ_; _+_ to _+ℕ_ ; +-comm to +ℕ-comm ;
     ·-assoc to ·ℕ-assoc ; ·-comm to ·ℕ-comm ; isEven to isEvenℕ ;
     isOdd to isOddℕ)
@@ -19,6 +19,18 @@ open import Cubical.Data.Sum
 open import Cubical.Data.Fin.Base
 open import Cubical.Data.Fin.Properties
 open import Cubical.Data.Int.Base
+
+IsZeroℤ : ℤ → Type
+IsZeroℤ = Bool→Type ∘ (_≡ᵇ pos 0)
+
+NonZeroℤ : ℤ → Type
+NonZeroℤ = Bool→Type ∘ not ∘ (_≡ᵇ pos 0)
+
+isDecIsZeroℤ : ∀ z → Dec (IsZeroℤ z)
+isDecIsZeroℤ _ = DecBool→Type
+
+isDecNonZeroℤ : ∀ z → Dec (NonZeroℤ z)
+isDecNonZeroℤ _ = DecBool→Type
 
 min : ℤ → ℤ → ℤ
 min (pos zero) (pos m) = pos zero

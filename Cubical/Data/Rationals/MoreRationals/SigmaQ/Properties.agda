@@ -1,5 +1,8 @@
 module Cubical.Data.Rationals.MoreRationals.SigmaQ.Properties where
 
+open import Cubical.Foundations.Prelude
+open import Cubical.Foundations.Function
+
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat as ℕ using (ℕ; suc; zero; predℕ)
 open import Cubical.Data.Nat.GCD as ℕ
@@ -7,8 +10,6 @@ open import Cubical.Data.Nat.Coprime
 open import Cubical.Data.Nat.Properties hiding (≢0→NonZero)
 open import Cubical.Data.NatPlusOne.PropertiesWithInt
   using (ℕ₊₁→ℤ; ·ℕ₊₁→ℤ-distr)
-open import Cubical.Foundations.Prelude
-open import Cubical.Relation.Nullary
 open import Cubical.Data.Int as ℤ
   using (ℤ; pos; negsuc; isIntegralℤ; injPos)
 open import Cubical.Data.Int.GCD as ℤ
@@ -17,10 +18,7 @@ open import Cubical.Data.NatPlusOne as ℕ₊₁
     ·₊₁-identityʳ; ·₊₁-identityˡ ; ·₊₁-assoc; ·₊₁-interchange; ·₊₁-assoc4)
 open import Cubical.Data.Rationals.MoreRationals.SigmaQ.Base
 
-private
-  converse : {ℓ : Level} {a b : Type ℓ} →
-    (a → b) → ¬ b → ¬ a
-  converse = λ z z₁ z₂ → z₁ (z z₂)
+open import Cubical.Relation.Nullary
 
 -- Operations on ℚ
 infixl 6 _-_ _+_
@@ -510,7 +508,7 @@ private
   (1ℚ / (1ℚ / q)) ≡ q
 /-invol q {{nz}}{{nz'}} = 1ℚ/≡1/ (1ℚ / q) {{nz'}} ∙
   (1/-subst (1ℚ/≡1/ q {{nz}})
-  {{nz'}}{{nonZero-1/'}}) ∙ /-invol' q {{nz}} {{nonZero-1/'}}
+  {{nz'}}{{nonZero-1/' {q}}}) ∙ /-invol' q {{nz}} {{nonZero-1/' {q}}}
 
 -- specialises one of the instances of /-invol for convenience
 /-invol* : (q : ℚ) {{nz : NonZero q}} →
@@ -729,7 +727,7 @@ open 1/-helpers
   {{npq : NonZero (p / q)}} → 1ℚ / (p / q) ≡ q / p
 1/-flip p q {{np}}{{nq}}{{npq}} =
   (cong (λ u → u / (p / q)) (sym (/-self q))) ∙ (cong (λ u → (q · 1/ q) · u)
-   (1/-subst {p / q} {p / q} refl {{npq}}{{·-NonZero p (1/ q) {{np}}{{nonZero-1/'}}}})) ∙
+   (1/-subst {p / q} {p / q} refl {{npq}}{{·-NonZero p (1/ q) {{np}}{{nonZero-1/' {q}}}}})) ∙
   ·/CancelR* (1/ q) q p {{nonZero-1/' {q}}}{{np}}
 
 1/-flip* : (p q : ℚ) {{np : NonZero p}}{{nq : NonZero q}} →

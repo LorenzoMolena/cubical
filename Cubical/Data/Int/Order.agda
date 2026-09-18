@@ -4,16 +4,41 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.Function
 
+open import Cubical.Data.Bool hiding (_≤_ ; _≥_ ; _≟_ ; isProp≤)
 open import Cubical.Data.Empty as ⊥ using (⊥)
 open import Cubical.Data.Int.Base as ℤ
 open import Cubical.Data.Int.Properties as ℤ
-open import Cubical.Data.Nat as ℕ
+open import Cubical.Data.Nat as ℕ hiding (_<ᵇ_)
 open import Cubical.Data.Nat.Order using () renaming (_≤_ to _ℕ≤_)
 open import Cubical.Data.NatPlusOne.Base as ℕ₊₁
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum
 
 open import Cubical.Relation.Nullary
+
+Positiveℤ : ℤ → Type
+Positiveℤ = Bool→Type ∘ (pos 0 <ᵇ_)
+
+Negativeℤ : ℤ → Type
+Negativeℤ = Bool→Type ∘ (_<ᵇ pos 0)
+
+NonPositiveℤ : ℤ → Type
+NonPositiveℤ = Bool→Type ∘ not ∘ (pos 0 <ᵇ_)
+
+NonNegativeℤ : ℤ → Type
+NonNegativeℤ = Bool→Type ∘ not ∘ (_<ᵇ pos 0)
+
+isDecPositiveℤ : ∀ z → Dec (Positiveℤ z)
+isDecPositiveℤ _ = DecBool→Type
+
+isDecNegativeℤ : ∀ z → Dec (Negativeℤ z)
+isDecNegativeℤ _ = DecBool→Type
+
+isDecNonPositiveℤ : ∀ z → Dec (NonPositiveℤ z)
+isDecNonPositiveℤ _ = DecBool→Type
+
+isDecNonNegativeℤ : ∀ z → Dec (NonNegativeℤ z)
+isDecNonNegativeℤ _ = DecBool→Type
 
 infix 4 _≤_ _<_ _≥_ _>_
 

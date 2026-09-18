@@ -255,7 +255,7 @@ gcd-greatest = curry (snd (gcdIsGCD _ _) _)
 -- Other properties
 
 gcd[0,0]≡0 : gcd 0 0 ≡ 0
-gcd[0,0]≡0 = antisym∣ (∣-zeroʳ (gcd 0 0) ) (gcd-greatest (∣-zeroʳ 0) (∣-zeroʳ 0))
+gcd[0,0]≡0 = refl
 
 gcd[m,n]≢0 : ∀ (m n : ℕ) → (¬ (m ≡ 0)) ⊎ (¬ (n ≡ 0)) → ¬ (gcd m n ≡ 0)
 gcd[m,n]≢0 m n (inl m≢0) gcd0 =
