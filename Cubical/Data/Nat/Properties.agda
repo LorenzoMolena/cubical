@@ -279,6 +279,12 @@ integral-domain-· {zero} {l} ¬p ¬q r = ¬p refl
 integral-domain-· {suc k} {zero} ¬p ¬q r = ¬q refl
 integral-domain-· {suc k} {suc l} ¬p ¬q r = snotz r
 
+-- Arithmetic facts about ^
+
+1^≡1 : ∀ m → 1 ^ m ≡ 1
+1^≡1 zero    = refl
+1^≡1 (suc m) = +-zero _ ∙ 1^≡1 m
+
 -- Arithmetic facts about ∸
 
 zero∸ : ∀ n → zero ∸ n ≡ zero

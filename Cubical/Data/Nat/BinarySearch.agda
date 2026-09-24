@@ -70,8 +70,8 @@ module IncreasingDec (dec : ∀ n → Dec (P n)) (P≤ : ∀ {m n} → m ≤ᵗ 
   ... | inl least = least
   ... | inr ¬P<n  = n , Pn , ¬P<n
 
--- one application is to search the biggest image of
--- an increasing function which is below a given k : ℕ
+-- This can be applied to search for the biggest value such that
+-- its image under an increasing function is below a given k : ℕ
 module BiggestImage≤ (f : ℕ → ℕ) (inc : isIncreasing f) (f0=0 : f 0 ≡ 0) (k : ℕ) where
   open IncreasingDec
     ((k <ᵗ?_) ∘ f)
@@ -114,31 +114,3 @@ module BiggestImage≤ (f : ℕ → ℕ) (inc : isIncreasing f) (f0=0 : f 0 ≡ 
 
     image≤ : f preimage ≤ k
     image≤ = withLeast.image≤ (→Least ΣP)
-
--- as an example, we can implement the floor of the square root on natural numbers;
--- as shown below, the use of binary search makes the implementation reasonably efficient
-module example where
-  module _ (n : ℕ) where
-    private
-      Σ<² : Σ[ k ∈ ℕ ] n <ᵗ k ^ 2
-      Σ<² = (suc n , <→<ᵗ (L≤^suc (suc n) 1))
-
-    open BiggestImage≤.→Biggest (_^ 2) (≤-^ʳ {k = 2}) refl n Σ<² public renaming
-      (preimage to ⌊√_⌋ ; <imageSuc to <⌊√1+_⌋ ; image≤ to ⌊√_⌋≤)
-
-  √2Digits : ℕ → ℕ × ℕ
-  √2Digits n = toDigits n ⌊√ 2 · 100 ^ n ⌋ where
-    toDigits : ℕ → ℕ → ℕ × ℕ
-    toDigits n x = (x / (10 ^ n) , x % (10 ^ n))
-
-  _ : ⌊√ 64 ⌋ ≡ 8
-  _ = refl
-
-  _ : ⌊√ 63 ⌋ ≡ 7
-  _ = refl
-
-  _ : ⌊√ 65 ⌋ ≡ 8
-  _ = refl
-
-  _ : √2Digits 20 ≡ (1 , 41421356237309504880)
-  _ = refl
