@@ -100,12 +100,12 @@ module RootCore (n-1 x : ℕ) where
     Σ<ⁿ : Σ[ k ∈ ℕ ] x <ᵗ k ^ n
     Σ<ⁿ = (suc x , <→<ᵗ (L≤^suc (suc x) n-1))
   open BiggestImage≤.→Biggest (_^ n) (≤-^ʳ {k = n}) refl x Σ<ⁿ public renaming
-    (preimage to ⌊1+_√_⌋ ; <imageSuc to <⌊1+_√1+_⌋ ; image≤ to ⌊1+_√_⌋≤)
+    (preimage to ⌊1+_√_⌋ ; <imageSuc to <1+⌊1+_√_⌋^ ; image≤ to ⌊1+_√_⌋^≤)
 
 rootℕ : ∀ n-1 x → Rootℕ (suc n-1) x
 rootℕ n-1 x .Rootℕ.⌊_√_⌋  = RootCore.⌊1+ n-1 √ x ⌋
-rootℕ n-1 x .Rootℕ.√^≤   = RootCore.⌊1+ n-1 √ x ⌋≤
-rootℕ n-1 x .Rootℕ.<1+√^ = RootCore.<⌊1+ n-1 √1+ x ⌋
+rootℕ n-1 x .Rootℕ.√^≤   = RootCore.⌊1+ n-1 √ x ⌋^≤
+rootℕ n-1 x .Rootℕ.<1+√^ = RootCore.<1+⌊1+ n-1 √ x ⌋^
 
 open RootTheory (rootℕ) public
 
