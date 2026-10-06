@@ -10,8 +10,8 @@ open import Cubical.Functions.Logic using (_⊔′_)
 
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Fast.Int.Base as ℤ using (ℤ)
-import Cubical.Data.Fast.Int.Properties as ℤ
-import Cubical.Data.Fast.Int.Order as ℤ
+open import Cubical.Data.Fast.Int.Properties as ℤ using ()
+open import Cubical.Data.Fast.Int.Order as ℤ using ()
 open import Cubical.Data.Rationals.Base as ℚ
 open import Cubical.Data.Rationals.Properties as ℚ
 open import Cubical.Data.Nat as ℕ
@@ -32,116 +32,43 @@ private
   ·CommR a b c = sym (ℤ.·Assoc a b c) ∙ cong (a ℤ.·_) (ℤ.·Comm b c) ∙ ℤ.·Assoc a c b
 
   _≤'_ : ℚ → ℚ → hProp ℓ-zero
-  _≤'_ = fun
-    where
-        lemma≤ : ((a , b) (c , d) (e , f) : (ℤ × ℕ₊₁))
-                → (c ℤ.· ℕ₊₁→ℤ f ) ≡ (e ℤ.· ℕ₊₁→ℤ d)
-                → ((a ℤ.· ℕ₊₁→ℤ d) ℤ.≤ (c ℤ.· ℕ₊₁→ℤ b))
-                ≡ ((a ℤ.· ℕ₊₁→ℤ f) ℤ.≤ (e ℤ.· ℕ₊₁→ℤ b))
-        lemma≤ (a , b) (c , d) (e , f) cf≡ed = (ua (propBiimpl→Equiv ℤ.isProp≤ ℤ.isProp≤
-                (ℤ.≤-·o-cancel ∘
-                  subst2 ℤ._≤_ (·CommR a (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ f))
-                               (·CommR c (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ f) ∙
-                                cong (ℤ._· ℕ₊₁→ℤ b) cf≡ed ∙
-                                ·CommR e (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ b)) ∘
-                 ℤ.≤-·o)
-                (ℤ.≤-·o-cancel ∘
-                  subst2 ℤ._≤_ (·CommR a (ℕ₊₁→ℤ f) (ℕ₊₁→ℤ d))
-                                (·CommR e (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ d) ∙
-                                 cong (ℤ._· ℕ₊₁→ℤ b) (sym cf≡ed) ∙
-                                 ·CommR c (ℕ₊₁→ℤ f) (ℕ₊₁→ℤ b)) ∘
-                 ℤ.≤-·o)))
-
-        fun₀ : ℤ × ℕ₊₁ → ℚ → hProp ℓ-zero
-        fst (fun₀ (a , b) [ c , d ]) = a ℤ.· ℕ₊₁→ℤ d ℤ.≤ c ℤ.· ℕ₊₁→ℤ b
-        snd (fun₀ _ [ _ ]) = ℤ.isProp≤
-        fun₀ a/b (eq/ c/d e/f cf≡ed i) = record
-          { fst = lemma≤ a/b c/d e/f cf≡ed i
-          ; snd = isProp→PathP (λ i → isPropIsProp {A = lemma≤ a/b c/d e/f cf≡ed i}) ℤ.isProp≤ ℤ.isProp≤ i
-          }
-        fun₀ a/b (squash/ x y p q i j) = isSet→SquareP (λ _ _ → isSetHProp)
-          (λ _ → fun₀ a/b x)
-          (λ _ → fun₀ a/b y)
-          (λ i → fun₀ a/b (p i))
-          (λ i → fun₀ a/b (q i)) j i
-
-        toPath : ∀ a/b c/d (x : a/b ∼ c/d) (y : ℚ) → fun₀ a/b y ≡ fun₀ c/d y
-        toPath (a , b) (c , d) ad≡cb = elimProp (λ _ → isSetHProp _ _) λ (e , f) →
-          Σ≡Prop (λ _ → isPropIsProp) (ua (propBiimpl→Equiv ℤ.isProp≤ ℤ.isProp≤
-                (ℤ.≤-·o-cancel ∘
-                  subst2 ℤ._≤_ (·CommR a (ℕ₊₁→ℤ f) (ℕ₊₁→ℤ d) ∙
-                                 cong (ℤ._· ℕ₊₁→ℤ f) ad≡cb ∙
-                                 ·CommR c (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ f))
-                               (·CommR e (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ d)) ∘
-                 ℤ.≤-·o)
-                (ℤ.≤-·o-cancel ∘
-                  subst2 ℤ._≤_ (·CommR c (ℕ₊₁→ℤ f) (ℕ₊₁→ℤ b) ∙
-                                 cong (ℤ._· ℕ₊₁→ℤ f) (sym ad≡cb) ∙
-                                 ·CommR a (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ f))
-                               (·CommR e (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ b)) ∘
-                 ℤ.≤-·o)))
-
-        fun : ℚ → ℚ → hProp ℓ-zero
-        fun [ a/b ] y = fun₀ a/b y
-        fun (eq/ a/b c/d ad≡cb i) y = toPath a/b c/d ad≡cb y i
-        fun (squash/ x y p q i j) z = isSet→SquareP (λ _ _ → isSetHProp)
-          (λ _ → fun x z) (λ _ → fun y z) (λ i → fun (p i) z) (λ i → fun (q i) z) j i
+  _≤'_ = Rec2SymHProp.go onFrac module ≤ where
+    onFrac : Rec2SymHProp ℓ-zero
+    onFrac .Rec2SymHProp.rel  (a , b) (c , d) = a ℤ.· ℕ₊₁→ℤ d ℤ.≤ c ℤ.· ℕ₊₁→ℤ b
+    onFrac .Rec2SymHProp.prop (a , b) (c , d) = ℤ.isProp≤
+    onFrac .Rec2SymHProp.symL (a , b) (c , d) = sym
+    onFrac .Rec2SymHProp.symR (a , b) (c , d) = sym
+    onFrac .Rec2SymHProp.eql  (a , b) (c , d) (e , f) ad≡cb =
+        ℤ.≤-·o-cancel
+      ∘ subst2 ℤ._≤_ (·CommR a _ _ ∙∙ cong (ℤ._· _) ad≡cb ∙∙ ·CommR c _ _)
+                     (·CommR e (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ d))
+      ∘ ℤ.≤-·o
+    onFrac .Rec2SymHProp.eqr  (a , b) (c , d) (e , f) cf≡ed =
+        ℤ.≤-·o-cancel
+      ∘ subst2 ℤ._≤_ (·CommR a (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ f))
+                     (·CommR c _ _ ∙∙ cong (ℤ._· _) cf≡ed ∙∙ ·CommR e _ _)
+      ∘ ℤ.≤-·o
 
   _<'_ : ℚ → ℚ → hProp ℓ-zero
-  _<'_ = fun
-    where
-        lemma< : ((a , b) (c , d) (e , f) : (ℤ × ℕ₊₁))
-                → (c ℤ.· ℕ₊₁→ℤ f ) ≡ (e ℤ.· ℕ₊₁→ℤ d)
-                → ((a ℤ.· ℕ₊₁→ℤ d) ℤ.< (c ℤ.· ℕ₊₁→ℤ b))
-                ≡ ((a ℤ.· ℕ₊₁→ℤ f) ℤ.< (e ℤ.· ℕ₊₁→ℤ b))
-        lemma< (a , b) (c , d) (e , f) cf≡ed = (ua (propBiimpl→Equiv ℤ.isProp< ℤ.isProp<
-                (ℤ.<-·o-cancel ∘
-                  subst2 ℤ._<_ (·CommR a (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ f))
-                               (·CommR c (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ f) ∙
-                                cong (ℤ._· ℕ₊₁→ℤ b) cf≡ed ∙
-                                ·CommR e (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ b)) ∘
-                 ℤ.<-·o)
-                (ℤ.<-·o-cancel ∘
-                  subst2 ℤ._<_ (·CommR a (ℕ₊₁→ℤ f) (ℕ₊₁→ℤ d))
-                               (·CommR e (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ d) ∙
-                                cong (ℤ._· ℕ₊₁→ℤ b) (sym cf≡ed) ∙
-                                ·CommR c (ℕ₊₁→ℤ f) (ℕ₊₁→ℤ b)) ∘
-                 ℤ.<-·o)))
+  _<'_ = Rec2SymHProp.go onFrac module < where
+    onFrac : Rec2SymHProp ℓ-zero
+    onFrac .Rec2SymHProp.rel  (a , b) (c , d) = a ℤ.· ℕ₊₁→ℤ d ℤ.< c ℤ.· ℕ₊₁→ℤ b
+    onFrac .Rec2SymHProp.prop (a , b) (c , d) = ℤ.isProp<
+    onFrac .Rec2SymHProp.symL (a , b) (c , d) = sym
+    onFrac .Rec2SymHProp.symR (a , b) (c , d) = sym
+    onFrac .Rec2SymHProp.eql  (a , b) (c , d) (e , f) ad≡cb =
+        ℤ.<-·o-cancel
+      ∘ subst2 ℤ._<_ (·CommR a _ _ ∙∙ cong (ℤ._· _) ad≡cb ∙∙ ·CommR c _ _)
+                     (·CommR e (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ d))
+      ∘ ℤ.<-·o
+    onFrac .Rec2SymHProp.eqr  (a , b) (c , d) (e , f) cf≡ed =
+        ℤ.<-·o-cancel
+      ∘ subst2 ℤ._<_ (·CommR a (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ f))
+                     (·CommR c _ _ ∙∙ cong (ℤ._· _) cf≡ed ∙∙ ·CommR e _ _)
+      ∘ ℤ.<-·o
 
-        fun₀ : ℤ × ℕ₊₁ → ℚ → hProp ℓ-zero
-        fst (fun₀ (a , b) [ c , d ]) = a ℤ.· ℕ₊₁→ℤ d ℤ.< c ℤ.· ℕ₊₁→ℤ b
-        snd (fun₀ _ [ _ ]) = ℤ.isProp<
-        fun₀ a/b (eq/ c/d e/f cf≡ed i) = record
-          { fst = lemma< a/b c/d e/f cf≡ed i
-          ; snd = isProp→PathP (λ i → isPropIsProp {A = lemma< a/b c/d e/f cf≡ed i}) ℤ.isProp< ℤ.isProp< i
-          }
-        fun₀ a/b (squash/ x y p q i j) = isSet→SquareP (λ _ _ → isSetHProp)
-          (λ _ → fun₀ a/b x)
-          (λ _ → fun₀ a/b y)
-          (λ i → fun₀ a/b (p i))
-          (λ i → fun₀ a/b (q i)) j i
-
-        toPath : ∀ a/b c/d (x : a/b ∼ c/d) (y : ℚ) → fun₀ a/b y ≡ fun₀ c/d y
-        toPath (a , b) (c , d) ad≡cb = elimProp (λ _ → isSetHProp _ _) λ (e , f) →
-          Σ≡Prop (λ _ → isPropIsProp) (ua (propBiimpl→Equiv ℤ.isProp< ℤ.isProp<
-                (ℤ.<-·o-cancel ∘
-                  subst2 ℤ._<_ (·CommR a (ℕ₊₁→ℤ f) (ℕ₊₁→ℤ d) ∙
-                                cong (ℤ._· ℕ₊₁→ℤ f) ad≡cb ∙
-                                ·CommR c (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ f))
-                               (·CommR e (ℕ₊₁→ℤ b) (ℕ₊₁→ℤ d)) ∘
-                 ℤ.<-·o)
-                (ℤ.<-·o-cancel ∘
-                  subst2 ℤ._<_ (·CommR c (ℕ₊₁→ℤ f) (ℕ₊₁→ℤ b) ∙
-                                cong (ℤ._· ℕ₊₁→ℤ f) (sym ad≡cb) ∙
-                                ·CommR a (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ f))
-                               (·CommR e (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ b)) ∘
-                 ℤ.<-·o)))
-
-        fun : ℚ → ℚ → hProp ℓ-zero
-        fun [ a/b ] y = fun₀ a/b y
-        fun (eq/ a/b c/d ad≡cb i) y = toPath a/b c/d ad≡cb y i
-        fun (squash/ x y p q i j) z = isSet→SquareP (λ _ _ → isSetHProp)
-          (λ _ → fun x z) (λ _ → fun y z) (λ i → fun (p i) z) (λ i → fun (q i) z) j i
+{-# DISPLAY <.onFrac = _<'_ #-}
+{-# DISPLAY ≤.onFrac = _≤'_ #-}
 
 record _≤_ (m n : ℚ ) : Type₀ where
   constructor inj
@@ -209,6 +136,41 @@ module _ where
 
   recompute¬# : ∀ {a b} → ¬ (a # b) → ¬ (a # b)
   recompute¬# r = ⊎.rec (recompute¬< (r ∘ inl)) (recompute¬< (r ∘ inr))
+
+  -- if the proof p : x ≡ x' is computationaly heavy, then
+  -- subst (_≤ _) p q will normalize slowly for concrete rationals,
+  -- and the situation applies as well for < and # in place of ≤.
+  -- However, we can always recompute and avoid the actual transports, and since
+  -- this pattern is quite common, here below we introduce the following helpers:
+
+  subst≤ : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x ≤ y → x' ≤ y'
+  subst≤ = ((recompute≤ ∘_) ∘_) ∘ subst2 _≤_
+
+  subst≤L : ∀ {x x' y} → x ≡ x' → x ≤ y → x' ≤ y
+  subst≤L = (recompute≤ ∘_) ∘ subst (_≤ _)
+
+  subst≤R : ∀ {x y y'} → y ≡ y' → x ≤ y → x ≤ y'
+  subst≤R = (recompute≤ ∘_) ∘ subst (_ ≤_)
+
+  subst< : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x < y → x' < y'
+  subst< = ((recompute< ∘_) ∘_) ∘ subst2 _<_
+
+  subst<L : ∀ {x x' y} → x ≡ x' → x < y → x' < y
+  subst<L = (recompute< ∘_) ∘ subst (_< _)
+
+  subst<R : ∀ {x y y'} → y ≡ y' → x < y → x < y'
+  subst<R = (recompute< ∘_) ∘ subst (_ <_)
+
+  subst# : ∀ {x x' y y'} → x ≡ x' → y ≡ y' → x # y → x' # y'
+  subst# = ((recompute# ∘_) ∘_) ∘ subst2 _#_
+
+  subst#L : ∀ {x x' y} → x ≡ x' → x # y → x' # y
+  subst#L = (recompute# ∘_) ∘ subst (_# _)
+
+  subst#R : ∀ {x y y'} → y ≡ y' → x # y → x # y'
+  subst#R = (recompute# ∘_) ∘ subst (_ #_)
+
+  -- properties of ≤ , < , and #
 
   isRefl≤ : isRefl _≤_
   isRefl≤ = elimProp {P = λ x → x ≤ x} (λ x → isProp≤ x x) λ _ → inj ℤ.isRefl≤
@@ -308,7 +270,7 @@ module _ where
     where
       lem : (a b c : ℤ.ℤ × ℕ₊₁) → [ a ] < [ b ] → ([ a ] < [ c ]) ⊔′ ([ c ] < [ b ])
       lem a b c a<b with discreteℚ [ a ] [ c ]
-      ... | yes a≡c = ∣ inr (recompute< (subst (_< [ b ]) a≡c a<b)) ∣₁
+      ... | yes a≡c = ∣ inr (subst<L a≡c a<b) ∣₁
       ... | no a≢c = ∣ ⊎.map (λ a<c → a<c)
                              (λ c<a → isTrans< [ c ] [ a ] [ b ] c<a a<b)
                              (inequalityImplies# [ a ] [ c ] a≢c) ∣₁
@@ -321,7 +283,7 @@ module _ where
       where
         lem : (a b c : ℤ.ℤ × ℕ₊₁) → [ a ] # [ b ] → ([ a ] # [ c ]) ⊔′ ([ b ] # [ c ])
         lem a b c a#b with discreteℚ [ b ] [ c ]
-        ... | yes b≡c = ∣ inl (recompute# (subst ([ a ] #_) b≡c a#b)) ∣₁
+        ... | yes b≡c = ∣ inl (subst#R b≡c a#b) ∣₁
         ... | no  b≢c = ∣ inr (inequalityImplies# [ b ] [ c ] b≢c) ∣₁
 
 ≤-+o : ∀ m n o → m ≤ n → m ℚ.+ o ≤ n ℚ.+ o
@@ -365,7 +327,7 @@ module _ where
                        (ℤ.≤-+o (ℤ.≤-·o ad≤cb)) }
 
 ≤-o+ : ∀ m n o →  m ≤ n → o ℚ.+ m ≤ o ℚ.+ n
-≤-o+ m n o = recompute≤ ∘ subst2 _≤_ (+Comm m o) (+Comm n o) ∘ ≤-+o m n o
+≤-o+ m n o = subst≤ (+Comm m o) (+Comm n o) ∘ ≤-+o m n o
 
 ≤Monotone+ : ∀ m n o s → m ≤ n → o ≤ s → m ℚ.+ o ≤ n ℚ.+ s
 ≤Monotone+ m n o s m≤n o≤s
@@ -376,16 +338,16 @@ module _ where
               (≤-o+ o s n o≤s)
 
 ≤-o+-cancel : ∀ m n o →  o ℚ.+ m ≤ o ℚ.+ n → m ≤ n
-≤-o+-cancel m n o = recompute≤ ∘
-  subst2 _≤_ (+Assoc (- o) o m ∙ cong (ℚ._+ m) (+InvL o) ∙ +IdL m)
-             (+Assoc (- o) o n ∙ cong (ℚ._+ n) (+InvL o) ∙ +IdL n) ∘
-        ≤-o+ (o ℚ.+ m) (o ℚ.+ n) (- o)
+≤-o+-cancel m n o = subst≤
+  (+Assoc (- o) o m ∙ cong (ℚ._+ m) (+InvL o) ∙ +IdL m)
+  (+Assoc (- o) o n ∙ cong (ℚ._+ n) (+InvL o) ∙ +IdL n) ∘
+  ≤-o+ (o ℚ.+ m) (o ℚ.+ n) (- o)
 
 ≤-+o-cancel : ∀ m n o → m ℚ.+ o ≤ n ℚ.+ o → m ≤ n
-≤-+o-cancel m n o = recompute≤ ∘
-    subst2 _≤_ (sym (+Assoc m o (- o)) ∙ cong (λ x → m ℚ.+ x) (+InvR o) ∙ +IdR m)
-               (sym (+Assoc n o (- o)) ∙ cong (λ x → n ℚ.+ x) (+InvR o) ∙ +IdR n) ∘
-          ≤-+o (m ℚ.+ o) (n ℚ.+ o) (- o)
+≤-+o-cancel m n o = subst≤
+  (sym (+Assoc m o (- o)) ∙ cong (λ x → m ℚ.+ x) (+InvR o) ∙ +IdR m)
+  (sym (+Assoc n o (- o)) ∙ cong (λ x → n ℚ.+ x) (+InvR o) ∙ +IdR n) ∘
+  ≤-+o (m ℚ.+ o) (n ℚ.+ o) (- o)
 
 <-+o : ∀ m n o → m < n → m ℚ.+ o < n ℚ.+ o
 <-+o =
@@ -428,23 +390,23 @@ module _ where
                        (ℤ.<-+o (ℤ.<-·o ad<cb)) }
 
 <-o+ : ∀ m n o → m < n → o ℚ.+ m < o ℚ.+ n
-<-o+ m n o = recompute< ∘ subst2 _<_ (+Comm m o) (+Comm n o) ∘ <-+o m n o
+<-o+ m n o = subst< (+Comm m o) (+Comm n o) ∘ <-+o m n o
 
 <Monotone+ : ∀ m n o s → m < n → o < s → m ℚ.+ o < n ℚ.+ s
 <Monotone+ m n o s m<n o<s
   = isTrans< (m ℚ.+ o) (n ℚ.+ o) (n ℚ.+ s) (<-+o m n o m<n) (<-o+ o s n o<s)
 
 <-o+-cancel : ∀ m n o → o ℚ.+ m < o ℚ.+ n → m < n
-<-o+-cancel m n o = recompute< ∘
-  subst2 _<_ (+Assoc (- o) o m ∙ cong (ℚ._+ m) (+InvL o) ∙ +IdL m)
-             (+Assoc (- o) o n ∙ cong (ℚ._+ n) (+InvL o) ∙ +IdL n) ∘
-        <-o+ (o ℚ.+ m) (o ℚ.+ n) (- o)
+<-o+-cancel m n o = subst<
+  (+Assoc (- o) o m ∙ cong (ℚ._+ m) (+InvL o) ∙ +IdL m)
+  (+Assoc (- o) o n ∙ cong (ℚ._+ n) (+InvL o) ∙ +IdL n) ∘
+  <-o+ (o ℚ.+ m) (o ℚ.+ n) (- o)
 
 <-+o-cancel : ∀ m n o → m ℚ.+ o < n ℚ.+ o → m < n
-<-+o-cancel m n o = recompute< ∘
-  subst2 _<_ (sym (+Assoc m o (- o)) ∙ cong (λ x → m ℚ.+ x) (+InvR o) ∙ +IdR m)
-             (sym (+Assoc n o (- o)) ∙ cong (λ x → n ℚ.+ x) (+InvR o) ∙ +IdR n) ∘
-        <-+o (m ℚ.+ o) (n ℚ.+ o) (- o)
+<-+o-cancel m n o = subst<
+  (sym (+Assoc m o (- o)) ∙ cong (λ x → m ℚ.+ x) (+InvR o) ∙ +IdR m)
+  (sym (+Assoc n o (- o)) ∙ cong (λ x → n ℚ.+ x) (+InvR o) ∙ +IdR n) ∘
+  <-+o (m ℚ.+ o) (n ℚ.+ o) (- o)
 
 <Weaken≤ : ∀ m n → m < n → m ≤ n
 <Weaken≤ m n = elimProp2 {P = λ x y → x < y → x ≤ y}
@@ -646,7 +608,7 @@ m ≟ n with discreteℚ m n
         (≤max (ℚ.max m o) (ℚ.max n s))
 
 ≡Weaken≤ : ∀ m n → m ≡ n → m ≤ n
-≡Weaken≤ m n m≡n = recompute≤ $ subst (m ≤_) m≡n (isRefl≤ m)
+≡Weaken≤ m n m≡n = subst≤R m≡n (isRefl≤ m)
 
 ≤→≯ : ∀ m n →  m ≤ n → ¬ (m > n)
 ≤→≯ m n m≤n = recompute¬< $
