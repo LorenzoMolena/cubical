@@ -53,7 +53,7 @@ record ElimProp {A : Type ℓ} {R : A → A → Type ℓ'}
   go (squash/ x y p q i j) = isOfHLevel→isOfHLevelDep 2 (λ x → isProp→isSet (prop x))
     (go x) (go y) (cong go p) (cong go q) (squash/ x y p q) i j
 
--- This DISPLAY pragma, together with the use of "named where blocks" below, allows for
+-- These DISPLAY pragmas, together with the use of "named where blocks" below, allows for
 -- cleaner and shorter normal forms
 {-# DISPLAY ElimProp.go r = r #-}
 
@@ -331,8 +331,8 @@ record Rec2SymHProp {ℓA ℓB ℓR ℓS} (ℓ : Level)
   field
     rel  : A → B → Type ℓ
     prop : ∀ x y → isProp (rel x y)
-    symR : (a b : A) → R a b → R b a
-    symS : (b c : B) → S b c → S c b
+    symL : (a b : A) → R a b → R b a
+    symR : (b c : B) → S b c → S c b
     eql  : (a b : A) (c : B) (r : R a b) → rel a c → rel b c
     eqr  : (a : A) (b c : B) (S : S b c) → rel a b → rel a c
 
@@ -342,9 +342,9 @@ record Rec2SymHProp {ℓA ℓB ℓR ℓS} (ℓ : Level)
     e .Rec2HProp.rel  = rel
     e .Rec2HProp.prop = prop
     e .Rec2HProp.eql→ = eql
-    e .Rec2HProp.eql← = λ a b c → eql b a c ∘ symR a b
+    e .Rec2HProp.eql← = λ a b c → eql b a c ∘ symL a b
     e .Rec2HProp.eqr→ = eqr
-    e .Rec2HProp.eqr← = λ a b c → eqr a c b ∘ symS b c
+    e .Rec2HProp.eqr← = λ a b c → eqr a c b ∘ symR b c
 
 {-# DISPLAY Rec2SymHProp.GO.e r = r #-}
 

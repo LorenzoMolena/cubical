@@ -36,8 +36,8 @@ private
     onFrac : Rec2SymHProp ℓ-zero
     onFrac .Rec2SymHProp.rel  (a , b) (c , d) = a ℤ.· ℕ₊₁→ℤ d ℤ.≤ c ℤ.· ℕ₊₁→ℤ b
     onFrac .Rec2SymHProp.prop (a , b) (c , d) = ℤ.isProp≤
+    onFrac .Rec2SymHProp.symL (a , b) (c , d) = sym
     onFrac .Rec2SymHProp.symR (a , b) (c , d) = sym
-    onFrac .Rec2SymHProp.symS (a , b) (c , d) = sym
     onFrac .Rec2SymHProp.eql  (a , b) (c , d) (e , f) ad≡cb =
         ℤ.≤-·o-cancel
       ∘ subst2 ℤ._≤_ (·CommR a _ _ ∙∙ cong (ℤ._· _) ad≡cb ∙∙ ·CommR c _ _)
@@ -54,8 +54,8 @@ private
     onFrac : Rec2SymHProp ℓ-zero
     onFrac .Rec2SymHProp.rel  (a , b) (c , d) = a ℤ.· ℕ₊₁→ℤ d ℤ.< c ℤ.· ℕ₊₁→ℤ b
     onFrac .Rec2SymHProp.prop (a , b) (c , d) = ℤ.isProp<
+    onFrac .Rec2SymHProp.symL (a , b) (c , d) = sym
     onFrac .Rec2SymHProp.symR (a , b) (c , d) = sym
-    onFrac .Rec2SymHProp.symS (a , b) (c , d) = sym
     onFrac .Rec2SymHProp.eql  (a , b) (c , d) (e , f) ad≡cb =
         ℤ.<-·o-cancel
       ∘ subst2 ℤ._<_ (·CommR a _ _ ∙∙ cong (ℤ._· _) ad≡cb ∙∙ ·CommR c _ _)
@@ -66,6 +66,9 @@ private
       ∘ subst2 ℤ._<_ (·CommR a (ℕ₊₁→ℤ d) (ℕ₊₁→ℤ f))
                      (·CommR c _ _ ∙∙ cong (ℤ._· _) cf≡ed ∙∙ ·CommR e _ _)
       ∘ ℤ.<-·o
+
+{-# DISPLAY <.onFrac = _<'_ #-}
+{-# DISPLAY ≤.onFrac = _≤'_ #-}
 
 record _≤_ (m n : ℚ ) : Type₀ where
   constructor inj
