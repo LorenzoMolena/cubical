@@ -38,6 +38,9 @@ isSetℚ = SetQuotient.squash/
 [_/_] : ℤ → ℕ₊₁ → ℚ
 [ a / b ] = [ a , b ]
 
+{-# DISPLAY [_] (a        , 1+ b) = [ a / ℕ.suc b ] #-}
+{-# DISPLAY [_] (pos a    , 1+ b) = [ a / ℕ.suc b ] #-}
+{-# DISPLAY [_] (negsuc a , 1+ b) = [ - (ℕ.suc a) / ℕ.suc b ] #-}
 
 isEquivRel∼ : isEquivRel _∼_
 isEquivRel.reflexive isEquivRel∼ (a , b) = refl
