@@ -64,13 +64,37 @@ module _ (R' : ArchimedeanRing ℓ ℓ') where
   open RingTheory (ArchimedeanRing→Ring R')
   open ArchimedeanRingStr (snd R')
 
-  open module ArchimedeanRingReasoning = OrderedCommRingReasoning ROCR
+  module ArchimedeanRingReasoning where
+    open OrderedCommRingReasoning ROCR public
+
+    _<·ι[_] : ∀ {x y} z → x < y → x · ι₊₁ z < y · ι₊₁ z
+    _<·ι[_] _ = _<·[ _ , subst (_< _) ιpres0 (ιpres< _ _ (ℤ.pos<pos tt)) ]
+
+    ι[_]·<_ : ∀ {x y} z → x < y → ι₊₁ z · x < ι₊₁ z · y
+    ι[_]·<_ _ = [ _ , subst (_< _) ιpres0 (ιpres< _ _ (ℤ.pos<pos tt)) ]·<_
+
+    _≤·ι[_] : ∀ {x y} z → x ≤ y → x · ι₀₊ z ≤ y · ι₀₊ z
+    _≤·ι[_] _ = _≤·[ _ , subst (_≤ _) ιpres0 (ιpres≤ _ _ (ℤ.pos≤pos tt)) ]
+
+    ι[_]·≤_ : ∀ {x y} z → x ≤ y → ι₀₊ z · x ≤ ι₀₊ z · y
+    ι[_]·≤_ _ = [ _ , subst (_≤ _) ιpres0 (ιpres≤ _ _ (ℤ.pos≤pos tt)) ]·≤_
+
+  open ArchimedeanRingReasoning
 
   module ArchimedeanRingTheory where
     open OrderedCommRingTheory ROCR public
 
     ·CancelL< : ∀ x y z → 0r < z → (z · x) < (z · y) → x < y
     ·CancelL< x y z 0<z = ·CancelR< x y z 0<z ∘ subst2 _<_ (·Comm _ _) (·Comm _ _)
+
+    ι0· : ∀ x → ι 0 · x ≡ 0r
+    ι0· x = congL _·_ ιpres0 ∙ 0LeftAnnihilates x
+
+    ι1· : ∀ x → ι 1 · x ≡ x
+    ι1· x = congL _·_ ιpres1 ∙ ·IdL x
+
+    ιsuc· : ∀ r x → ι (1 ℤ.+ r) · x ≡ x + ι r · x
+    ιsuc· r x = cong (_· x) (ιpres+ _ _) ∙∙ ·DistL+ _ _ x ∙∙ cong (_+ ι r · x) (ι1· x)
 
     0<ι₊₁ : ∀ a → 0r < ι₊₁ a
     0<ι₊₁ a = subst (_< ι₊₁ a) ιpres0 (ιpres< (pos 0) (pos (ℕ₊₁→ℕ a)) ℤ.zero-<possuc)
@@ -149,3 +173,25 @@ module _ (R' : ArchimedeanRing ℓ ℓ') where
         ιl<x
         (subst (x <_) (cong ι (sym p ∙ ℤ.+Comm l _)) x<ιu
         :> x < ι (pos (suc k) ℤ.+ l))
+
+  open ArchimedeanRingTheory
+  open Exponentiation RCR
+
+  module BernoullyIneq where
+
+    0≤1+ : ∀ x → 0r ≤ 1r + x → ∀ n → 1r + ι₀₊ n · x ≤ (1r + x) ^ n
+    0≤1+ x 0≤1+x zero    = subst (_≤ 1r) (sym (congR _+_ (ι0· x) ∙ +IdR _)) (is-refl 1r)
+    0≤1+ x 0≤1+x (suc n) = begin≤
+      1r + ι₀₊ (suc n) · x                 ≡→≤⟨ congR _+_ (ιsuc· _ x) ∙ +Assoc 1r x _ ⟩
+      1r + x + ι₀₊ n · x                     ≤⟨ ≤SumLeftNonNeg _ _ 0≤rx² ⟩
+      1r + x + ι₀₊ n · x + ι₀₊ n · (x · x) ≡→≤⟨ solve! RCR ⟩
+      (1r + x) · (1r + ι₀₊ n · x)            ≤⟨ [ 1r + x , 0≤1+x ]·≤ 0≤1+ x 0≤1+x n ⟩
+      (1r + x) · (1r + x) ^ n                ◾
+      where
+        0≤rx² : 0r ≤ ι₀₊ n · (x · x)
+        0≤rx² = begin≤
+          0r ≡→≤⟨ solve! RCR ⟩ ι₀₊ n · 0r ≤⟨ ι[ n ]·≤ 0≤² x ⟩ ι₀₊ n · (x · x) ◾
+
+    0≤ : ∀ x → 0r ≤ x → ∀ n → 1r + ι₀₊ n · (x - 1r) ≤ x ^ n
+    0≤ x 0≤x n = subst (1r + ι₀₊ n · (x - 1r) ≤_) (cong (_^ n) (solve! RCR))
+      (0≤1+ (x - 1r) (subst (0r ≤_) (solve! RCR) 0≤x) n)
