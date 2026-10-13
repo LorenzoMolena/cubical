@@ -105,9 +105,8 @@ module FloorCeil
     (sym (pres- _) ∙ cong ι (-sucℤ _)) (-Idempotent r) (-Flip< _ _ (Floor.<suc⌊⌋ x))
 
   module FloorProperties (floor : ∀ r → Floor r) where
-
-    ⌊_⌋ : ⟨ R ⟩ → ℤ
-    ⌊_⌋ = Floor.⌊_⌋ ∘ floor
+    module _ (r : ⟨ R ⟩) where
+      open Floor (floor r) public
 
     private
       floorℤ : ∀ k → Floor (ι k)
@@ -133,18 +132,17 @@ module FloorCeil
 
     ⌊⌋Mono≤ : ∀ x y → x ≤ y → ⌊ x ⌋ ℤ.≤ ⌊ y ⌋
     ⌊⌋Mono≤ x y x≤y = ℤ.<suc→≤ $ reflect< ⌊ x ⌋ (sucℤ ⌊ y ⌋) $ begin<
-      ι ⌊ x ⌋         ≤⟨ floor x .Floor.⌊⌋≤ ⟩
+      ι ⌊ x ⌋         ≤⟨ ⌊⌋≤ x ⟩
       x              ≤⟨ x≤y ⟩
-      y              <⟨ floor y .Floor.<suc⌊⌋ ⟩
+      y              <⟨ <suc⌊⌋ y ⟩
       ι (sucℤ ⌊ y ⌋) ◾
 
     0≤→0≤⌊⌋ : ∀ r → 0r ≤ r → 0 ℤ.≤ ⌊ r ⌋
     0≤→0≤⌊⌋ r = ℤ.recompute≤ ∘ subst (ℤ._≤ ⌊ r ⌋) ⌊0⌋≡0 ∘ ⌊⌋Mono≤ 0r r
 
   module CeilProperties (ceil : ∀ r → Ceil r) where
-
-    ⌈_⌉ : ⟨ R ⟩ → ℤ
-    ⌈_⌉ = Ceil.⌈_⌉ ∘ ceil
+    module _ (r : ⟨ R ⟩) where
+      open Ceil (ceil r) public
 
     private
       ceilℤ : ∀ k → Ceil (ι k)
@@ -170,11 +168,11 @@ module FloorCeil
 
     ⌈⌉Mono≤ : ∀ x y → x ≤ y → ⌈ x ⌉ ℤ.≤ ⌈ y ⌉
     ⌈⌉Mono≤ x y x≤y = ℤ.pred<→≤ $ reflect< (predℤ ⌈ x ⌉) ⌈ y ⌉ $ begin<
-      ι (predℤ ⌈ x ⌉) <⟨ ceil x .Ceil.pred⌈⌉< ⟩
+      ι (predℤ ⌈ x ⌉) <⟨ pred⌈⌉< x ⟩
       x              ≤⟨ x≤y ⟩
-      y              ≤⟨ ceil y .Ceil.≤⌈⌉ ⟩
+      y              ≤⟨ ≤⌈⌉ y ⟩
       ι ⌈ y ⌉ ◾
 
     0<→0<⌈⌉ : ∀ r → 0r < r → 0 ℤ.< ⌈ r ⌉
     0<→0<⌈⌉ r 0<r = reflect< 0 ⌈ r ⌉ $ begin<
-      ι 0 ≡→≤⟨ pres0 ⟩ 0r <⟨ 0<r ⟩ r ≤⟨ ceil r .Ceil.≤⌈⌉ ⟩ ι ⌈ r ⌉ ◾
+      ι 0 ≡→≤⟨ pres0 ⟩ 0r <⟨ 0<r ⟩ r ≤⟨ ≤⌈⌉ r ⟩ ι ⌈ r ⌉ ◾
