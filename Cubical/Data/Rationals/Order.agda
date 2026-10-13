@@ -15,6 +15,7 @@ open import Cubical.Data.Fast.Int.Order as ℤ using ()
 open import Cubical.Data.Rationals.Base as ℚ
 open import Cubical.Data.Rationals.Properties as ℚ
 open import Cubical.Data.Nat as ℕ
+open import Cubical.Data.Nat.Order as ℕ using ()
 open import Cubical.Data.NatPlusOne
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum as ⊎ using (_⊎_; inl; inr; isProp⊎)
@@ -632,3 +633,9 @@ m ≟ n with discreteℚ m n
 
 <ℤ→<ℚ : ∀ m n k → m ℤ.< n → [ m / k ] < [ n / k ]
 <ℤ→<ℚ m n (1+ k) m<n = inj (ℤ.<-·o {m} m<n)
+
+≤ℕ→≤ℚ : ∀ m n k → m ℕ.≤ n → [ ℤ.pos m / k ] ≤ [ ℤ.pos n / k ]
+≤ℕ→≤ℚ m n k = ≤ℤ→≤ℚ _ _ k ∘ ℤ.≤ℕ→≤ℤ m n
+
+<ℕ→<ℚ : ∀ m n k → m ℕ.< n → [ ℤ.pos m / k ] < [ ℤ.pos n / k ]
+<ℕ→<ℚ m n k = <ℤ→<ℚ _ _ k ∘ ℤ.<ℕ→<ℤ m n

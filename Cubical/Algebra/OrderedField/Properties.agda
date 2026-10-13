@@ -133,6 +133,12 @@ module _ (F' : OrderedField ℓ ℓ') where
     infix 9 _⁻¹₊
     infixl 9 _/₊_ _₊/₊_
 
+    ·₊-rinv : ∀ x → ⟨ x ₊/₊ x ⟩₊ ≡ 1f
+    ·₊-rinv x = ·-rinv ⟨ x ⟩₊
+
+    ·₊-linv : ∀ x → ⟨ x ⁻¹₊ ·₊ x ⟩₊ ≡ 1f
+    ·₊-linv x = ·-linv ⟨ x ⟩₊
+
     /₊· : ∀ x y → x /₊ y · ⟨ y ⟩₊ ≡ x
     /₊· x y = divideMultiply x ⟨ y ⟩₊
 

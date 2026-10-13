@@ -376,6 +376,26 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     0≤→0≤^ x (suc n) 0≤x =
       subst (_≤ x ^ suc n) (0RightAnnihilates x) ([ x , 0≤x ]·≤ 0≤→0≤^ x n 0≤x)
 
+    0<+Closed : ∀ x y → 0r < x → 0r < y → 0r < x + y
+    0<+Closed x y = (subst (_< x + y) (+IdL 0r) ∘_) ∘ +Mono< _ _ _ _
+
+    0≤+Closed : ∀ x y → 0r ≤ x → 0r ≤ y → 0r ≤ x + y
+    0≤+Closed x y = (subst (_≤ x + y) (+IdL 0r) ∘_) ∘ +Mono≤ _ _ _ _
+
+    0<·Closed : ∀ x y → 0r < x → 0r < y → 0r < x · y
+    0<·Closed x y 0<x 0<y = begin<
+      0r      ≡→≤⟨ solve! RCR ⟩
+      0r · 0r   ≤⟨ <-≤-weaken _ _ 0<x ≤·[ 0r , is-refl 0r ] ⟩
+      x · 0r    <⟨ [ x , 0<x ]·< 0<y ⟩
+      x · y    ◾
+
+    0≤·Closed : ∀ x y → 0r ≤ x → 0r ≤ y → 0r ≤ x · y
+    0≤·Closed x y 0≤x 0≤y = begin≤
+      0r      ≡→≤⟨ solve! RCR ⟩
+      0r · 0r   ≤⟨ 0≤x ≤·[ 0r , is-refl 0r ] ⟩
+      x · 0r    ≤⟨ [ x , 0≤x ]·≤ 0≤y ⟩
+      x · y    ◾
+
   open OrderedCommRingTheory
 
   module AdditiveSubType

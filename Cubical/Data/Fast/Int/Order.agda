@@ -240,6 +240,30 @@ suc≤→< {negsuc (suc m)} {negsuc n} (negsuc≤negsuc p) = negsuc<negsuc p
 ≤≡<suc : (m ≤ n) ≡ (m < sucℤ n)
 ≤≡<suc = ua ≤≃<suc
 
+pred<→≤ : predℤ m < n → m ≤ n
+pred<→≤ = recompute≤ ∘ subst (_≤ _) (sucPred _) ∘ <→suc≤
+
+≤→pred< : m ≤ n → predℤ m < n
+≤→pred< = suc≤→< ∘ recompute≤ ∘ subst (_≤ _) (sym (sucPred _))
+
+pred<≃≤ : (predℤ m < n) ≃ (m ≤ n)
+pred<≃≤ = propBiimpl→Equiv isProp< isProp≤ pred<→≤ ≤→pred<
+
+pred<≡≤ : (predℤ m < n) ≡ (m ≤ n)
+pred<≡≤ = ua pred<≃≤
+
+≤pred→< : m ≤ predℤ n → m < n
+≤pred→< = recompute< ∘ subst (_ <_) (sucPred _) ∘ ≤→<suc
+
+<→≤pred : m < n → m ≤ predℤ n
+<→≤pred = <suc→≤ ∘ recompute< ∘ subst (_ <_) (sym (sucPred _))
+
+≤pred≃< : (m ≤ predℤ n) ≃ (m < n)
+≤pred≃< = propBiimpl→Equiv isProp≤ isProp< ≤pred→< <→≤pred
+
+≤pred≡< : (m ≤ predℤ n) ≡ (m < n)
+≤pred≡< = ua ≤pred≃<
+
 ≤-+o : m ≤ n → m ℤ.+ o ≤ n ℤ.+ o
 ≤-+o = recompute≤ ∘ proof _ _ _ where
   proof : ∀ m n o → m ≤ n → m ℤ.+ o ≤ n ℤ.+ o
@@ -658,6 +682,12 @@ min≤ {negsuc (suc m)} {negsuc (suc n)} with m ℕ.<ᵇ? n
 -- the first component will normalize quickly, but not the path itself
 <→Σℕ : m < n → Σ[ k ∈ ℕ ] m ℤ.+ pos (suc k) ≡ n
 <→Σℕ {m} = map-snd (sym (+sucℤ m _) ∙∙ sucℤ+ m _ ∙∙_) ∘ ≤→Σℕ ∘ <→suc≤
+
+≤ℕ→≤ℤ : ∀ m n → m ℕ.≤ n → pos m ≤ pos n
+≤ℕ→≤ℤ _ _ = recompute≤ ∘ pos≤pos ∘ ≤→≤ᵗ
+
+<ℕ→<ℤ : ∀ m n → m ℕ.< n → pos m < pos n
+<ℕ→<ℤ _ _ = recompute< ∘ pos<pos ∘ <→<ᵗ
 
 data Trichotomy m n : Type where
   lt : m < n → Trichotomy m n
