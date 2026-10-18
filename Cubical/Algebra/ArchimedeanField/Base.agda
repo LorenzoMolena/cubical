@@ -12,7 +12,8 @@ open import Cubical.Algebra.OrderedField.Base
 open import Cubical.Algebra.OrderedField.Instances.Rationals
 open import Cubical.Algebra.Ring
 
-open import Cubical.Data.Rationals using (ℚ)
+open import Cubical.Data.Rationals.Base as ℚ
+import Cubical.Data.Rationals.Order as ℚ
 open import Cubical.Data.Sigma
 
 open import Cubical.HITs.PropositionalTruncation as PT
@@ -34,6 +35,12 @@ record IsArchimedeanField
     isHomomorphism : IsOrderedFieldHom (snd ℚOrderedField) ι
                       (orderedfieldstr _ _ _ _ _ _ _ isOrderedField)
     archimedeanProperty : (x y : F) → x < y → ∃[ q ∈ ℚ ] (x < ι q) × (ι q < y)
+
+  ι₀₊ : Σ ℚ (0 ℚ.≤_) → F
+  ι₀₊ = ι ∘ fst
+
+  ι₊ : Σ ℚ (0 ℚ.<_) → F
+  ι₊ = ι ∘ fst
 
   open IsOrderedField isOrderedField public
   open IsOrderedCommRingMono isHomomorphism public

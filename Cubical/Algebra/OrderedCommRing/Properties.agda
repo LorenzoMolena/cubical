@@ -15,6 +15,7 @@ open import Cubical.Algebra.Semigroup
 
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat   as ℕ using (ℕ ; zero ; suc)
+import Cubical.Data.Nat.Order  as ℕ
 open import Cubical.Data.Sigma
 open import Cubical.Data.Sum
 
@@ -375,6 +376,34 @@ module _ (R' : OrderedCommRing ℓ ℓ') where
     0≤→0≤^ x zero    0≤x = 0≤1
     0≤→0≤^ x (suc n) 0≤x =
       subst (_≤ x ^ suc n) (0RightAnnihilates x) ([ x , 0≤x ]·≤ 0≤→0≤^ x n 0≤x)
+
+    1≤→1≤^ : ∀ x n → 1r ≤ x → 1r ≤ x ^ n
+    1≤→1≤^ x zero    1≤x = is-refl 1r
+    1≤→1≤^ x (suc n) 1≤x = begin≤
+      1r          ≤⟨ 1≤x ⟩
+      x         ≡→≤⟨ sym $ ·IdR x ⟩
+      x · 1r      ≤⟨ [ x , is-trans≤ _ _ _ 0≤1 1≤x ]·≤ 1≤→1≤^ x n 1≤x ⟩
+      x · x ^ n   ◾
+
+    1≤→^MonoL≤ : ∀ x → 1r ≤ x → ∀ {m n} → m ℕ.≤ n → x ^ m ≤ x ^ n
+    1≤→^MonoL≤ x 1≤x {zero}  {n}     = λ _ → 1≤→1≤^ x n 1≤x
+    1≤→^MonoL≤ x 1≤x {suc m} {zero}  = ⊥.rec ∘ ℕ.¬-<-zero
+    1≤→^MonoL≤ x 1≤x {suc m} {suc n} =
+      ·MonoL≤ _ _ _ (is-trans≤ _ _ _ 0≤1 1≤x) ∘ 1≤→^MonoL≤ x 1≤x ∘ ℕ.pred-≤-pred
+
+    ∈[0,1]→^≤1 : ∀ x n → 0r ≤ x → x ≤ 1r → x ^ n ≤ 1r
+    ∈[0,1]→^≤1 x zero    0≤x x≤1 = is-refl 1r
+    ∈[0,1]→^≤1 x (suc n) 0≤x x≤1 = begin≤
+      x · x ^ n   ≤⟨ [ x , 0≤x ]·≤ ∈[0,1]→^≤1 x n 0≤x x≤1 ⟩
+      x · 1r      ≤⟨ x≤1 ≤·[ 1r , 0≤1 ] ⟩
+      1r · 1r   ≡→≤⟨ ·IdL 1r ⟩
+      1r          ◾
+
+    ∈[0,1]→^AntimonoL≤ : ∀ x → 0r ≤ x → x ≤ 1r → ∀ {m n} → m ℕ.≤ n → x ^ n ≤ x ^ m
+    ∈[0,1]→^AntimonoL≤ x 0≤x x≤1 {zero}  {n}     = λ _ → ∈[0,1]→^≤1 x n 0≤x x≤1
+    ∈[0,1]→^AntimonoL≤ x 0≤x x≤1 {suc m} {zero}  = ⊥.rec ∘ ℕ.¬-<-zero
+    ∈[0,1]→^AntimonoL≤ x 0≤x x≤1 {suc m} {suc n} =
+      ·MonoL≤ _ _ _ 0≤x ∘ ∈[0,1]→^AntimonoL≤ x 0≤x x≤1 ∘ ℕ.pred-≤-pred
 
     0<+Closed : ∀ x y → 0r < x → 0r < y → 0r < x + y
     0<+Closed x y = (subst (_< x + y) (+IdL 0r) ∘_) ∘ +Mono< _ _ _ _
