@@ -170,7 +170,7 @@ module _ (A' : ArchimedeanField ℓ ℓ') where
       module AR where
         open ArchimedeanRingStr (snd AR) public
         open ArchimedeanRingTheory AR public
-      module B≤ = BernoullyIneq AR
+      module B≤ = BernoulliIneq AR
 
     1<base→∃N[<baseᴺ] : ∀ x → ∀ b → 1f < b → ∃[ N ∈ ℕ ] A.⟨ x ⟩₊ < b ^ N
     1<base→∃N[<baseᴺ] (x , 0<x) b 1<b = do

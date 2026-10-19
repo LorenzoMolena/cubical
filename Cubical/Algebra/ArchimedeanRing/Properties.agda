@@ -177,7 +177,7 @@ module _ (R' : ArchimedeanRing ℓ ℓ') where
   open ArchimedeanRingTheory
   open Exponentiation RCR
 
-  module BernoullyIneq where
+  module BernoulliIneq where
 
     0≤1+ : ∀ x → 0r ≤ 1r + x → ∀ n → 1r + ι₀₊ n · x ≤ (1r + x) ^ n
     0≤1+ x 0≤1+x zero    = subst (_≤ 1r) (sym (congR _+_ (ι0· x) ∙ +IdR _)) (is-refl 1r)
