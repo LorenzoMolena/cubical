@@ -154,5 +154,8 @@ module _ (F' : OrderedField ℓ ℓ') where
     <₊1→1<₊⁻¹ : ∀ x → x <₊ 1₊ → 1₊ <₊ x ⁻¹₊
     <₊1→1<₊⁻¹ x = subst (_< ⟨ x ⁻¹₊ ⟩₊) (1⁻¹≡1 ⦃ 0<→∈Fˣ ⦄) ∘ ⁻¹Flip<₊ x 1₊
 
+    <→1<₊/₊ : ∀ x y → x <₊ y → 1₊ <₊ y ₊/₊ x
+    <→1<₊/₊ x y = ·CancelR< _ _ _ (snd x) ∘ subst2 _<_ (sym (·IdL _)) (sym (₊/₊· y x))
+
     ₊^-⁻¹₊ : ∀ x n → ⟨ (x ⁻¹₊) ₊^ n ⟩₊ ≡ ⟨ (x ₊^ n) ⁻¹₊ ⟩₊
     ₊^-⁻¹₊ x n = ^-⁻¹ ⟨ x ⟩₊ n

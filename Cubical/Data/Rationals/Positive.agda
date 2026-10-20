@@ -134,3 +134,6 @@ ceil₊ℕ≡ceil₊ℤ = snd ∘ ℤ.<→Σℕ ∘ 0<ceil₊ℤ
 ceil₊ : ℚ₊ → ℚ₊
 ceil₊ q .fst = [ ceil₊ℤ q / 1 ]
 ceil₊ q .snd = <ℤ→<ℚ 0 _ 1 (0<ceil₊ℤ q)
+
+≤₊ceil₊ℕ₊₁ : ∀ x → x ≤₊ [ ceil₊ℕ₊₁ x / 1 ]₊
+≤₊ceil₊ℕ₊₁ x = subst≤R (congL [_/_] (sym (ceil₊ℕ≡ceil₊ℤ x))) (≤⌈⌉ ⟨ x ⟩₊)
