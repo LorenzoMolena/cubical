@@ -42,6 +42,7 @@ open import Cubical.Algebra.OrderedCommRing.Instances.Rationals
 open import Cubical.Relation.Premetric
 open import Cubical.Relation.Premetric.Mappings
 open import Cubical.Relation.Premetric.Instances.FunctionSpace
+open import Cubical.Relation.Premetric.Instances.Scaled
 open import Cubical.Relation.Premetric.Completion.Base renaming (ℭ to ⟨ℭ_⟩)
 open import Cubical.Relation.Premetric.Completion.Properties renaming
   (ℭPremetricSpace to ℭ ; isCompleteℭ to compℭ)
@@ -193,7 +194,7 @@ module _ (M : PremetricSpace ℓM (ℓ-max ℓM ℓM')) (N : PremetricSpace ℓN
         δ/4+δ/4+ε+δ/2≡ε+δ : ⟨ (δ /4₊) +₊ ((δ /4₊) +₊ (ε +₊ (δ /2₊))) ⟩₊ ≡ ⟨ ε +₊ δ ⟩₊
         δ/4+δ/4+ε+δ/2≡ε+δ =
           ⟨ δ /4₊ +₊ (δ /4₊ +₊ (ε +₊ δ /2₊)) ⟩₊ ≡⟨ ℚ.+Assoc ⟨ δ /4₊ ⟩₊ _ _ ⟩
-          ⟨ (δ /4₊ +₊ δ /4₊) +₊ (ε +₊ δ /2₊) ⟩₊ ≡⟨ cong (ℚ._+ ⟨ ε +₊ δ /2₊ ⟩₊) (/4+/4≡/2 ⟨ δ ⟩₊) ⟩
+          ⟨ (δ /4₊ +₊ δ /4₊) +₊ (ε +₊ δ /2₊) ⟩₊ ≡⟨ congL ℚ._+_ (/4+/4≡/2 ⟨ δ ⟩₊) ⟩
           ⟨ δ /2₊ +₊ (ε +₊ δ /2₊) ⟩₊            ≡⟨ ℚ.+Comm ⟨ δ /2₊ ⟩₊ _ ⟩
           ⟨ (ε +₊ δ /2₊) +₊ δ /2₊ ⟩₊            ≡⟨ sym $ ℚ.+Assoc ⟨ ε ⟩₊ ⟨ δ /2₊ ⟩₊ _ ⟩
           ⟨ ε +₊ (δ /2₊ +₊ δ /2₊) ⟩₊            ≡⟨ cong (⟨ ε ⟩₊ ℚ.+_) (/2+/2≡id ⟨ δ ⟩₊) ⟩
@@ -212,6 +213,52 @@ module _ (M : PremetricSpace ℓM (ℓ-max ℓM ℓM')) (N : PremetricSpace ℓN
         ≈→liftNE≈ fⁿ gⁿ δ
           (λ x η → N.isMonotone≈< {ε = δ} {δ +₊ η} (<₊SumLeft δ η) (ptwf≈g x))
           x [ mean₊ δ ε -₊ δ ]⟨ <→<mean ⟨ δ ⟩₊ ⟨ ε ⟩₊ δ<ε ⟩
+
+module _ (M : PremetricSpace ℓM (ℓ-max ℓM ℓM')) (N : PremetricSpace ℓN' ℓN) where
+  private
+    ℭM = ℭ ℓM' M
+
+  module LiftCompleteCodomainᴸ (N-com : isComplete N) where
+    open Iso
+
+    private
+      module N = PremetricStr (str N)
+
+    module _ (L : ℚ₊) where
+      open Scaled N L renaming (·PremetricSpace to L·N)
+      open LiftCompleteCodomain {ℓM' = ℓM'} M L·N (isComplete· N-com)
+
+      liftLipschitzWith : Σ[ f ∈ _ ] IsLipschitzWith (snd M)  f (snd N) L
+                        → Σ[ g ∈ _ ] IsLipschitzWith (snd ℭM) g (snd N) L
+      liftLipschitzWith = L[,]≅NE[,·] ℭM N L .inv ∘ liftNE ∘ L[,]≅NE[,·] M N L .fun
+
+      liftLipschitzWithᴸ : Σ[ f ∈ _ ] IsLipschitzWith (snd M) f (snd N) L → L[ ℭM , N ]
+      liftLipschitzWithᴸ = map-snd (∣_∣₁ ∘ (L ,_)) ∘ liftLipschitzWith
+
+      _ : ∀ {f} → fst (liftLipschitzWithᴸ f) ∘ ι ≡ fst f
+      _ = refl
+
+    isIrrelevantLiftLipschitzWith : ∀ L L' f isLip isLip'
+      → fst (liftLipschitzWith L (f , isLip)) ≡ fst (liftLipschitzWith L' (f , isLip'))
+    isIrrelevantLiftLipschitzWith L L' f isLip isLip' = funExt $ lipschitz≡ _ _
+      (liftLipschitzWithᴸ L (f , isLip)) (liftLipschitzWithᴸ L' (f , isLip')) λ _ → refl
+
+    isPropΣLiftLipschitz :
+      (f : L[ M , N ]) → isProp (Σ[ g ∈ L[ ℭM , N  ] ] (fst g ∘ ι ≡ fst f))
+    isPropΣLiftLipschitz f (g , g∘ι≡f) (h , h∘ι≡f) = Σ≡Prop (λ _ → isSet→ N.isSetM _ _) $
+      L≡ $ funExt $ lipschitz≡ _ _ g h $ funExt⁻ $ g∘ι≡f ∙ sym h∘ι≡f
+
+    ΣLiftLipschitz : (f : L[ M , N ]) → Σ[ g ∈ L[ ℭM , N  ] ] (fst g ∘ ι ≡ fst f)
+    ΣLiftLipschitz f = PT.rec (isPropΣLiftLipschitz f)
+      (uncurry λ L L-lip → liftLipschitzWithᴸ L (fst f , L-lip) , refl) (snd f)
+
+    liftLipschitz liftL : L[ M , N ] → L[ ℭM , N ]
+    liftLipschitz = fst ∘ ΣLiftLipschitz
+
+    liftL = liftLipschitz
+
+    liftL∘ι : (f : L[ M , N ]) → fst (liftL f) ∘ ι ≡ fst f
+    liftL∘ι = snd ∘ ΣLiftLipschitz
 
 module _ {ℓA ℓA' ℓB ℓB'}
   (A : PremetricSpace ℓA (ℓ-max ℓA ℓA'))

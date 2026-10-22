@@ -204,3 +204,7 @@ module PositiveRationals where
       ⟨ ε ·₊ (L ·₊ (L ⁻¹₊)) ⟩₊ ≡⟨ cong (⟨ ε ⟩₊ ℚ.·_) (⁻¹inverse L) ⟩
       ⟨ ε ⟩₊ ℚ.· 1             ≡⟨ ℚ.·IdR ⟨ ε ⟩₊ ⟩
       ⟨ ε ⟩₊                   ∎
+
+    <·→/< : ∀ δ L ε → δ <₊ L ·₊ ε → δ / L <₊ ε
+    <·→/< δ L ε =
+      subst<R (sym (ℚ.·Assoc ⟨ L ⟩₊ _ _) ∙ ·/ L ε) ∘ <-·o _ _ _ (snd (L ⁻¹₊))
