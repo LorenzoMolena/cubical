@@ -313,6 +313,7 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
           step3 = /2+/2≡id ⟨ ε ⟩₊
 
   -- default choice given by s n := [ 1 / 1+ n ]₊
+  -- TO DO : improve the proof such that the N ∈ ℕ s.t. s N <₊ ε is closer to ε.
   isCauchy→isCauchySeqΣ : ∀ x → isCauchy x → Σ[ y ∈ (ℕ → M) ] isCauchySeqΣ y
   isCauchy→isCauchySeqΣ = withDecreasingSeq⟶0.isCauchy→isCauchySeqΣ s⟶0
     module [1+n]⁻¹IsDecreasing⟶0 where
