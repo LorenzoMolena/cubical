@@ -8,14 +8,22 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
 open import Cubical.Foundations.HLevels
 
+open import Cubical.Algebra.CommRing
+open import Cubical.Algebra.CommRing.Instances.Rationals renaming (ℚCommRing to ℚCR)
+open import Cubical.Algebra.OrderedCommRing
 open import Cubical.Algebra.OrderedCommRing.Instances.Rationals
 
 open import Cubical.Data.Empty as ⊥
 open import Cubical.Data.Nat as ℕ
-open import Cubical.Data.Nat.Order as ℕ renaming (_≤_ to _≤ℕ_ ; _<_ to _<ℕ_)
-open import Cubical.Data.Rationals as ℚ using ([_/_] ; eq/)
+open import Cubical.Data.Nat.Order  as ℕ renaming (_≤_ to _≤ℕ_ ; _<_ to _<ℕ_)
+open import Cubical.Data.Nat.Order.Inductive as ℕ
+open import Cubical.Data.NatPlusOne as ℕ₊₁
+import Cubical.Data.Fast.Int as ℤ
+import Cubical.Data.Fast.Int.Order as ℤ
+open import Cubical.Data.Rationals  as ℚ using ([_/_] ; eq/)
 open import Cubical.Data.Rationals.Order as ℚ
 open import Cubical.Data.Sigma
+open import Cubical.Data.Sum
 
 open import Cubical.HITs.PropositionalTruncation as PT
 open import Cubical.HITs.PropositionalTruncation.Monad
@@ -28,6 +36,8 @@ open import Cubical.Relation.Binary.Order.QuosetReasoning
 
 open import Cubical.Relation.Premetric.Base
 
+open import Cubical.Tactics.CommRingSolver
+
 private open module N = JoinProperties ℕ≤Pseudolattice
 open <-≤-Reasoning ℕ (snd ℕ≤Poset) (snd ℕ<Quoset)
   (λ _ → ℕ.<≤-trans) (λ _ → ℕ.≤<-trans) ℕ.<-weaken
@@ -35,9 +45,22 @@ open <-syntax
 open ≤-syntax
 open ≡-syntax
 
+private module Q = OrderedCommRingReasoning ℚOrderedCommRing
+
 open 1/2∈ℚ
 open PositiveRationals
 open PositiveHalvesℚ
+
+private
+  module _ (R : CommRing ℓ-zero) where
+    open CommRingStr (snd R) using () renaming (_+_ to _+r_ ; -_ to -r_ ; _-_ to _-r_)
+
+    lemma0 : ∀ sm sn a b
+           → (sm +r a) +r ((a +r b) +r (b +r sn)) ≡ (a +r a +r sm) +r (b +r b +r sn)
+    lemma0 _ _ _ _ = solve! R
+
+    lemma1 : ∀ sm sn e → (e -r sm +r sm) +r (e -r sn +r sn) ≡ e +r e
+    lemma1 _ _ _ = solve! R
 
 private
   variable
@@ -239,6 +262,75 @@ module PremetricTheory (M' : PremetricSpace ℓ ℓ') where
 
   isCauchySeqΣ<→isCauchy : ∀ x → isCauchySeqΣ< x → Σ[ y ∈ (ℚ₊ → M) ] isCauchy y
   isCauchySeqΣ<→isCauchy x = isCauchySeqΣ→isCauchy x ∘ isCauchySeqΣ<→isCauchySeqΣ x
+
+  record IsDecreasingSeq⟶0 (s : ℕ → ℚ₊) : Type where
+    constructor isdecreasingseq⟶0
+    no-eta-equality
+    field
+      decreasing : ∀ {m n} → m ≤ℕ n → s n ≤₊ s m
+      converges0 : ∀ ε → Σ[ N ∈ ℕ ] s N <₊ ε
+
+  DecreasingSeq⟶0 : Type
+  DecreasingSeq⟶0 = Σ (ℕ → ℚ₊) IsDecreasingSeq⟶0
+
+  module withDecreasingSeq⟶0 ((s , s⟶0) : DecreasingSeq⟶0) where
+    open IsDecreasingSeq⟶0 s⟶0
+
+    isCauchy→isCauchySeqΣ : ∀ x → isCauchy x → Σ[ y ∈ (ℕ → M) ] isCauchySeqΣ y
+    isCauchy→isCauchySeqΣ x xc .fst = x ∘ s
+    isCauchy→isCauchySeqΣ x xc .snd ε .fst = fst (converges0 (ε /2₊))
+    isCauchy→isCauchySeqΣ x xc .snd ε .snd m n N≤m N≤n =
+      begin≈[ ε ]⟨ lemma ⟩
+        x (s m) ≈[ s m +₊ α   ]⟨ xc (s m) α    ⟩
+        x α     ≈[ α   +₊ β   ]⟨ xc α    β     ⟩
+        x β     ≈[ β   +₊ s n ]⟨ xc β    (s n) ⟩
+        x (s n) ≈∎
+      where
+        N : ℕ
+        N = fst (converges0 (ε /2₊))
+
+        sₖ<ε/2 : ∀ {k} → N ≤ℕ k → s k <₊ ε /2₊
+        sₖ<ε/2 {k} N≤k = Q.begin<
+          ⟨ s k ⟩₊   Q.≤⟨ decreasing N≤k ⟩
+          ⟨ s N ⟩₊   Q.<⟨ snd (converges0 (ε /2₊)) ⟩
+          ⟨ ε /2₊ ⟩₊ Q.◾
+
+        α = [ ε /2₊ -₊ s m ]⟨ sₖ<ε/2 N≤m ⟩ /2₊
+        β = [ ε /2₊ -₊ s n ]⟨ sₖ<ε/2 N≤n ⟩ /2₊
+
+        lemma : ⟨ (s m +₊ α) +₊ ((α +₊ β) +₊ (β +₊ s n)) ⟩₊ ≡ ⟨ ε ⟩₊
+        lemma =
+          ⟨ (s m +₊ α) +₊ ((α +₊ β) +₊ (β +₊ s n)) ⟩₊                 ≡⟨ step0 ⟩
+          ⟨ (α +₊ α +₊ s m) +₊ (β +₊ β +₊ s n) ⟩₊                     ≡⟨ step1 ⟩
+          (ε /2₊ -₊ s m ℚ.+ ⟨ s m ⟩₊) ℚ.+ (ε /2₊ -₊ s n ℚ.+ ⟨ s n ⟩₊) ≡⟨ step2 ⟩
+          ⟨ ε /2₊ +₊ ε /2₊ ⟩₊                                         ≡⟨ step3 ⟩
+          ⟨ ε ⟩₊                                                      ∎
+          where
+          step0 = lemma0 ℚCR ⟨ s m ⟩₊ _ _ _
+          step1 = cong₂ ℚ._+_ (congL ℚ._+_ (/2+/2≡id (ε /2₊ -₊ s m)))
+                              (congL ℚ._+_ (/2+/2≡id (ε /2₊ -₊ s n)))
+          step2 = lemma1 ℚCR ⟨ s m ⟩₊ ⟨ s n ⟩₊ ⟨ ε /2₊ ⟩₊
+          step3 = /2+/2≡id ⟨ ε ⟩₊
+
+  -- default choice given by s n := [ 1 / 1+ n ]₊
+  isCauchy→isCauchySeqΣ : ∀ x → isCauchy x → Σ[ y ∈ (ℕ → M) ] isCauchySeqΣ y
+  isCauchy→isCauchySeqΣ = withDecreasingSeq⟶0.isCauchy→isCauchySeqΣ s⟶0
+    module [1+n]⁻¹IsDecreasing⟶0 where
+      open IsDecreasingSeq⟶0
+
+      s⟶0 : DecreasingSeq⟶0
+      s⟶0 .fst = [ 1 /_]₊ ∘ 1+_
+      s⟶0 .snd .decreasing = ≤ℕ→⁻¹≥⁻¹ _ _ ∘ suc-≤-suc
+      s⟶0 .snd .converges0 = λ ε →
+        let
+          ((1+ a , 1+ n) , ≡ε) = reduceFrac ε
+        in λ where
+          .fst → suc n
+          .snd → Q.begin<
+            [ 1 / 2+ n ] Q.<⟨ <ℕ→⁻¹>⁻¹ _ _ ℕ.<-suc ⟩
+            [ 1 / 1+ n ] Q.≤⟨ ≤ℤ→≤ℚ 1 (ℤ.pos (suc a)) (1+ n) (ℤ.pos≤pos tt) ⟩
+            [ _ / 1+ n ] Q.≡→≤⟨ ≡ε ⟩
+            ⟨ ε ⟩₊        Q.◾
 
   isLimit : (ℚ₊ → M) → M → Type ℓ'
   isLimit x l = ∀ ε θ → x ε ≈[ ε +₊ θ ] l

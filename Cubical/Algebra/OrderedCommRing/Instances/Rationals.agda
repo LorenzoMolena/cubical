@@ -6,6 +6,7 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Equiv
 
 open import Cubical.Data.Empty as ⊥
+open import Cubical.Data.Sigma
 open import Cubical.Data.Sum   as ⊎
 
 open import Cubical.HITs.PropositionalTruncation as PT
@@ -111,6 +112,17 @@ module PositiveRationals where
 
   [_/_]₊ : ℕ₊₁ → ℕ₊₁ → ℚ₊
   [ 1+ n / 1+ m ]₊ = [ pos (suc n) / 1+ m ] , pos<pos tt
+
+  reduceFrac : (q : ℚ₊) → Σ[ (n , m) ∈ ℕ₊₁ × ℕ₊₁ ] [ ℕ₊₁→ℤ n / m ] ≡ ⟨ q ⟩₊
+  reduceFrac q with Reduce.reduceΣ ⟨ q ⟩₊
+  ... | (pos zero    , d) , _ , ≡q =
+    ⊥.rec $ isIrrefl< 0 $ subst<R (sym ≡q ∙ eq/ _ _ refl) (snd q)
+  ... | (pos (suc n) , d) , _ , ≡q = (1+ n , d) , ≡q
+  ... | (negsuc n    , d) , _ , ≡q =
+    ⊥.rec $ isAsym< 0 (fst q) (snd q) (subst<L ≡q negsuc<pos)
+
+  reduce₊ : ℚ₊ → ℚ₊
+  reduce₊ = uncurry [_/_]₊ ∘ fst ∘ reduceFrac
 
   max₊ : ℚ₊ → ℚ₊ → ℚ₊
   fst (max₊ x y) = ℚ.max (fst x) (fst y)
