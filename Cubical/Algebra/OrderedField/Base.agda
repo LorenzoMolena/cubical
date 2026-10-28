@@ -92,11 +92,11 @@ record IsOrderedFieldHom {A : Type ℓ} {B : Type ℓ'}
   where
   no-eta-equality
   private
-    Fcring = snd (OrderedField→OrderedCommRing (A , F))
-    Kcring = snd (OrderedField→OrderedCommRing (B , K))
+    Focring = snd (OrderedField→OrderedCommRing (A , F))
+    Kocring = snd (OrderedField→OrderedCommRing (B , K))
 
   field
-    isOrderedCommRingMono : IsOrderedCommRingMono Fcring f Kcring
+    isOrderedCommRingMono : IsOrderedCommRingMono Focring f Kocring
 
   open IsOrderedCommRingMono isOrderedCommRingMono public
 
