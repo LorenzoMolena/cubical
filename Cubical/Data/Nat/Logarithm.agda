@@ -55,6 +55,12 @@ module LogTheory (logℕ : ∀ m n → Logℕ (suc (suc m)) (suc n)) where
   log : (b : ℕ) → {2 ≤ᵗ b} → (x : ℕ) → {1 ≤ᵗ x} → ℕ
   log (suc (suc m)) (suc n) = Logℕ.log (logℕ m n)
 
+  ^hlog≤ : (b : ℕ) → ∀ {2≤b} → (x : ℕ) → ∀ {1≤x} → b ^ (log b {2≤b} x {1≤x}) ≤ x
+  ^hlog≤ (suc (suc m)) (suc n) = Logℕ.^log≤ (logℕ m n)
+
+  <^1+log : (b : ℕ) → ∀ {2≤b} → (x : ℕ) → ∀ {1≤x} → x < b ^ suc (log b {2≤b} x {1≤x})
+  <^1+log (suc (suc m)) (suc n) = Logℕ.<^1+log (logℕ m n)
+
   module _ (m : ℕ) where
     private
       b   = suc (suc m)

@@ -204,6 +204,18 @@ pos<pos→neg>neg : pos k < pos l → neg k > neg l
 pos<pos→neg>neg {zero}  {suc l} (pos<pos p) = negsuc<pos
 pos<pos→neg>neg {suc k} {suc l} (pos<pos p) = negsuc<negsuc p
 
+pos≤pos→≤ᵗ : pos k ≤ pos l → k ℕ.≤ᵗ l
+pos≤pos→≤ᵗ (pos≤pos x) = x
+
+negsuc≤negsuc→≥ᵗ : negsuc k ≤ negsuc l → k ℕ.≥ᵗ l
+negsuc≤negsuc→≥ᵗ (negsuc≤negsuc x) = x
+
+pos<pos→<ᵗ : pos k < pos l → k ℕ.<ᵗ l
+pos<pos→<ᵗ (pos<pos x) = x
+
+negsuc<negsuc→>ᵗ : negsuc k < negsuc l → k ℕ.>ᵗ l
+negsuc<negsuc→>ᵗ (negsuc<negsuc x) = x
+
 <→suc≤ : m < n → sucℤ m ≤ n
 <→suc≤ {pos m}          {pos n}    (pos<pos p)       = pos≤pos p
 <→suc≤ {negsuc zero}    {pos n}     negsuc<pos       = pos≤pos tt
@@ -239,6 +251,30 @@ suc≤→< {negsuc (suc m)} {negsuc n} (negsuc≤negsuc p) = negsuc<negsuc p
 
 ≤≡<suc : (m ≤ n) ≡ (m < sucℤ n)
 ≤≡<suc = ua ≤≃<suc
+
+pred<→≤ : predℤ m < n → m ≤ n
+pred<→≤ = recompute≤ ∘ subst (_≤ _) (sucPred _) ∘ <→suc≤
+
+≤→pred< : m ≤ n → predℤ m < n
+≤→pred< = suc≤→< ∘ recompute≤ ∘ subst (_≤ _) (sym (sucPred _))
+
+pred<≃≤ : (predℤ m < n) ≃ (m ≤ n)
+pred<≃≤ = propBiimpl→Equiv isProp< isProp≤ pred<→≤ ≤→pred<
+
+pred<≡≤ : (predℤ m < n) ≡ (m ≤ n)
+pred<≡≤ = ua pred<≃≤
+
+≤pred→< : m ≤ predℤ n → m < n
+≤pred→< = recompute< ∘ subst (_ <_) (sucPred _) ∘ ≤→<suc
+
+<→≤pred : m < n → m ≤ predℤ n
+<→≤pred = <suc→≤ ∘ recompute< ∘ subst (_ <_) (sym (sucPred _))
+
+≤pred≃< : (m ≤ predℤ n) ≃ (m < n)
+≤pred≃< = propBiimpl→Equiv isProp≤ isProp< ≤pred→< <→≤pred
+
+≤pred≡< : (m ≤ predℤ n) ≡ (m < n)
+≤pred≡< = ua ≤pred≃<
 
 ≤-+o : m ≤ n → m ℤ.+ o ≤ n ℤ.+ o
 ≤-+o = recompute≤ ∘ proof _ _ _ where
@@ -658,6 +694,12 @@ min≤ {negsuc (suc m)} {negsuc (suc n)} with m ℕ.<ᵇ? n
 -- the first component will normalize quickly, but not the path itself
 <→Σℕ : m < n → Σ[ k ∈ ℕ ] m ℤ.+ pos (suc k) ≡ n
 <→Σℕ {m} = map-snd (sym (+sucℤ m _) ∙∙ sucℤ+ m _ ∙∙_) ∘ ≤→Σℕ ∘ <→suc≤
+
+≤ℕ→≤ℤ : ∀ m n → m ℕ.≤ n → pos m ≤ pos n
+≤ℕ→≤ℤ _ _ = recompute≤ ∘ pos≤pos ∘ ≤→≤ᵗ
+
+<ℕ→<ℤ : ∀ m n → m ℕ.< n → pos m < pos n
+<ℕ→<ℤ _ _ = recompute< ∘ pos<pos ∘ <→<ᵗ
 
 data Trichotomy m n : Type where
   lt : m < n → Trichotomy m n
