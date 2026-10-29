@@ -72,31 +72,32 @@ module _ (A' : ArchimedeanField ℓ ℓ') where
   private
     A    = fst A'
     AOF  = ArchimedeanField→OrderedField A'
-    AOF  = ArchimedeanField→OrderedField A'
     AOCR = ArchimedeanField→OrderedCommRing A'
     ACR  = ArchimedeanField→CommRing A'
 
 
-  open ArchimedeanFieldStr (snd A')
+  open ArchimedeanFieldStr (snd A') renaming (isOrderedCommRingMono to ιOCR↪)
   open Exponentiation ACR
 
   module ArchimedeanFieldReasoning where
     open OrderedFieldReasoning AOF public
     open ℚ↪Reasoning AOF (ι , isOrderedFieldHomι) public
 
+  open ArchimedeanFieldReasoning
+
   module ArchimedeanFieldTheory where
     open OrderedFieldTheory AOF public
     open ℚ↪Theory AOF (ι , isOrderedFieldHomι) public
-  
+
     archimedeanPropertyℤ : ∀ x y → 0f < y → ∃[ k ∈ ℤ ] (x < ι [ k , 1 ] · y)
     archimedeanPropertyℤ x y 0<y = do
       (inl 0<x) ← is-weakly-linear 0f y x 0<y
         where (inr x<y) → return (1 , subst (x <_) (sym (ι1· y)) x<y)
       let
         x₊ = x , 0<x ; y₊ = y , 0<y ; y/x = y A./₊ x₊
-      (q , 0<ιq , q<y/x) ← uncurry (archimedeanProperty 0f) (y₊ A.₊/₊ x₊)
+      (q , 0<ιq , q<y/x) ← uncurry (isArchimedeanWithι 0f) (y₊ A.₊/₊ x₊)
       let
-        q₊ = q , recompute< (ιreflect< 0 q (subst (_< ι q) (sym ιpres0) 0<ιq))
+        q₊ = q , 0<ι→0< _ 0<ιq
 
         x≡ι⌈1/q⌉·ιq·x : x ≡ ι₊ (q₊ ⁻¹₊) · (ι q · x)
         x≡ι⌈1/q⌉·ιq·x =
@@ -135,7 +136,7 @@ module _ (A' : ArchimedeanField ℓ ℓ') where
     AR.ι    ARStr = ι ∘ [_/ 1 ]
     AR.isAR ARStr .IsAR.isOrderedCommRing   = isOrderedCommRing
     AR.isAR ARStr .IsAR.·CancelR<           = ·CancelR<
-    AR.isAR ARStr .IsAR.isMonomorphism      = snd ((_ , isHomomorphism) ∘ocr↪ ℤ↪ℚOCR)
+    AR.isAR ARStr .IsAR.isMonomorphism      = snd ((_ , ιOCR↪) ∘ocr↪ ℤ↪ℚOCR)
     AR.isAR ARStr .IsAR.archimedeanProperty = archimedeanPropertyℤ
 
   private
