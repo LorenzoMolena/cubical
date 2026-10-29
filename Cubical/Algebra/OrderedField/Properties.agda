@@ -5,27 +5,18 @@ open import Cubical.Foundations.Function
 open import Cubical.Foundations.Powerset
 
 open import Cubical.Algebra.CommRing
-open import Cubical.Algebra.HeytingField.Base
-open import Cubical.Algebra.HeytingField.Properties
+open import Cubical.Algebra.HeytingField
 open import Cubical.Algebra.OrderedCommRing as OCR hiding (module Positive)
 open import Cubical.Algebra.OrderedField.Base
 open import Cubical.Algebra.Ring
 
 open import Cubical.Data.Empty as ⊥
-open import Cubical.Data.Nat as ℕ using (ℕ ; zero ; suc)
-open import Cubical.Data.Fast.Int.Base as ℤ
-  renaming (_+_ to _+ℤ_ ; _·_ to _·ℤ_ ; -_ to -ℤ_ ; _-_ to _-ℤ_)
-import Cubical.Data.Fast.Int.Order as ℤ
 open import Cubical.Data.Sum
 
-open import Cubical.Relation.Binary
-open import Cubical.Relation.Binary.Order.Apartness
 open import Cubical.Relation.Binary.Order.Quoset
 open import Cubical.Relation.Binary.Order.StrictOrder
 open import Cubical.Relation.Binary.Order.Poset hiding (isPseudolattice)
 open import Cubical.Relation.Binary.Order.Pseudolattice
-
-open import Cubical.Tactics.CommRingSolver
 
 private
   variable
@@ -33,9 +24,6 @@ private
 
 OrderedField→StrictOrder : OrderedField ℓ ℓ' → StrictOrder ℓ ℓ'
 OrderedField→StrictOrder = OrderedCommRing→StrictOrder ∘ OrderedField→OrderedCommRing
-
-OrderedField→CommRing : OrderedField ℓ ℓ' → CommRing ℓ
-OrderedField→CommRing = OrderedCommRing→CommRing ∘ OrderedField→OrderedCommRing
 
 OrderedField→Ring : OrderedField ℓ ℓ' → Ring ℓ
 OrderedField→Ring = OrderedCommRing→Ring ∘ OrderedField→OrderedCommRing
@@ -55,11 +43,6 @@ module _ (F' : OrderedField ℓ ℓ') where
     FOCR = OrderedField→OrderedCommRing F'
     FCR  = OrderedField→CommRing F'
 
-  -- open RingTheory (OrderedField→Ring F')
-  -- open HeytingFieldStr (snd ?)
-  -- open OrderedFieldStr (snd F')
-
-  -- open HeytingFieldStr (snd (OrderedField→HeytingField F')) using (_[_]⁻¹)
   open module OrderedFieldReasoning = OrderedCommRingReasoning FOCR
 
   open OrderedFieldStr (snd F')
@@ -69,7 +52,7 @@ module _ (F' : OrderedField ℓ ℓ') where
 
   module OrderedFieldTheory where
     open OrderedCommRingTheory FOCR hiding (_#_) public
-    open FieldTheory (OrderedField→HeytingField F') public
+    open HeytingFieldTheory (OrderedField→HeytingField F') public
 
     0<→∈Fˣ : {x : F} {0< : 0f < x} → x ∈ Fˣ
     0<→∈Fˣ {x} {0<} = #0→isInv x (inr 0<)
@@ -145,6 +128,12 @@ module _ (F' : OrderedField ℓ ℓ') where
     ₊/₊· : ∀ x y → ⟨ x ₊/₊ y ⟩₊ · ⟨ y ⟩₊ ≡ ⟨ x ⟩₊
     ₊/₊· x y = divideMultiply ⟨ x ⟩₊ ⟨ y ⟩₊
 
+    ·/₊ : ∀ x y → ⟨ y ⟩₊ · x /₊ y ≡ x
+    ·/₊ x y = divideMultiply' x ⟨ y ⟩₊
+
+    ·₊/₊ : ∀ x y → ⟨ y ⟩₊ · ⟨ x ₊/₊ y ⟩₊ ≡ ⟨ x ⟩₊
+    ·₊/₊ x y = divideMultiply' ⟨ x ⟩₊ ⟨ y ⟩₊
+
     ⁻¹Flip<₊ : ∀ x y → x <₊ y → y ⁻¹₊ <₊ x ⁻¹₊
     ⁻¹Flip<₊ x y = 0<→⁻¹Flip< ⟨ x ⟩₊ ⟨ y ⟩₊ (snd x)
 
@@ -152,7 +141,7 @@ module _ (F' : OrderedField ℓ ℓ') where
     ⁻¹Flip<₊' x y = 0<→⁻¹Flip<' ⟨ x ⟩₊ ⟨ y ⟩₊ (snd y)
 
     <₊1→1<₊⁻¹ : ∀ x → x <₊ 1₊ → 1₊ <₊ x ⁻¹₊
-    <₊1→1<₊⁻¹ x = subst (_< ⟨ x ⁻¹₊ ⟩₊) (1⁻¹≡1 ⦃ 0<→∈Fˣ ⦄) ∘ ⁻¹Flip<₊ x 1₊
+    <₊1→1<₊⁻¹ x = subst (_< ⟨ x ⁻¹₊ ⟩₊) 1⁻¹≡1 ∘ ⁻¹Flip<₊ x 1₊
 
     <→1<₊/₊ : ∀ x y → x <₊ y → 1₊ <₊ y ₊/₊ x
     <→1<₊/₊ x y = ·CancelR< _ _ _ (snd x) ∘ subst2 _<_ (sym (·IdL _)) (sym (₊/₊· y x))

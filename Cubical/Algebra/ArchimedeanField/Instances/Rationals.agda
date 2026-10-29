@@ -37,7 +37,7 @@ isArchimedeanField (snd ℚArchimedeanField) = isArchimedeanFieldℚ
   where
   open IsArchimedeanField
   isArchimedeanFieldℚ : IsArchimedeanField _ _ _ _ _ _ _ _
-  isArchimedeanFieldℚ .isOrderedField      = isOrderedField $ snd ℚOrderedField
-  isArchimedeanFieldℚ .isHomomorphism      = snd $ idOFHom ℚOrderedField
-  isArchimedeanFieldℚ .archimedeanProperty =
+  isArchimedeanFieldℚ .isOrderedField     = isOrderedField $ snd ℚOrderedField
+  isArchimedeanFieldℚ .isOrderedFieldHomι = snd $ idOFHom ℚOrderedField
+  isArchimedeanFieldℚ .isArchimedeanWithι =
     λ x y x<y → ∣ mean x y , <→<mean x y x<y , <→mean< x y x<y ∣₁

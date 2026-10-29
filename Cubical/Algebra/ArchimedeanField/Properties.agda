@@ -16,6 +16,7 @@ open import Cubical.Algebra.OrderedCommRing.Instances.Rationals
 open import Cubical.Algebra.OrderedCommRing.Morphisms
 open import Cubical.Algebra.OrderedField as OF
 open import Cubical.Algebra.OrderedField.Instances.Rationals
+open import Cubical.Algebra.OrderedField.PropertiesWithRationals
 open import Cubical.Algebra.Ring
 
 open import Cubical.Data.Empty as ⊥
@@ -58,7 +59,8 @@ ArchimedeanField→StrictOrder : ArchimedeanField ℓ ℓ' → StrictOrder ℓ �
 ArchimedeanField→StrictOrder = OrderedField→StrictOrder ∘ ArchimedeanField→OrderedField
 
 ArchimedeanField→PseudoLattice : ArchimedeanField ℓ ℓ' → Pseudolattice ℓ ℓ'
-ArchimedeanField→PseudoLattice = OrderedField→PseudoLattice ∘ ArchimedeanField→OrderedField
+ArchimedeanField→PseudoLattice =
+  OrderedField→PseudoLattice ∘ ArchimedeanField→OrderedField
 
 ArchimedeanField→Poset : ArchimedeanField ℓ ℓ' → Poset ℓ ℓ'
 ArchimedeanField→Poset = OrderedField→Poset ∘ ArchimedeanField→OrderedField
@@ -70,47 +72,22 @@ module _ (A' : ArchimedeanField ℓ ℓ') where
   private
     A    = fst A'
     AOF  = ArchimedeanField→OrderedField A'
+    AOF  = ArchimedeanField→OrderedField A'
     AOCR = ArchimedeanField→OrderedCommRing A'
     ACR  = ArchimedeanField→CommRing A'
+
 
   open ArchimedeanFieldStr (snd A')
   open Exponentiation ACR
 
   module ArchimedeanFieldReasoning where
     open OrderedFieldReasoning AOF public
-
-    _<·ι[_] : ∀ {x y} z → x < y → x · ι₊ z < y · ι₊ z
-    _<·ι[_] z = _<·[ _ , subst (_< _) ιpres0 (ιpres< _ _ (snd z)) ]
-
-    ι[_]·<_ : ∀ {x y} z → x < y → ι₊ z · x < ι₊ z · y
-    ι[_]·<_ z = [ _ , subst (_< _) ιpres0 (ιpres< _ _ (snd z)) ]·<_
-
-    _≤·ι[_] : ∀ {x y} z → x ≤ y → x · ι₀₊ z ≤ y · ι₀₊ z
-    _≤·ι[_] z = _≤·[ _ , subst (_≤ _) ιpres0 (ιpres≤ _ _ (snd z)) ]
-
-    ι[_]·≤_ : ∀ {x y} z → x ≤ y → ι₀₊ z · x ≤ ι₀₊ z · y
-    ι[_]·≤_ z = [ _ , subst (_≤ _) ιpres0 (ιpres≤ _ _ (snd z)) ]·≤_
-
-  open ArchimedeanFieldReasoning
+    open ℚ↪Reasoning AOF (ι , isOrderedFieldHomι) public
 
   module ArchimedeanFieldTheory where
     open OrderedFieldTheory AOF public
-
-    ι0· : ∀ x → ι 0 · x ≡ 0f
-    ι0· x = congL _·_ ιpres0 ∙ 0LeftAnnihilates x
-
-    ι1· : ∀ x → ι 1 · x ≡ x
-    ι1· x = congL _·_ ιpres1 ∙ ·IdL x
-
-    0<ι₊ : ∀ a → 0f < ι₊ a
-    0<ι₊ = subst (_< ι _) ιpres0 ∘ uncurry (ιpres< 0)
-
-    0≤ι₊ : ∀ a → 0f ≤ ι₊ a
-    0≤ι₊ = <-≤-weaken 0f _ ∘ 0<ι₊
-
-    0≤ι₀₊ : ∀ a → 0f ≤ ι₀₊ a
-    0≤ι₀₊ = subst (_≤ ι _) ιpres0 ∘ uncurry (ιpres≤ 0)
-
+    open ℚ↪Theory AOF (ι , isOrderedFieldHomι) public
+  
     archimedeanPropertyℤ : ∀ x y → 0f < y → ∃[ k ∈ ℤ ] (x < ι [ k , 1 ] · y)
     archimedeanPropertyℤ x y 0<y = do
       (inl 0<x) ← is-weakly-linear 0f y x 0<y

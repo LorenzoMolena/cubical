@@ -75,9 +75,14 @@ module Units (R' : CommRing ℓ) where
  divideMultiply : ∀ x y ⦃ _ : y ∈ Rˣ ⦄ → x / y · y ≡ x
  divideMultiply x y = sym (·Assoc x _ _) ∙∙ congR _·_ (·-linv y) ∙∙ ·IdR x
 
+ divideMultiply' : ∀ x y ⦃ _ : y ∈ Rˣ ⦄ → y · x / y ≡ x
+ divideMultiply' x y = ·Comm y _ ∙ divideMultiply x y
+
  multiplyDivide : ∀ x y ⦃ _ : y ∈ Rˣ ⦄ → (x · y) / y ≡ x
  multiplyDivide x y = sym (·Assoc x _ _) ∙∙ congR _·_ (·-rinv y) ∙∙ ·IdR x
 
+ multiplyDivide' : ∀ x y ⦃ _ : y ∈ Rˣ ⦄ → (y · x) / y ≡ x
+ multiplyDivide' x y = cong (_/ y) (·Comm y x) ∙ multiplyDivide x y
 
  RˣMultClosed : (r r' : R) ⦃ r∈Rˣ : r ∈ Rˣ ⦄ ⦃ r'∈Rˣ : r' ∈ Rˣ ⦄
               → (r · r') ∈ Rˣ
@@ -120,6 +125,9 @@ module Units (R' : CommRing ℓ) where
  -- laws keeping the instance arguments
  1⁻¹≡1 : ⦃ 1∈Rˣ' : 1r ∈ Rˣ ⦄ → 1r ⁻¹ ≡ 1r
  1⁻¹≡1 ⦃ 1∈Rˣ' ⦄ = (sym (·IdL _)) ∙ 1∈Rˣ' .snd
+
+ /1≡id : ∀ x ⦃ _ : 1r ∈ Rˣ ⦄ → x / 1r ≡ x
+ /1≡id x = congR _·_ 1⁻¹≡1 ∙ ·IdR x
 
  ⁻¹-dist-· : (r r' : R) ⦃ r∈Rˣ : r ∈ Rˣ ⦄ ⦃ r'∈Rˣ : r' ∈ Rˣ ⦄ ⦃ rr'∈Rˣ : (r · r') ∈ Rˣ ⦄
            → (r · r') ⁻¹ ≡ r ⁻¹ · r' ⁻¹
