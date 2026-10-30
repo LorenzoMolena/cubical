@@ -22,9 +22,9 @@ record IsNormedSpace (R : ArchimedeanField ℓ' ℓ<≤) (F : ValuedField R ℓ'
   (∥_∥ : V → ⟨ R ⟩)
   : Type (ℓ-max ℓ (ℓ-max ℓ' (ℓ-max ℓ'' (ℓ-max ℓ# ℓ<≤)))) where
   no-eta-equality
+  constructor isnormedspace
   open ValuedFieldStr (snd F) using (∣_∣)
   open ArchimedeanFieldStr (snd R) using (_≤_ ; _·_) renaming (0f to 0r ; _+_ to _+r_)
-
   field
     isVectorSpace     : IsVectorSpace (ValuedField→HeytingField F) 0v _+_ -_ _⋆_
     isNonNegative∥    : ∀ v   → 0r ≤ ∥ v ∥
@@ -44,6 +44,10 @@ record NormedSpaceStr (R : ArchimedeanField ℓ' ℓ<≤) (F : ValuedField R ℓ
     _⋆_ : ⟨ F ⟩ → V → V
     ∥_∥ : V → ⟨ R ⟩
     isNormedSpace : IsNormedSpace R F 0v _+_ -_ _⋆_ ∥_∥
+
+  infixr 7 _+_
+  infix  8 -_
+  infix  9 _⋆_
 
   open IsNormedSpace isNormedSpace public
 
