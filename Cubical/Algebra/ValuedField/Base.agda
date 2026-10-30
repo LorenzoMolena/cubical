@@ -21,16 +21,17 @@ record IsValuation {F : Type ℓ} {R : Type ℓ'}
   where
   no-eta-equality
   constructor isvaluation
-  private
-    module F = HeytingFieldStr Fstr
-    module R = ArchimedeanFieldStr Rstr
+
+  open HeytingFieldStr     Fstr
+  open ArchimedeanFieldStr Rstr
+    renaming (0f to 0r ; _+_ to _+r_ ; _·_ to _·r_) hiding (-_)
 
   field
-    isNonNegative∣    : ∀ x   → R.0f R.≤ ∣ x ∣
-    isSymmetric∣      : ∀ x   → ∣ F.- x ∣ ≡ ∣ x ∣ -- this is actualy redundant
-    isTriangular∣     : ∀ x y → ∣ x F.+ y ∣ R.≤ ∣ x ∣ R.+ ∣ y ∣
-    isMultiplicative∣ : ∀ x y → ∣ x F.· y ∣ ≡ ∣ x ∣ R.· ∣ y ∣
-    isApartFrom0∣     : ∀ x   → (x F.# F.0f) ≃ ((∣ x ∣ R.< R.0f) ⊎ (R.0f R.< ∣ x ∣))
+    isNonNegative∣    : ∀ x   → 0r ≤ ∣ x ∣
+    isSymmetric∣      : ∀ x   → ∣ - x ∣ ≡ ∣ x ∣ -- this is actualy redundant
+    isTriangular∣     : ∀ x y → ∣ x + y ∣ ≤ ∣ x ∣ +r ∣ y ∣
+    isMultiplicative∣ : ∀ x y → ∣ x · y ∣ ≡ ∣ x ∣ ·r ∣ y ∣
+    isApartFrom0∣     : ∀ x   → (x # 0f) ≃ ((∣ x ∣ < 0r) ⊎ (0r < ∣ x ∣))
 
 record IsValuedField (R : ArchimedeanField ℓ' ℓ<≤) {F : Type ℓ}
   (0f 1f : F)
