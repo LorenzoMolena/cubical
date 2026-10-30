@@ -22,14 +22,14 @@ record IsNormedSpace (R : ArchimedeanField ℓ' ℓ<≤) (F : ValuedField R ℓ'
   (∥_∥ : V → ⟨ R ⟩)
   : Type (ℓ-max ℓ (ℓ-max ℓ' (ℓ-max ℓ'' (ℓ-max ℓ# ℓ<≤)))) where
   no-eta-equality
-  private
-    open ValuedFieldStr (snd F) using (∣_∣)
-    open module R = ArchimedeanFieldStr (snd R) using (_≤_ ; _·_) renaming (0f to 0r)
+  open ValuedFieldStr (snd F) using (∣_∣)
+  open ArchimedeanFieldStr (snd R) using (_≤_ ; _·_) renaming (0f to 0r ; _+_ to _+r_)
+
   field
     isVectorSpace     : IsVectorSpace (ValuedField→HeytingField F) 0v _+_ -_ _⋆_
     isNonNegative∥    : ∀ v   → 0r ≤ ∥ v ∥
     isMultiplicative∥ : ∀ k v → ∥ k ⋆ v ∥ ≡ ∣ k ∣ · ∥ v ∥
-    isTriangular∥     : ∀ v w → ∥ v + w ∥ ≤ ∥ v ∥ R.+ ∥ w ∥
+    isTriangular∥     : ∀ v w → ∥ v + w ∥ ≤ ∥ v ∥ +r ∥ w ∥
     isSeparated∥      : ∀ v   → ∥ v ∥ ≡ 0r → v ≡ 0v
 
   open IsLeftModule isVectorSpace public
